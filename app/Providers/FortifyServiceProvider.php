@@ -115,6 +115,7 @@ class FortifyServiceProvider extends ServiceProvider
         /* @chisel-registration */
         Fortify::registerView(fn (Request $request) => Inertia::render('auth/register', [
             'teamInvitation' => $this->teamInvitation($request),
+            'institutionalEmailDomains' => config('taskmate.institutional_email_domains', []),
         ]));
         /* @end-chisel-registration */
 

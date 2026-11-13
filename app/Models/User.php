@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use App\Concerns\HasTeams;
+use App\Enums\UserType;
+use App\Enums\VerificationStatus;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -34,7 +36,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Membership> $teamMemberships
  * @property-read Collection<int, Team> $teams
  */
-#[Fillable(['user_type', 'affiliation', 'id_number'])]
+#[Fillable(['name', 'email', 'password', 'user_type', 'id_number', 'affiliation', 'organization_name', 'position', 'supporting_info'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
@@ -45,7 +47,38 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
     public function isVerified(): bool
     {
-        return $this->verification_status === 'verified';
+        return $this->verification_status === VerificationStatus::Verified;
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->user_type === UserType::Student;
+    }
+
+    public function isFacultyStaff(): bool
+    {
+        return $this->user_type === UserType::FacultyStaff;
+    }
+
+    public function isOrganization(): bool
+    {
+        return $this->user_type === UserType::Organization;
+    }
+
+    public function canPost(): bool
+    {
+        if (! $this->isVerified()) {
+            return false;
+        }
+
+        return $this->isFacultyStaff()
+            || $this->isOrganization()
+            || ($this->isStudent() && (bool) config('taskmate.students_can_post', true));
+    }
+
+    public function canApply(): bool
+    {
+        return $this->isStudent() && $this->isVerified();
     }
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasTeams, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -61,6 +94,8 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'email_verified_at' => 'datetime',
             'is_admin' => 'boolean',
             'password' => 'hashed',
+            'user_type' => UserType::class,
+            'verification_status' => VerificationStatus::class,
             /* @chisel-2fa */
             'two_factor_confirmed_at' => 'datetime',
             /* @end-chisel-2fa */

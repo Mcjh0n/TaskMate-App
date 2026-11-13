@@ -28,6 +28,18 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->profileRules($this->user()->id);
+        $user = $this->user();
+        $rules = $this->profileRules($user->id);
+        $rules['affiliation'] = $user->isOrganization()
+            ? ['prohibited']
+            : ['required', 'string', 'max:255'];
+
+        foreach (['organization_name', 'position', 'supporting_info'] as $field) {
+            $rules[$field] = $user->isOrganization()
+                ? ['required', 'string', 'max:'.($field === 'supporting_info' ? 1000 : 255)]
+                : ['prohibited'];
+        }
+
+        return $rules;
     }
 }

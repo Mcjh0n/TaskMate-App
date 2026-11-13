@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Enums\TeamRole;
+use App\Enums\UserType;
+use App\Enums\VerificationStatus;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -29,10 +31,13 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'user_type' => fake()->randomElement(['student', 'faculty', 'external']),
-            'verification_status' => 'pending',
-            'affiliation' => fake()->company(),
+            'user_type' => UserType::Student,
+            'verification_status' => VerificationStatus::Pending,
+            'affiliation' => 'Synthetic College and Program',
             'id_number' => fake()->optional()->bothify('CMU-####'),
+            'organization_name' => null,
+            'position' => null,
+            'supporting_info' => null,
             'is_admin' => false,
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
@@ -71,6 +76,11 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    public function verified(): static
+    {
+        return $this->state(fn () => ['verification_status' => VerificationStatus::Verified]);
     }
 
     /* @chisel-2fa */

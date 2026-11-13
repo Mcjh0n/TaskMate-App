@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\UserType;
+use App\Enums\VerificationStatus;
 use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\TeamInvitation;
@@ -14,14 +16,16 @@ class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_registration_screen_can_be_rendered()
+    public function test_registration_screen_can_be_rendered(): void
     {
-        $response = $this->get(route('register'));
-
-        $response->assertOk();
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('auth/register')
+                ->where('institutionalEmailDomains.0', 'cmu.edu.ph'));
     }
 
-    public function test_registration_screen_includes_team_invitation_context()
+    public function test_registration_screen_includes_team_invitation_context(): void
     {
         $owner = User::factory()->create();
         $team = Team::factory()->create(['name' => 'Laravel Team']);
@@ -29,90 +33,188 @@ class RegistrationTest extends TestCase
 
         $invitation = TeamInvitation::factory()->create([
             'team_id' => $team->id,
-            'email' => 'invited@example.com',
+            'email' => 'invited@example.test',
             'invited_by' => $owner->id,
         ]);
 
-        $response = $this->get(route('register', ['invitation' => $invitation->code]));
-
-        $response->assertOk();
-        $response->assertInertia(fn (Assert $page) => $page
-            ->component('auth/register')
-            ->where('teamInvitation.code', $invitation->code)
-            ->where('teamInvitation.teamName', 'Laravel Team'),
-        );
+        $this->get(route('register', ['invitation' => $invitation->code]))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('auth/register')
+                ->where('teamInvitation.code', $invitation->code)
+                ->where('teamInvitation.teamName', 'Laravel Team'));
     }
 
-    public function test_new_users_can_register()
+    public function test_students_can_register_with_cmu_email_and_student_details(): void
     {
-        $response = $this->post(route('register.store'), [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'user_type' => 'student',
-            'affiliation' => 'College of Science',
-            'id_number' => 'CMU-12345',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ]);
+        $this->post(route('register.store'), $this->validStudent())->assertRedirect(route('dashboard'));
 
-        $this->assertAuthenticated();
-
-        $user = User::where('email', 'test@example.com')->first();
-        $response->assertRedirect(route('dashboard'));
-        $this->assertSame('student', $user->user_type);
-        $this->assertSame('College of Science', $user->affiliation);
-        $this->assertSame('CMU-12345', $user->id_number);
+        $user = User::query()->where('email', 'student@cmu.edu.ph')->firstOrFail();
+        $this->assertSame(UserType::Student, $user->user_type);
+        $this->assertSame('FAKE-STU-101', $user->id_number);
+        $this->assertSame('Synthetic College and Program', $user->affiliation);
+        $this->assertSame(VerificationStatus::Pending, $user->verification_status);
         $this->assertFalse($user->is_admin);
-        $this->assertSame('pending', $user->verification_status);
     }
 
-    public function test_student_and_faculty_registration_require_an_id_number(): void
-    {
-        $this->from(route('register'))->post(route('register.store'), [
-            'name' => 'Student User',
-            'email' => 'student@example.com',
-            'user_type' => 'student',
-            'affiliation' => 'College of Science',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ])->assertSessionHasErrors('id_number');
-
-        $this->from(route('register'))->post(route('register.store'), [
-            'name' => 'Faculty User',
-            'email' => 'faculty@example.com',
-            'user_type' => 'faculty',
-            'affiliation' => 'Library',
-            'password' => 'password',
-            'password_confirmation' => 'password',
-        ])->assertSessionHasErrors('id_number');
-    }
-
-    public function test_external_registration_does_not_require_an_id_number(): void
+    public function test_faculty_staff_can_register_with_cmu_email_and_employee_details(): void
     {
         $this->post(route('register.store'), [
-            'name' => 'Outside User',
-            'email' => 'outside@example.com',
-            'user_type' => 'external',
-            'affiliation' => 'Local Community',
-            'password' => 'password',
-            'password_confirmation' => 'password',
+            ...$this->baseRegistration('faculty@cmu.edu.ph'),
+            'user_type' => 'faculty_staff',
+            'id_number' => 'FAKE-EMP-101',
+            'affiliation' => 'Synthetic CMU Office',
         ])->assertRedirect(route('dashboard'));
 
         $this->assertDatabaseHas('users', [
-            'email' => 'outside@example.com',
-            'user_type' => 'external',
-            'id_number' => null,
+            'email' => 'faculty@cmu.edu.ph',
+            'user_type' => 'faculty_staff',
+            'verification_status' => 'pending',
+            'id_number' => 'FAKE-EMP-101',
         ]);
     }
 
-    public function test_registration_rejects_unknown_account_types_and_missing_affiliation(): void
+    public function test_organization_representatives_can_register_with_required_organization_details(): void
+    {
+        $this->post(route('register.store'), [
+            ...$this->baseRegistration('representative@example.test'),
+            'user_type' => 'organization',
+            'organization_name' => 'Synthetic Example Organization',
+            'position' => 'Synthetic Coordinator',
+            'supporting_info' => 'A synthetic organization used only for registration tests.',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas('users', [
+            'email' => 'representative@example.test',
+            'user_type' => 'organization',
+            'organization_name' => 'Synthetic Example Organization',
+            'position' => 'Synthetic Coordinator',
+            'id_number' => null,
+            'affiliation' => null,
+            'verification_status' => 'pending',
+        ]);
+    }
+
+    public function test_student_and_faculty_staff_emails_must_use_configured_institutional_domains(): void
+    {
+        foreach (['student', 'faculty_staff'] as $type) {
+            $this->from(route('register'))->post(route('register.store'), [
+                ...$this->baseRegistration("{$type}@outside.example.test"),
+                'user_type' => $type,
+                'id_number' => 'FAKE-ID-001',
+                'affiliation' => 'Synthetic College or Office',
+            ])->assertSessionHasErrors('email');
+        }
+    }
+
+    public function test_registration_requires_fields_for_each_selected_account_type(): void
     {
         $this->from(route('register'))->post(route('register.store'), [
-            'name' => 'Invalid User',
-            'email' => 'invalid@example.com',
-            'user_type' => 'admin',
+            ...$this->baseRegistration('missing-student@cmu.edu.ph'),
+            'user_type' => 'student',
+        ])->assertSessionHasErrors(['id_number', 'affiliation']);
+
+        $this->from(route('register'))->post(route('register.store'), [
+            ...$this->baseRegistration('missing-faculty@cmu.edu.ph'),
+            'user_type' => 'faculty_staff',
+        ])->assertSessionHasErrors(['id_number', 'affiliation']);
+
+        $this->from(route('register'))->post(route('register.store'), [
+            ...$this->baseRegistration('missing-organization@example.test'),
+            'user_type' => 'organization',
+        ])->assertSessionHasErrors(['organization_name', 'position', 'supporting_info']);
+
+        $this->from(route('register'))->post(route('register.store'), [
+            ...$this->baseRegistration('long-description@example.test'),
+            'user_type' => 'organization',
+            'organization_name' => 'Synthetic Organization',
+            'position' => 'Synthetic Representative',
+            'supporting_info' => str_repeat('x', 1001),
+        ])->assertSessionHasErrors('supporting_info');
+    }
+
+    public function test_admin_and_unknown_user_types_are_rejected(): void
+    {
+        foreach (['admin', 'unknown'] as $type) {
+            $this->from(route('register'))->post(route('register.store'), [
+                ...$this->baseRegistration("{$type}@example.test"),
+                'user_type' => $type,
+            ])->assertSessionHasErrors('user_type');
+        }
+    }
+
+    public function test_registration_payload_cannot_set_admin_or_verification_status(): void
+    {
+        $this->post(route('register.store'), [
+            ...$this->validStudent(),
+            'is_admin' => true,
+            'verification_status' => 'verified',
+        ])->assertRedirect(route('dashboard'));
+
+        $user = User::query()->where('email', 'student@cmu.edu.ph')->firstOrFail();
+        $this->assertFalse($user->is_admin);
+        $this->assertSame(VerificationStatus::Pending, $user->verification_status);
+    }
+
+    public function test_sensitive_account_status_fields_are_not_mass_assignable(): void
+    {
+        $user = User::factory()->create();
+        $user->fill(['is_admin' => true, 'verification_status' => 'verified']);
+
+        $this->assertFalse($user->is_admin);
+        $this->assertSame(VerificationStatus::Pending, $user->verification_status);
+        $this->assertNotContains('is_admin', $user->getFillable());
+        $this->assertNotContains('verification_status', $user->getFillable());
+    }
+
+    public function test_account_shared_data_omits_admin_only_verification_note(): void
+    {
+        $user = User::factory()->create(['verification_note' => 'Sensitive synthetic admin note.']);
+
+        $this->actingAs($user)->get(route('profile.edit'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('auth.user.id', $user->id)
+                ->missing('auth.user.verification_note'));
+    }
+
+    public function test_make_admin_command_marks_an_existing_user_admin_and_verified(): void
+    {
+        $user = User::factory()->create(['email' => 'candidate@example.test']);
+
+        $this->artisan('taskmate:make-admin', ['email' => $user->email])
+            ->expectsOutputToContain('is now a verified TaskMate administrator.')
+            ->assertSuccessful();
+
+        $this->assertTrue($user->fresh()->is_admin);
+        $this->assertSame(VerificationStatus::Verified, $user->fresh()->verification_status);
+    }
+
+    public function test_make_admin_command_fails_clearly_when_user_is_missing(): void
+    {
+        $this->artisan('taskmate:make-admin', ['email' => 'missing@example.test'])
+            ->expectsOutputToContain('No user found with that email address.')
+            ->assertFailed();
+    }
+
+    /** @return array<string, string> */
+    private function validStudent(): array
+    {
+        return [
+            ...$this->baseRegistration('student@cmu.edu.ph'),
+            'user_type' => 'student',
+            'id_number' => 'FAKE-STU-101',
+            'affiliation' => 'Synthetic College and Program',
+        ];
+    }
+
+    /** @return array<string, string> */
+    private function baseRegistration(string $email): array
+    {
+        return [
+            'name' => 'Synthetic Test Applicant',
+            'email' => $email,
             'password' => 'password',
             'password_confirmation' => 'password',
-        ])->assertSessionHasErrors(['user_type', 'affiliation']);
+        ];
     }
 }

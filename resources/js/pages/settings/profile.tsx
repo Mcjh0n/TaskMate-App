@@ -6,6 +6,7 @@ import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileCo
 import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +32,7 @@ export default function Profile(
     /* @end-chisel-email-verification */
 ) {
     const { auth } = usePage<PageProps>().props;
+    const isOrganization = auth.user.user_type === 'organization';
 
     return (
         <>
@@ -42,7 +44,7 @@ export default function Profile(
                 <Heading
                     variant="small"
                     title="Profile"
-                    description="Update your name and email address"
+                    description="Update your name, email, and account details"
                 />
 
                 <Form
@@ -72,6 +74,32 @@ export default function Profile(
                                     message={errors.name}
                                 />
                             </div>
+
+                            {isOrganization ? (
+                                <>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="organization_name">Organization name</Label>
+                                        <Input id="organization_name" name="organization_name" defaultValue={auth.user.organization_name ?? ''} required />
+                                        <InputError message={errors.organization_name} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="position">Your position</Label>
+                                        <Input id="position" name="position" defaultValue={auth.user.position ?? ''} required />
+                                        <InputError message={errors.position} />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="supporting_info">About the organization and why it posts tasks</Label>
+                                        <Textarea id="supporting_info" name="supporting_info" defaultValue={auth.user.supporting_info ?? ''} maxLength={1000} required />
+                                        <InputError message={errors.supporting_info} />
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="affiliation">{auth.user.user_type === 'student' ? 'College and program' : 'College or office'}</Label>
+                                    <Input id="affiliation" name="affiliation" defaultValue={auth.user.affiliation ?? ''} required />
+                                    <InputError message={errors.affiliation} />
+                                </div>
+                            )}
 
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>

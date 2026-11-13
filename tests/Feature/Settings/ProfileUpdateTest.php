@@ -30,6 +30,7 @@ class ProfileUpdateTest extends TestCase
             ->patch(route('profile.update'), [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
+                'affiliation' => $user->affiliation,
             ]);
 
         $response
@@ -52,6 +53,7 @@ class ProfileUpdateTest extends TestCase
             ->patch(route('profile.update'), [
                 'name' => 'Test User',
                 'email' => 'Test@Example.com',
+                'affiliation' => $user->affiliation,
             ])
             ->assertSessionHasNoErrors();
 
@@ -79,6 +81,7 @@ class ProfileUpdateTest extends TestCase
             ->patch(route('profile.update'), [
                 'name' => 'Test User',
                 'email' => 'Taken@Example.com',
+                'affiliation' => $user->affiliation,
             ]);
 
         $response
@@ -95,6 +98,7 @@ class ProfileUpdateTest extends TestCase
             ->patch(route('profile.update'), [
                 'name' => 'Test User',
                 'email' => $user->email,
+                'affiliation' => $user->affiliation,
             ]);
 
         $response
@@ -102,6 +106,51 @@ class ProfileUpdateTest extends TestCase
             ->assertRedirect(route('profile.edit'));
 
         $this->assertNotNull($user->refresh()->email_verified_at);
+    }
+
+    public function test_profile_cannot_change_account_type_id_number_or_verification_status(): void
+    {
+        $user = User::factory()->create([
+            'id_number' => 'FAKE-STU-001',
+            'verification_status' => 'pending',
+        ]);
+
+        $this->actingAs($user)->patch(route('profile.update'), [
+            'name' => 'Updated Synthetic Student',
+            'email' => $user->email,
+            'affiliation' => 'Updated Synthetic College',
+            'user_type' => 'organization',
+            'id_number' => 'FAKE-CHANGED',
+            'verification_status' => 'verified',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('student', $user->fresh()->user_type->value);
+        $this->assertSame('FAKE-STU-001', $user->fresh()->id_number);
+        $this->assertSame('pending', $user->fresh()->verification_status->value);
+        $this->assertSame('Updated Synthetic College', $user->fresh()->affiliation);
+    }
+
+    public function test_organization_representative_can_update_organization_details(): void
+    {
+        $user = User::factory()->create([
+            'user_type' => 'organization',
+            'affiliation' => null,
+            'organization_name' => 'Old Synthetic Organization',
+            'position' => 'Old Synthetic Position',
+            'supporting_info' => 'Old synthetic details.',
+        ]);
+
+        $this->actingAs($user)->patch(route('profile.update'), [
+            'name' => 'Synthetic Representative',
+            'email' => $user->email,
+            'organization_name' => 'Updated Synthetic Organization',
+            'position' => 'Updated Synthetic Position',
+            'supporting_info' => 'Updated synthetic details for local testing.',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertSame('Updated Synthetic Organization', $user->fresh()->organization_name);
+        $this->assertSame('Updated Synthetic Position', $user->fresh()->position);
+        $this->assertSame('Updated synthetic details for local testing.', $user->fresh()->supporting_info);
     }
 
     public function test_user_can_delete_their_account()

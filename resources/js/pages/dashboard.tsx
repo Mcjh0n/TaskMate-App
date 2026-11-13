@@ -1,6 +1,8 @@
 import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import PendingInvitationsModal from '@/components/pending-invitations-modal';
+import { SafetyNotice } from '@/components/safety-notice';
+import { VerificationStatusBadge } from '@/components/verification-status-badge';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { dashboard } from '@/routes';
 import type { DashboardInvitation } from '@/types';
@@ -30,11 +32,20 @@ export default function Dashboard({ pendingInvitations = [], status }: Props) {
                         {status}
                     </div>
                 )}
-                {auth.user.verification_status === 'pending' && (
-                    <div role="status" className="rounded-lg border px-4 py-3 text-sm">
-                        Your account is awaiting verification by an administrator.
-                    </div>
-                )}
+                <div className="flex flex-wrap items-center gap-3">
+                    <VerificationStatusBadge status={auth.user.verification_status} />
+                    {auth.user.verification_status === 'pending' && (
+                        <div role="status" className="rounded-lg border px-4 py-3 text-sm">
+                            Your account is awaiting verification by an administrator. Some actions are unavailable until then.
+                        </div>
+                    )}
+                    {auth.user.verification_status === 'rejected' && (
+                        <div role="status" className="rounded-lg border border-red-300 px-4 py-3 text-sm text-red-900 dark:border-red-800 dark:text-red-200">
+                            Your account verification was rejected. Some actions are unavailable. Please contact an administrator for help.
+                        </div>
+                    )}
+                </div>
+                <SafetyNotice />
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                         <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />

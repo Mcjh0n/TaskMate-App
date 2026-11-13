@@ -5,7 +5,10 @@ namespace App\Actions\Fortify;
 use App\Actions\Teams\CreateTeam;
 use App\Concerns\PasswordValidationRules;
 use App\Concerns\ProfileValidationRules;
+use App\Enums\UserType;
+use App\Enums\VerificationStatus;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -27,12 +30,29 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        $profileRules = $this->profileRules();
+        $profileRules['email'][] = function (string $attribute, mixed $value, \Closure $fail) use ($input): void {
+            if (! in_array($input['user_type'] ?? null, [UserType::Student->value, UserType::FacultyStaff->value], true)) {
+                return;
+            }
+
+            $domain = Str::lower(Str::afterLast((string) $value, '@'));
+            $allowedDomains = array_map(fn (string $emailDomain) => Str::lower($emailDomain), config('taskmate.institutional_email_domains', []));
+
+            if (! in_array($domain, $allowedDomains, true)) {
+                $fail('Use your CMU institutional email address.');
+            }
+        };
+
         Validator::make($input, [
-            ...$this->profileRules(),
+            ...$profileRules,
             'password' => $this->passwordRules(),
-            'user_type' => ['required', Rule::in(['student', 'faculty', 'external'])],
-            'affiliation' => ['required', 'string', 'max:255'],
-            'id_number' => [Rule::requiredIf(in_array($input['user_type'] ?? null, ['student', 'faculty'], true)), 'nullable', 'string', 'max:255'],
+            'user_type' => ['required', Rule::in(array_keys(config('taskmate.user_types', [])))],
+            'id_number' => ['required_if:user_type,student,faculty_staff', 'nullable', 'string', 'max:255'],
+            'affiliation' => ['required_if:user_type,student,faculty_staff', 'nullable', 'string', 'max:255'],
+            'organization_name' => ['required_if:user_type,organization', 'nullable', 'string', 'max:255'],
+            'position' => ['required_if:user_type,organization', 'nullable', 'string', 'max:255'],
+            'supporting_info' => ['required_if:user_type,organization', 'nullable', 'string', 'max:1000'],
         ])->validate();
 
         return DB::transaction(function () use ($input) {
@@ -40,9 +60,14 @@ class CreateNewUser implements CreatesNewUsers
             $user->name = $input['name'];
             $user->email = $input['email'];
             $user->password = $input['password'];
-            $user->user_type = $input['user_type'];
-            $user->affiliation = $input['affiliation'];
+            $user->user_type = UserType::from($input['user_type']);
+            $user->verification_status = VerificationStatus::Pending;
+            $user->is_admin = false;
+            $user->affiliation = $input['affiliation'] ?? null;
             $user->id_number = $input['id_number'] ?? null;
+            $user->organization_name = $input['organization_name'] ?? null;
+            $user->position = $input['position'] ?? null;
+            $user->supporting_info = $input['supporting_info'] ?? null;
             $user->save();
 
             $this->createTeam->handle($user, $user->name."'s Team", isPersonal: true);

@@ -41,7 +41,22 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
-                'user' => $user,
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'email_verified_at' => $user->email_verified_at,
+                    'user_type' => $user->user_type?->value,
+                    'is_admin' => $user->is_admin,
+                    'verification_status' => $user->verification_status?->value,
+                    'affiliation' => $user->affiliation,
+                    'id_number' => $user->id_number,
+                    'organization_name' => $user->organization_name,
+                    'position' => $user->position,
+                    'supporting_info' => $user->supporting_info,
+                    'created_at' => $user->created_at,
+                    'updated_at' => $user->updated_at,
+                ] : null,
             ],
             'flash' => [
                 'status' => fn () => $request->session()->get('status'),
