@@ -1,4 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
+import { useState } from 'react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import TeamInvitationAlert from '@/components/team-invitation-alert';
@@ -17,6 +18,13 @@ type Props = {
 };
 
 export default function Register({ passwordRules, teamInvitation }: Props) {
+    const [userType, setUserType] = useState('student');
+    const affiliationLabel = userType === 'student'
+        ? 'College / Department'
+        : userType === 'faculty'
+          ? 'Office / Department'
+          : 'Organization / Community';
+
     return (
         <>
             <Head title="Register" />
@@ -36,6 +44,49 @@ export default function Register({ passwordRules, teamInvitation }: Props) {
                         )}
 
                         <div className="grid gap-6">
+                            <div className="grid gap-2">
+                                <Label htmlFor="user_type">Account type</Label>
+                                <select
+                                    id="user_type"
+                                    name="user_type"
+                                    value={userType}
+                                    onChange={(event) => setUserType(event.target.value)}
+                                    required
+                                    className="border-input bg-background ring-offset-background focus-visible:ring-ring h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                                >
+                                    <option value="student">CMU Student</option>
+                                    <option value="faculty">CMU Faculty / Staff</option>
+                                    <option value="external">Outside the campus</option>
+                                </select>
+                                <InputError message={errors.user_type} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label htmlFor="affiliation">{affiliationLabel}</Label>
+                                <Input
+                                    id="affiliation"
+                                    type="text"
+                                    required
+                                    name="affiliation"
+                                    placeholder={affiliationLabel}
+                                />
+                                <InputError message={errors.affiliation} />
+                            </div>
+
+                            {userType !== 'external' && (
+                                <div className="grid gap-2">
+                                    <Label htmlFor="id_number">CMU ID Number</Label>
+                                    <Input
+                                        id="id_number"
+                                        type="text"
+                                        required
+                                        name="id_number"
+                                        placeholder="CMU ID Number"
+                                    />
+                                    <InputError message={errors.id_number} />
+                                </div>
+                            )}
+
                             <div className="grid gap-2">
                                 <Label htmlFor="name">Name</Label>
                                 <Input

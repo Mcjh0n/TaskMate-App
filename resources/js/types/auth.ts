@@ -4,6 +4,11 @@ export type User = {
     email: string;
     avatar?: string;
     email_verified_at: string | null;
+    user_type: 'student' | 'faculty' | 'external';
+    is_admin: boolean;
+    verification_status: 'pending' | 'verified' | 'rejected';
+    affiliation: string;
+    id_number: string | null;
     /* @chisel-2fa */
     two_factor_enabled?: boolean;
     /* @end-chisel-2fa */

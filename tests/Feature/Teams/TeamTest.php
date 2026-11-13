@@ -195,7 +195,8 @@ class TeamTest extends TestCase
         $betaTeam = Team::factory()->create(['name' => 'Beta Team']);
         $betaTeam->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
-        $user->update(['current_team_id' => $zuluTeam->id]);
+        $user->current_team_id = $zuluTeam->id;
+        $user->save();
 
         $response = $this
             ->actingAs($user)
@@ -219,7 +220,8 @@ class TeamTest extends TestCase
         $team = Team::factory()->create(['name' => 'Zulu Team']);
         $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
-        $user->update(['current_team_id' => $team->id]);
+        $user->current_team_id = $team->id;
+        $user->save();
 
         $response = $this
             ->actingAs($user)
@@ -243,7 +245,8 @@ class TeamTest extends TestCase
         $team = Team::factory()->create();
         $team->members()->attach($user, ['role' => TeamRole::Owner->value]);
 
-        $user->update(['current_team_id' => $personalTeam->id]);
+        $user->current_team_id = $personalTeam->id;
+        $user->save();
 
         $response = $this
             ->actingAs($user)
@@ -294,7 +297,8 @@ class TeamTest extends TestCase
         $betaTeam = Team::factory()->create(['name' => 'Beta Team']);
         $betaTeam->members()->attach($member, ['role' => TeamRole::Member->value]);
 
-        $member->update(['current_team_id' => $zuluTeam->id]);
+        $member->current_team_id = $zuluTeam->id;
+        $member->save();
 
         $response = $this
             ->actingAs($member)
@@ -357,8 +361,10 @@ class TeamTest extends TestCase
         $team->members()->attach($owner, ['role' => TeamRole::Owner->value]);
         $team->members()->attach($member, ['role' => TeamRole::Member->value]);
 
-        $owner->update(['current_team_id' => $team->id]);
-        $member->update(['current_team_id' => $team->id]);
+        $owner->current_team_id = $team->id;
+        $owner->save();
+        $member->current_team_id = $team->id;
+        $member->save();
 
         $response = $this
             ->actingAs($owner)

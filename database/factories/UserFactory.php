@@ -29,6 +29,11 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'user_type' => fake()->randomElement(['student', 'faculty', 'external']),
+            'verification_status' => 'pending',
+            'affiliation' => fake()->company(),
+            'id_number' => fake()->optional()->bothify('CMU-####'),
+            'is_admin' => false,
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),

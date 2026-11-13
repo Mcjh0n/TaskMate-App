@@ -33,6 +33,7 @@ class DashboardController extends Controller
 
         return Inertia::render('dashboard', [
             'pendingInvitations' => $pendingInvitations,
+            'status' => $request->session()->get('status'),
         ]);
     }
 }
