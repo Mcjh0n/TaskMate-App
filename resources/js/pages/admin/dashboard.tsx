@@ -20,6 +20,8 @@ type Props = {
         rejected: number;
         tasksAwaitingReview: number;
         highRiskTasksAwaitingReview: number;
+        openReports: number;
+        reportsUnderReview: number;
     };
     recentActions: Action[];
 };
@@ -59,6 +61,17 @@ export default function AdminDashboard({ counts, recentActions }: Props) {
                     <Link href={admin.tasks.index({ query: { risk_level: 'high', status: 'pending_review' } })} className="rounded-lg border p-4 hover:bg-muted/50">
                         <span className="text-sm text-muted-foreground">High-risk tasks awaiting review</span>
                         <p className="mt-3 text-3xl font-semibold">{counts.highRiskTasksAwaitingReview}</p>
+                    </Link>
+                </section>
+
+                <section aria-label="Report review counts" className="grid gap-4 sm:grid-cols-2">
+                    <Link href={admin.reports.index({ query: { status: 'open' } })} className="rounded-lg border p-4 hover:bg-muted/50">
+                        <span className="text-sm text-muted-foreground">Open reports</span>
+                        <p className="mt-3 text-3xl font-semibold">{counts.openReports}</p>
+                    </Link>
+                    <Link href={admin.reports.index({ query: { status: 'under_review' } })} className="rounded-lg border p-4 hover:bg-muted/50">
+                        <span className="text-sm text-muted-foreground">Reports under review</span>
+                        <p className="mt-3 text-3xl font-semibold">{counts.reportsUnderReview}</p>
                     </Link>
                 </section>
 

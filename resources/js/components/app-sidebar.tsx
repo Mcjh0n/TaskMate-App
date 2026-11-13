@@ -18,6 +18,7 @@ import { dashboard } from '@/routes';
 import { create as createTask, mine as myTasks } from '@/routes/tasks';
 import browse from '@/routes/browse';
 import applications from '@/routes/applications';
+import reports from '@/routes/reports';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -45,6 +46,9 @@ export function AppSidebar() {
             { title: 'Browse Tasks', href: browse.index().url, icon: Search },
             { title: 'My Applications', href: applications.mine().url, icon: BriefcaseBusiness },
         );
+    }
+    if (page.props.auth.user?.verification_status === 'verified') {
+        mainNavItems.push({ title: 'My Reports', href: reports.mine().url, icon: FolderGit2 });
     }
 
     const footerNavItems: NavItem[] = [

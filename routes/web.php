@@ -11,6 +11,10 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\BrowseController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AgreementController;
+use App\Http\Controllers\CompletionPaymentController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Admin\AdminReportsController;
+use App\Http\Controllers\Admin\AdminReportDecisionController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +44,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/tasks/{task}', [AdminTasksController::class, 'show'])->name('tasks.show');
     Route::post('/tasks/{task}/decision', AdminTaskDecisionController::class)->name('tasks.decision');
     Route::get('/agreements/{agreement}', [AgreementController::class, 'adminShow'])->name('agreements.show');
+    Route::get('/reports', [AdminReportsController::class, 'index'])->name('reports.index');
+    Route::get('/reports/{report}', [AdminReportsController::class, 'show'])->name('reports.show');
+    Route::post('/reports/{report}/decision', AdminReportDecisionController::class)->name('reports.decision');
 });
 
 Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
@@ -60,6 +67,16 @@ Route::middleware(['auth', 'account.verified'])->group(function () {
     Route::post('/agreements/{agreement}/confirm', [AgreementController::class, 'confirm'])->name('agreements.confirm');
     Route::post('/agreements/{agreement}/send-back', [AgreementController::class, 'sendBack'])->name('agreements.send-back');
     Route::post('/agreements/{agreement}/cancel', [AgreementController::class, 'cancel'])->name('agreements.cancel');
+    Route::post('/agreements/{agreement}/completion/delivered', [CompletionPaymentController::class, 'markDelivered'])->name('agreements.completion.delivered');
+    Route::post('/agreements/{agreement}/completion/complete', [CompletionPaymentController::class, 'complete'])->name('agreements.completion.complete');
+    Route::post('/agreements/{agreement}/payments/mark-paid', [CompletionPaymentController::class, 'markPaid'])->name('agreements.payments.mark-paid');
+    Route::post('/agreements/{agreement}/payments/confirm-received', [CompletionPaymentController::class, 'confirmReceived'])->name('agreements.payments.confirm-received');
+    Route::post('/agreements/{agreement}/payments/not-received', [CompletionPaymentController::class, 'reportNotReceived'])->name('agreements.payments.not-received');
+    Route::post('/agreements/{agreement}/reports', [ReportController::class, 'store'])->name('agreements.reports.store');
+    Route::get('/my-reports', [ReportController::class, 'mine'])->name('reports.mine');
+    Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+    Route::post('/reports/{report}/statements', [ReportController::class, 'reply'])->name('reports.reply');
+    Route::get('/reports/{report}/evidence/{evidence}', [ReportController::class, 'evidence'])->name('reports.evidence');
 });
 
 Route::middleware(['auth', 'account.verified', 'can.apply'])->group(function () {

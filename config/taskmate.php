@@ -135,4 +135,24 @@ return [
         'terms_max_length' => 3000,
         // Required terms fields and payment-arrangement options are provisional and must be confirmed by the team.
     ],
+
+    'payment_status' => [
+        // PROVISIONAL: approved payment arrangement options must be confirmed by the team.
+        'methods' => [
+            'gcash' => 'GCash',
+            'maya' => 'Maya',
+            'bank_transfer' => 'Bank transfer',
+            'cash' => 'Cash',
+            'other' => 'Other',
+        ],
+    ],
+
+    'reports' => [
+        // PROVISIONAL: response times, evidence standards, and escalation rules are undecided.
+        'evidence_max_files' => 5,
+        'evidence_max_kb' => 5120,
+        'evidence_mimes' => ['jpg', 'jpeg', 'png', 'pdf'],
+        'non_payment_wait_days' => 3,
+        'statement_max_length' => 3000,
+    ],
 ];

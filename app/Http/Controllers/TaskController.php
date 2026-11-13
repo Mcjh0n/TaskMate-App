@@ -50,6 +50,8 @@ class TaskController extends Controller
                 ...$this->summary($task),
                 'applicantsCount' => $task->applications()->count(),
                 'canCancel' => $request->user()->can('cancel', $task),
+                'paymentStatus' => $task->agreement?->paymentStatus()->value,
+                'paymentStatusLabel' => $task->agreement?->paymentStatus()->label(),
             ]);
 
         return Inertia::render('tasks/mine', [
@@ -91,6 +93,8 @@ class TaskController extends Controller
                 'id' => $task->agreement->id,
                 'status' => $task->agreement->status->value,
                 'statusLabel' => $task->agreement->status->label(),
+                'paymentStatus' => $task->agreement->paymentStatus()->value,
+                'paymentStatusLabel' => $task->agreement->paymentStatus()->label(),
             ] : null,
             'canProposeAgreement' => $task->poster_id === $request->user()->id
                 && $task->status === TaskStatus::Assigned

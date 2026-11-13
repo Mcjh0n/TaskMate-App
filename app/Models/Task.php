@@ -87,6 +87,11 @@ class Task extends Model
         return $this->hasOne(Agreement::class);
     }
 
+    public function completion(): \Illuminate\Database\Eloquent\Relations\HasOneThrough
+    {
+        return $this->hasOneThrough(TaskCompletion::class, Agreement::class);
+    }
+
     public function adminActions(): MorphMany
     {
         return $this->morphMany(AdminAction::class, 'subject');

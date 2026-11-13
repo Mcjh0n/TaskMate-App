@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use LogicException;
 
 class AgreementVersion extends Model
 {
@@ -18,6 +19,12 @@ class AgreementVersion extends Model
     protected function casts(): array
     {
         return ['final_amount' => 'decimal:2', 'start_date' => 'date', 'due_date' => 'date', 'created_at' => 'datetime'];
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(fn () => throw new LogicException('Agreement versions are immutable.'));
+        static::deleting(fn () => throw new LogicException('Agreement versions cannot be deleted.'));
     }
 
     public function agreement(): BelongsTo { return $this->belongsTo(Agreement::class); }

@@ -53,6 +53,8 @@ class ApplicationController extends Controller
                 'agreementId' => $application->agreement?->id,
                 'agreementStatus' => $application->agreement?->status->value,
                 'agreementStatusLabel' => $application->agreement?->status->label(),
+                'paymentStatus' => $application->agreement?->paymentStatus()->value,
+                'paymentStatusLabel' => $application->agreement?->paymentStatus()->label(),
                 'appliedAt' => $application->created_at?->toDateTimeString(),
             ]);
 

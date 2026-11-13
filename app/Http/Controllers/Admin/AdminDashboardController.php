@@ -8,6 +8,8 @@ use App\Models\AdminAction;
 use App\Models\User;
 use App\Models\Task;
 use App\Enums\TaskStatus;
+use App\Enums\ReportStatus;
+use App\Models\Report;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -40,6 +42,8 @@ class AdminDashboardController extends Controller
                 'rejected' => User::query()->where('verification_status', VerificationStatus::Rejected->value)->count(),
                 'tasksAwaitingReview' => Task::query()->where('status', TaskStatus::PendingReview->value)->count(),
                 'highRiskTasksAwaitingReview' => Task::query()->where('status', TaskStatus::PendingReview->value)->where('risk_level', 'high')->count(),
+                'openReports' => Report::query()->where('status', ReportStatus::Open->value)->count(),
+                'reportsUnderReview' => Report::query()->where('status', ReportStatus::UnderReview->value)->count(),
             ],
             'recentActions' => $recentActions,
         ]);

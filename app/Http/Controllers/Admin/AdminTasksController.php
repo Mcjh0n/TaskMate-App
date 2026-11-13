@@ -9,6 +9,8 @@ use App\Http\Requests\Admin\AdminTaskIndexRequest;
 use App\Models\AdminAction;
 use App\Models\Task;
 use App\Models\TaskScreening;
+use App\Enums\PaymentEventType;
+use App\Enums\PaymentStatus;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,7 +54,7 @@ class AdminTasksController extends Controller
 
     public function show(Task $task): Response
     {
-        $task->load(['poster', 'screenings', 'adminActions.admin:id,name', 'applications.applicant:id,name']);
+        $task->load(['poster', 'screenings', 'adminActions.admin:id,name', 'applications.applicant:id,name', 'agreement.currentVersion', 'agreement.completion', 'agreement.paymentEvents.actor:id,name']);
         $latestScreening = $task->screenings->first();
 
         return Inertia::render('admin/tasks/show', [
@@ -114,6 +116,7 @@ class AdminTasksController extends Controller
                 'status' => $task->agreement->status->value,
                 'locked_at' => $task->agreement->locked_at?->toDateTimeString(),
             ] : null,
+            'completionPayment' => $task->agreement ? $this->completionPayment($task->agreement) : null,
             'canReview' => $task->status === TaskStatus::PendingReview && $task->poster_id !== auth()->id(),
             'riskQuestions' => collect(config('taskmate.risk_questions', []))->mapWithKeys(fn (array $items, string $key) => [$key => $this->optionsFor($items)]),
         ]);
@@ -139,5 +142,40 @@ class AdminTasksController extends Controller
     private function optionsFor(array $options): array
     {
         return collect($options)->map(fn (string $label, string $value) => compact('value', 'label'))->values()->all();
+    }
+
+    private function completionPayment(\App\Models\Agreement $agreement): array
+    {
+        $completion = $agreement->completion;
+        $agreedAmount = (float) $agreement->currentVersion->final_amount;
+        $events = $agreement->paymentEvents;
+        $latest = $events->last();
+        $paymentStatus = match ($latest?->event) {
+            PaymentEventType::MarkedPaid => PaymentStatus::MarkedPaid,
+            PaymentEventType::ConfirmedReceived => PaymentStatus::ConfirmedReceived,
+            PaymentEventType::ReportedNotReceived => PaymentStatus::NotReceived,
+            default => PaymentStatus::Unpaid,
+        };
+
+        return [
+            'paymentStatus' => $paymentStatus->value,
+            'paymentStatusLabel' => $paymentStatus->label(),
+            'agreedAmount' => $agreement->currentVersion->final_amount,
+            'settled' => $latest?->event === PaymentEventType::ConfirmedReceived && $latest->amount !== null && (float) $latest->amount === $agreedAmount,
+            'completion' => $completion ? ['deliveredAt' => $completion->delivered_at?->toDateTimeString(), 'deliveredNote' => $completion->delivered_note, 'completedAt' => $completion->completed_at?->toDateTimeString(), 'completionNote' => $completion->completion_note] : null,
+            'events' => $events->map(fn ($event) => [
+                'id' => $event->id, 'event' => $event->event->value,
+                'eventLabel' => match ($event->event) {
+                    PaymentEventType::MarkedPaid => 'Poster marked payment as paid',
+                    PaymentEventType::ConfirmedReceived => 'Student confirmed receipt',
+                    PaymentEventType::ReportedNotReceived => 'Student reported not receiving payment',
+                },
+                'actorName' => $event->actor->name, 'amount' => $event->amount, 'paidOn' => $event->paid_on?->toDateString(),
+                'method' => $event->method, 'note' => $event->note, 'createdAt' => $event->created_at?->toDateTimeString(),
+                'amountMismatch' => $event->amount !== null && (float) $event->amount !== $agreedAmount,
+            ])->values(),
+            'activeReportId' => null, 'canMarkDelivered' => false, 'canRecordCompletion' => false,
+            'canMarkPaid' => false, 'canRespondPayment' => false, 'canReportNonPayment' => false, 'paymentMethods' => [],
+        ];
     }
 }

@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\ApplicationStatus;
 use App\Enums\AgreementStatus;
 use App\Enums\TaskStatus;
+use App\Enums\PaymentEventType;
 use App\Models\Agreement;
 use App\Models\Task;
 use App\Models\User;
@@ -42,6 +43,31 @@ class AgreementPolicy
     public function cancel(User $user, Agreement $agreement): bool
     {
         return $this->isParty($user, $agreement) && $agreement->status === AgreementStatus::Negotiating;
+    }
+
+    public function markDelivered(User $user, Agreement $agreement): bool
+    {
+        return $agreement->student_id === $user->id && $agreement->status === AgreementStatus::Agreed;
+    }
+
+    public function recordCompletion(User $user, Agreement $agreement): bool
+    {
+        return $agreement->poster_id === $user->id && $agreement->status === AgreementStatus::Agreed;
+    }
+
+    public function markPaid(User $user, Agreement $agreement): bool
+    {
+        return $agreement->poster_id === $user->id && $agreement->status === AgreementStatus::Agreed;
+    }
+
+    public function respondPayment(User $user, Agreement $agreement): bool
+    {
+        return $agreement->student_id === $user->id && $agreement->status === AgreementStatus::Agreed;
+    }
+
+    public function reportNonPayment(User $user, Agreement $agreement): bool
+    {
+        return $agreement->student_id === $user->id && $agreement->status === AgreementStatus::Agreed;
     }
 
     private function isParty(User $user, Agreement $agreement): bool
