@@ -59,6 +59,7 @@ class Task extends Model
             'guidelines_confirmed_at' => 'datetime',
             'reviewed_at' => 'datetime',
             'screened_at' => 'datetime',
+            'removed_at' => 'datetime',
         ];
     }
 
@@ -70,6 +71,11 @@ class Task extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function removedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'removed_by');
     }
 
     public function screenings(): HasMany
@@ -100,5 +106,10 @@ class Task extends Model
     public function ratings(): HasMany
     {
         return $this->hasMany(Rating::class);
+    }
+
+    public function contentFlags(): MorphMany
+    {
+        return $this->morphMany(ContentFlag::class, 'flaggable');
     }
 }

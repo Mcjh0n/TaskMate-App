@@ -18,6 +18,7 @@ class BrowseController extends Controller
         $tasks = Task::query()
             ->with('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at')
             ->where('status', TaskStatus::Approved->value)
+            ->whereDoesntHave('poster.sanctions', fn ($sanctions) => $sanctions->whereNull('lifted_at')->where('type', 'suspension')->where('starts_at', '<=', now())->where('ends_at', '>', now()))
             ->where(fn ($query) => $query->whereNull('deadline')->orWhereDate('deadline', '>=', today()))
             ->when($filters['search'] ?? null, function ($query, string $search) {
                 $query->where(fn ($query) => $query
@@ -52,6 +53,7 @@ class BrowseController extends Controller
     public function show(Request $request, Task $task, RatingSummary $ratingSummaries): Response
     {
         abort_unless($task->status === TaskStatus::Approved, 404);
+        abort_if($task->poster->sanctions()->whereNull('lifted_at')->where('type', 'suspension')->where('starts_at', '<=', now())->where('ends_at', '>', now())->exists(), 404);
         abort_if($task->deadline !== null && $task->deadline->toDateString() < today()->toDateString(), 404);
         $task->load('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at');
         $application = $task->applications()->where('applicant_id', $request->user()->id)->first();
@@ -67,6 +69,8 @@ class BrowseController extends Controller
             'canApply' => $application === null && $task->status === TaskStatus::Approved
                 && ($task->deadline === null || $task->deadline->toDateString() >= today()->toDateString())
                 && $task->poster_id !== $request->user()->id,
+            'problemReport' => ['action' => route('tasks.problem-reports.store', $task), 'types' => $this->problemReportTypes()],
+            'offPlatformWarning' => $task->contentFlags()->where('source_user_id', '!=', $request->user()->id)->where('status', 'open')->exists(),
             'status' => $request->session()->get('status'),
             'messageMaxLength' => (int) config('taskmate.applications.message_max_length', 1000),
         ]);
@@ -76,6 +80,7 @@ class BrowseController extends Controller
     {
         abort_unless($application->applicant_id === $request->user()->id, 404);
         $task = $application->task()->with('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at')->firstOrFail();
+        abort_if($task->status === TaskStatus::Removed, 404);
 
         return Inertia::render('browse/show', [
             'task' => $this->details($task),
@@ -151,5 +156,10 @@ class BrowseController extends Controller
     private function options(array $values): array
     {
         return collect($values)->map(fn (string $label, string $value) => compact('value', 'label'))->values()->all();
+    }
+
+    private function problemReportTypes(): array
+    {
+        return collect(config('taskmate.reports.types', []))->except(['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()->all();
     }
 }

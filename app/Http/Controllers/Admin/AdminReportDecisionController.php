@@ -20,11 +20,18 @@ class AdminReportDecisionController extends Controller
             $decision = $request->validated('decision');
             $report->status = match ($decision) {
                 'start_review' => ReportStatus::UnderReview,
+                'escalate' => ReportStatus::UnderReview,
                 'resolve' => ReportStatus::Resolved,
                 'dismiss' => ReportStatus::Dismissed,
             };
+            if ($decision === 'escalate') {
+                $report->escalated_at = now();
+                $report->escalated_by = $request->user()->id;
+                $report->escalation_note = $request->validated('note');
+            }
             $report->outcome = $decision === 'resolve' ? ReportOutcome::from($request->validated('outcome')) : null;
             $report->admin_note = $request->validated('note');
+            $report->resolution_message = $decision === 'resolve' ? $request->validated('resolution_message') : null;
             $report->reviewed_by = $request->user()->id;
             $report->reviewed_at = now();
             $report->save();
@@ -33,6 +40,7 @@ class AdminReportDecisionController extends Controller
                 'admin_id' => $request->user()->id,
                 'action' => match ($decision) {
                     'start_review' => 'report_review_started',
+                    'escalate' => 'report_escalated',
                     'resolve' => 'report_resolved',
                     'dismiss' => 'report_dismissed',
                 },

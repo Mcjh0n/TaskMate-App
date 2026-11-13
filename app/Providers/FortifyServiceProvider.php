@@ -38,6 +38,10 @@ use Laravel\Fortify\Contracts\VerifyEmailResponse as VerifyEmailResponseContract
 /* @end-chisel-email-verification */
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use App\Services\SanctionService;
 /* @chisel-passkeys */
 use Laravel\Passkeys\Contracts\PasskeyLoginResponse as PasskeyLoginResponseContract;
 
@@ -70,6 +74,14 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::query()->where(Fortify::username(), $request->input(Fortify::username()))->first();
+            if (! $user || ! Hash::check((string) $request->input('password'), $user->password)) return null;
+            if (app(SanctionService::class)->banned($user)) {
+                throw ValidationException::withMessages(['email' => 'Your account is banned. '.config('taskmate.moderation.sanction_notice_contact')]);
+            }
+            return $user;
+        });
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();

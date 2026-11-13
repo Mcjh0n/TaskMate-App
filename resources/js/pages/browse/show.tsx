@@ -9,6 +9,7 @@ import { ApplicationStatusBadge } from '@/components/application-status-badge';
 import browse from '@/routes/browse';
 import applications from '@/routes/applications';
 import { RatingSummary } from '@/components/rating-summary';
+import { ProblemReportForm } from '@/components/problem-report-form';
 
 type Task = {
     id: number; title: string; category: string; description: string; requiredActivities: string; deliverables: string;
@@ -19,9 +20,9 @@ type Task = {
 };
 type Poster = { displayName: string; accountType: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; memberSince: string | null; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
 type Application = { status: string; statusLabel: string; appliedAt: string | null };
-type Props = { task: Task; poster: Poster; application: Application | null; canApply?: boolean; limitedView?: boolean; currentTaskStatus?: string; status?: string | null; messageMaxLength: number };
+type Props = { task: Task; poster: Poster; application: Application | null; canApply?: boolean; limitedView?: boolean; currentTaskStatus?: string; status?: string | null; messageMaxLength: number; problemReport?: { action: string; types: { value: string; label: string }[] }; offPlatformWarning?: boolean };
 
-export default function BrowseTaskDetail({ task, poster, application, canApply = false, limitedView = false, currentTaskStatus, status, messageMaxLength }: Props) {
+export default function BrowseTaskDetail({ task, poster, application, canApply = false, limitedView = false, currentTaskStatus, status, messageMaxLength, problemReport, offPlatformWarning }: Props) {
     return (
         <>
             <Head title={task.title} />
@@ -60,6 +61,8 @@ export default function BrowseTaskDetail({ task, poster, application, canApply =
                     <RatingSummary summary={poster.ratingSummary} />
                 </section>
                 <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">Verification and screening help inform your decision but do not guarantee the safety of a person or task. Do not agree to anything that makes you uncomfortable, and report concerns.</div>
+                {problemReport && <ProblemReportForm action={problemReport.action} types={problemReport.types} />}
+                {offPlatformWarning && <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.</div>}
                 {application ? (
                     <section className="space-y-2 rounded-xl border p-5">
                         <h2 className="font-semibold">Your application</h2>

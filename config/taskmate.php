@@ -148,12 +148,63 @@ return [
     ],
 
     'reports' => [
-        // PROVISIONAL: response times, evidence standards, and escalation rules are undecided.
+        // PROVISIONAL: evidence standards, response times, appeal process, and escalation rules are undecided.
+        'types' => [
+            'non_payment' => ['label' => 'Non-payment', 'priority' => 'high', 'respondent_can_reply' => true],
+            'misleading_description' => ['label' => 'Misleading description', 'priority' => 'normal', 'respondent_can_reply' => true],
+            'harassment' => ['label' => 'Harassment', 'priority' => 'high', 'respondent_can_reply' => false],
+            'unsafe_behavior' => ['label' => 'Unsafe behavior', 'priority' => 'high', 'respondent_can_reply' => false],
+            'academic_dishonesty' => ['label' => 'Academic dishonesty', 'priority' => 'normal', 'respondent_can_reply' => true],
+            'fraudulent_post' => ['label' => 'Fraudulent post', 'priority' => 'high', 'respondent_can_reply' => false],
+            'rule_bypass_request' => ['label' => 'Request to bypass platform rules', 'priority' => 'high', 'respondent_can_reply' => false],
+            'off_platform_transaction' => ['label' => 'Request to move task arrangements outside TaskMate', 'priority' => 'high', 'respondent_can_reply' => false],
+            'incomplete_work' => ['label' => 'Incomplete work', 'priority' => 'normal', 'respondent_can_reply' => true],
+            'other' => ['label' => 'Other', 'priority' => 'normal', 'respondent_can_reply' => false],
+        ],
+        'rate_limit_per_day' => 5,
+        'description_max_length' => 3000,
         'evidence_max_files' => 5,
         'evidence_max_kb' => 5120,
         'evidence_mimes' => ['jpg', 'jpeg', 'png', 'pdf'],
         'non_payment_wait_days' => 3,
         'statement_max_length' => 3000,
+    ],
+
+    'moderation' => [
+        // PROVISIONAL: designated office, response targets, appeal process, and escalation rules are undecided.
+        'sanction_notice_contact' => 'Contact the TaskMate administrators through the designated office. The appeals process has not been decided.',
+        'response_target_days' => null,
+        'escalation_office_label' => null,
+    ],
+
+    'offplatform' => [
+        // PROVISIONAL: sample patterns for testing only; the team must approve detection rules. Payment arrangements are excluded.
+        'patterns' => [
+            'move_chat_outside' => [
+                ['label' => 'Message me on Telegram', 'pattern' => '/message\s+me\s+on\s+telegram/i'],
+                ['label' => 'External messenger URL', 'pattern' => '/https?:\/\/(?:t\.me|wa\.me|discord\.gg|m\.me)\/[\w.-]+/i'],
+            ],
+            'bypass_agreement' => [
+                ['label' => 'Skip the agreement', 'pattern' => '/let.?s\s+skip\s+the\s+agreement/i'],
+                ['label' => 'Start before signing', 'pattern' => '/start\s+before\s+we\s+sign/i'],
+            ],
+            'bypass_review' => [
+                ['label' => 'Avoid administrator review', 'pattern' => '/don.?t\s+tell\s+the\s+admin/i'],
+            ],
+            'share_contact_details' => [
+                ['label' => 'Phone number', 'pattern' => '/(?<!\d)(?:\+?\d[\s().-]?){8,14}\d(?!\d)/'],
+            ],
+        ],
+        'category_labels' => [
+            'move_chat_outside' => 'Move communication outside TaskMate',
+            'bypass_agreement' => 'Bypass the TaskMate agreement',
+            'bypass_review' => 'Bypass TaskMate review',
+            'share_contact_details' => 'Share personal contact details',
+        ],
+    ],
+
+    'sanctions' => [
+        'max_suspension_days' => 90,
     ],
 
     'ratings' => [

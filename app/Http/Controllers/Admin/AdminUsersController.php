@@ -52,7 +52,7 @@ class AdminUsersController extends Controller
 
     public function show(User $user): Response
     {
-        $user->load(['adminActions.admin:id,name', 'verifiedBy:id,name', 'ratingsReceived.task:id,title', 'ratingsReceived.rater:id,name', 'ratingsReceived.scores', 'ratingsGiven.task:id,title', 'ratingsGiven.ratee:id,name', 'ratingsGiven.scores']);
+        $user->load(['adminActions.admin:id,name', 'verifiedBy:id,name', 'ratingsReceived.task:id,title', 'ratingsReceived.rater:id,name', 'ratingsReceived.scores', 'ratingsGiven.task:id,title', 'ratingsGiven.ratee:id,name', 'ratingsGiven.scores', 'sanctions.issuer:id,name', 'sanctions.report']);
 
         return Inertia::render('admin/users/show', [
             'user' => [
@@ -84,6 +84,8 @@ class AdminUsersController extends Controller
                 ])->values(),
             'ratingsReceived' => $user->ratingsReceived->map(fn ($rating) => $this->ratingRecord($rating, $rating->rater->name))->values(),
             'ratingsGiven' => $user->ratingsGiven->map(fn ($rating) => $this->ratingRecord($rating, $rating->ratee->name))->values(),
+            'sanctions' => $user->sanctions->sortByDesc('created_at')->map(fn ($sanction) => ['id' => $sanction->id, 'type' => $sanction->type->value, 'reason' => $sanction->reason, 'internalNote' => $sanction->internal_note, 'startsAt' => $sanction->starts_at?->toDateTimeString(), 'endsAt' => $sanction->ends_at?->toDateTimeString(), 'liftedAt' => $sanction->lifted_at?->toDateTimeString(), 'liftNote' => $sanction->lift_note, 'reportId' => $sanction->report_id])->values(),
+            'postedTasks' => $user->tasks()->select(['id', 'title', 'status'])->latest()->get()->map(fn ($task) => ['id' => $task->id, 'title' => $task->title, 'status' => $task->status->label()])->values(),
         ]);
     }
 

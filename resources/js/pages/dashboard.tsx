@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import PendingInvitationsModal from '@/components/pending-invitations-modal';
 import { SafetyNotice } from '@/components/safety-notice';
@@ -14,9 +14,12 @@ type Props = {
     verificationNote?: string | null;
     verifiedAt?: string | null;
     ratingsWaiting?: { id: number; taskTitle: string; daysLeft: number }[];
+    warningSanction?: { id: number; reason: string } | null;
+    activeSuspension?: { id: number; reason: string; endsAt: string | null } | null;
+    sanctionContact?: string;
 };
 
-export default function Dashboard({ pendingInvitations = [], status, verificationNote, verifiedAt, ratingsWaiting = [] }: Props) {
+export default function Dashboard({ pendingInvitations = [], status, verificationNote, verifiedAt, ratingsWaiting = [], warningSanction, activeSuspension, sanctionContact }: Props) {
     const { auth } = usePage().props;
     const [showInvitations, setShowInvitations] = useState(
         pendingInvitations.length > 0,
@@ -36,6 +39,8 @@ export default function Dashboard({ pendingInvitations = [], status, verificatio
                         {status}
                     </div>
                 )}
+                {warningSanction && <div className="w-full rounded-lg border border-amber-400 bg-amber-50 p-4 text-sm text-amber-950"><p><strong>Account warning:</strong> {warningSanction.reason}</p><button className="mt-2 underline" type="button" onClick={() => router.post(`/my-sanctions/${warningSanction.id}/acknowledge`)}>Acknowledge warning</button></div>}
+                {activeSuspension && <div role="status" className="w-full rounded-lg border border-red-300 p-4 text-sm"><p>Your account is suspended until {activeSuspension.endsAt ? new Date(activeSuspension.endsAt).toLocaleString() : 'further notice'}.</p><p className="mt-1">{activeSuspension.reason}</p><p className="mt-1">{sanctionContact}</p><Link className="mt-2 inline-block underline" href="/my-sanctions">View account actions</Link></div>}
                 <div className="flex flex-wrap items-center gap-3">
                     <VerificationStatusBadge status={auth.user.verification_status} />
                     {auth.user.verification_status === 'pending' && (

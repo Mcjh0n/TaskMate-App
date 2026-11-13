@@ -7,6 +7,8 @@ use App\Enums\PaymentEventType;
 use App\Enums\PaymentStatus;
 use App\Enums\ReportStatus;
 use App\Enums\ReportType;
+use App\Models\Application;
+use App\Models\Task;
 use App\Models\Agreement;
 use App\Models\PaymentEvent;
 use App\Models\Report;
@@ -21,6 +23,46 @@ use Throwable;
 
 class ReportWorkflow
 {
+    /** @param array<int, UploadedFile> $files */
+    public function createProblem(User $reporter, User $reportedUser, ?Task $task, ?Agreement $agreement, ReportType $type, string $description, array $files): Report
+    {
+        if ($type === ReportType::NonPayment || $reporter->id === $reportedUser->id || $reportedUser->isAdmin()) {
+            throw ValidationException::withMessages(['report' => 'This report cannot be submitted.']);
+        }
+        if ($type === ReportType::IncompleteWork && (! $agreement || $agreement->status !== AgreementStatus::Agreed || ! $agreement->locked_at)) {
+            throw ValidationException::withMessages(['report' => 'Incomplete work reports require a locked agreement.']);
+        }
+        $storedPaths = [];
+        try {
+            return DB::transaction(function () use ($reporter, $reportedUser, $task, $agreement, $type, $description, $files, &$storedPaths): Report {
+                User::query()->lockForUpdate()->findOrFail($reporter->id);
+                $limit = (int) config('taskmate.reports.rate_limit_per_day', 5);
+                if ($reporter->filedReports()->whereDate('created_at', today())->count() >= $limit) {
+                    throw ValidationException::withMessages(['report' => 'You have reached the daily report limit. Try again tomorrow.']);
+                }
+                $duplicate = $reporter->filedReports()->where('reported_user_id', $reportedUser->id)
+                    ->where('task_id', $task?->id)->where('type', $type->value)
+                    ->whereIn('status', [ReportStatus::Open->value, ReportStatus::UnderReview->value])->exists();
+                if ($duplicate) throw ValidationException::withMessages(['report' => 'You already have an open report of this type about this person and task.']);
+                $report = new Report;
+                $report->reporter_id = $reporter->id;
+                $report->reported_user_id = $reportedUser->id;
+                $report->task_id = $task?->id;
+                $report->agreement_id = $agreement?->id;
+                $report->type = $type;
+                $report->priority = config('taskmate.reports.types.'.$type->value.'.priority', 'normal');
+                $report->description = $description;
+                $report->status = ReportStatus::Open;
+                $report->save();
+                $this->storeEvidence($report, $reporter, $files, $storedPaths);
+                return $report;
+            });
+        } catch (Throwable $exception) {
+            foreach ($storedPaths as $path) Storage::disk('evidence')->delete($path);
+            throw $exception;
+        }
+    }
+
     public function canReportNonPayment(Agreement $agreement): bool
     {
         if ($agreement->status !== AgreementStatus::Agreed || ! $agreement->locked_at
@@ -67,6 +109,7 @@ class ReportWorkflow
                 $report->task_id = $agreement->task_id;
                 $report->agreement_id = $agreement->id;
                 $report->type = ReportType::NonPayment;
+                $report->priority = config('taskmate.reports.types.non_payment.priority', 'high');
                 $report->description = $description;
                 $report->status = ReportStatus::Open;
                 $report->save();
@@ -98,14 +141,15 @@ class ReportWorkflow
         try {
             return DB::transaction(function () use ($report, $poster, $body, $files, &$storedPaths): ReportStatement {
                 $report = Report::query()->lockForUpdate()->findOrFail($report->id);
-                if ($poster->id !== $report->reported_user_id || ! in_array($report->status, [ReportStatus::Open, ReportStatus::UnderReview], true)) abort(403);
+                if (! $poster->can('reply', $report) && $report->reporter_id !== $poster->id) abort(403);
+                if (! in_array($report->status, [ReportStatus::Open, ReportStatus::UnderReview], true)) abort(403);
                 if ($report->evidence()->count() + count($files) > (int) config('taskmate.reports.evidence_max_files', 5)) {
                     throw ValidationException::withMessages(['evidence' => 'The evidence file limit for this report has been reached.']);
                 }
                 $statement = new ReportStatement;
                 $statement->report_id = $report->id;
                 $statement->user_id = $poster->id;
-                $statement->role = 'respondent';
+                $statement->role = $report->reporter_id === $poster->id ? 'reporter' : 'respondent';
                 $statement->body = $body;
                 $statement->created_at = now();
                 $statement->save();
@@ -119,7 +163,7 @@ class ReportWorkflow
     }
 
     /** @param array<int, UploadedFile> $files @param array<int, string> $storedPaths */
-    private function storeEvidence(Report $report, User $uploader, array $files, array &$storedPaths): void
+    public function storeEvidence(Report $report, User $uploader, array $files, array &$storedPaths): void
     {
         foreach ($files as $file) {
             $path = Storage::disk('evidence')->putFile('reports/'.$report->id, $file);

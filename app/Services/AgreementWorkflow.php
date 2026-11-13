@@ -17,7 +17,7 @@ use Illuminate\Validation\ValidationException;
 
 class AgreementWorkflow
 {
-    public function __construct(private readonly AgreementContentHasher $hasher) {}
+    public function __construct(private readonly AgreementContentHasher $hasher, private readonly OffPlatformScanner $scanner) {}
 
     public function create(Task $task, User $poster, array $data): Agreement
     {
@@ -101,6 +101,7 @@ class AgreementWorkflow
             $message->body = $body;
             $message->created_at = now();
             $message->save();
+            $this->scanner->flag($message, $user, 'body', $body);
         });
     }
 
@@ -155,6 +156,8 @@ class AgreementWorkflow
             'payment_arrangement' => $version->payment_arrangement,
         ]);
         $version->save();
+        $this->scanner->flag($version, $user, 'terms', $version->terms);
+        if ($version->comment) $this->scanner->flag($version, $user, 'comment', $version->comment);
 
         $agreement->current_version_id = $version->id;
         $agreement->save();

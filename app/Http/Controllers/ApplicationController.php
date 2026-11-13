@@ -16,10 +16,11 @@ use Inertia\Response;
 use Illuminate\Validation\ValidationException;
 use App\Services\RatingWorkflow;
 use App\Services\RatingSummary;
+use App\Services\OffPlatformScanner;
 
 class ApplicationController extends Controller
 {
-    public function store(StoreApplicationRequest $request, Task $task): RedirectResponse
+    public function store(StoreApplicationRequest $request, Task $task, OffPlatformScanner $scanner): RedirectResponse
     {
         Gate::authorize('create', [Application::class, $task]);
 
@@ -30,6 +31,7 @@ class ApplicationController extends Controller
         $application->proposed_amount = $request->validated('proposed_amount');
         $application->status = ApplicationStatus::Pending;
         $application->save();
+        $scanner->flag($application, $request->user(), 'message', $application->message);
 
         return back()->with('status', 'Your application was submitted.');
     }

@@ -16,6 +16,9 @@ class AdminReportIndexRequest extends FormRequest
             'search' => ['nullable', 'string', 'max:150'],
             'type' => ['nullable', Rule::in(array_column(ReportType::cases(), 'value'))],
             'status' => ['nullable', Rule::in(array_column(ReportStatus::cases(), 'value'))],
+            'priority' => ['nullable', Rule::in(['normal', 'high'])],
+            'escalated' => ['nullable', Rule::in(['0', '1'])],
+            'has_evidence' => ['nullable', Rule::in(['0', '1'])],
         ];
     }
 }

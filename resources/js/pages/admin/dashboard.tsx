@@ -22,6 +22,10 @@ type Props = {
         highRiskTasksAwaitingReview: number;
         openReports: number;
         reportsUnderReview: number;
+        highPriorityReports: number;
+        escalatedReports: number;
+        openFlags: number;
+        activeSuspensions: number;
     };
     recentActions: Action[];
 };
@@ -73,6 +77,12 @@ export default function AdminDashboard({ counts, recentActions }: Props) {
                         <span className="text-sm text-muted-foreground">Reports under review</span>
                         <p className="mt-3 text-3xl font-semibold">{counts.reportsUnderReview}</p>
                     </Link>
+                </section>
+                <section aria-label="Safety and account actions" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <Link href={admin.reports.index({ query: { priority: 'high' } })} className="rounded-lg border p-4 hover:bg-muted/50"><span className="text-sm text-muted-foreground">High-priority reports</span><p className="mt-3 text-3xl font-semibold">{counts.highPriorityReports}</p></Link>
+                    <Link href={admin.reports.index({ query: { escalated: '1' } })} className="rounded-lg border p-4 hover:bg-muted/50"><span className="text-sm text-muted-foreground">Escalated reports</span><p className="mt-3 text-3xl font-semibold">{counts.escalatedReports}</p></Link>
+                    <Link href="/admin/flags" className="rounded-lg border p-4 hover:bg-muted/50"><span className="text-sm text-muted-foreground">Open content flags</span><p className="mt-3 text-3xl font-semibold">{counts.openFlags}</p></Link>
+                    <Link href={admin.users.index()} className="rounded-lg border p-4 hover:bg-muted/50"><span className="text-sm text-muted-foreground">Active suspensions</span><p className="mt-3 text-3xl font-semibold">{counts.activeSuspensions}</p></Link>
                 </section>
 
                 <section className="space-y-3">

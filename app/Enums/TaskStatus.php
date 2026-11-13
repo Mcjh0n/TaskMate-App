@@ -12,6 +12,7 @@ enum TaskStatus: string
     case Assigned = 'assigned';
     case InProgress = 'in_progress';
     case Completed = 'completed';
+    case Removed = 'removed';
 
     public function label(): string
     {
@@ -24,6 +25,7 @@ enum TaskStatus: string
             self::Assigned => 'Assigned',
             self::InProgress => 'In progress',
             self::Completed => 'Completed',
+            self::Removed => 'Removed by administrator',
         };
     }
 

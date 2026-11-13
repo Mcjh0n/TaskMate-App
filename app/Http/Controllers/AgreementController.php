@@ -77,6 +77,9 @@ class AgreementController extends Controller
             'termsMaxLength' => config('taskmate.agreement.terms_max_length', 3000),
             'notice' => 'This agreement records what the poster and student agreed. It is not a legal contract. TaskMate does not process, hold, or guarantee payment. Payment is made directly between the two of you.',
             'status' => $request->session()->get('status'),
+            'problemReport' => ['action' => route('agreements.problem-reports.store', $agreement), 'types' => collect(config('taskmate.reports.types', []))->except('non_payment')->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()],
+            'offPlatformWarning' => $agreement->versions()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->exists()
+                || $agreement->messages()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->exists(),
         ]);
     }
 

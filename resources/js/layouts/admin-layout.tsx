@@ -10,6 +10,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
         { label: 'Users', href: admin.users.index().url },
         { label: 'Tasks', href: admin.tasks.index().url },
         { label: 'Reports', href: admin.reports.index().url },
+        { label: 'Flags', href: '/admin/flags' },
         { label: 'Ratings', href: admin.ratings.index().url },
     ];
 

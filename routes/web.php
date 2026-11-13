@@ -18,6 +18,11 @@ use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\Admin\AdminRatingsController;
 use App\Http\Controllers\Admin\AdminReportsController;
 use App\Http\Controllers\Admin\AdminReportDecisionController;
+use App\Http\Controllers\GeneralReportController;
+use App\Http\Controllers\SanctionsController;
+use App\Http\Controllers\Admin\AdminSanctionsController;
+use App\Http\Controllers\Admin\AdminFlagsController;
+use App\Http\Controllers\Admin\AdminTaskClosureController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
@@ -30,7 +35,7 @@ Route::prefix('{current_team}')
         Route::get('dashboard', DashboardController::class)->name('dashboard');
     });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'account.active'])->group(function () {
     Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
     Route::delete('invitations/{invitation}', [TeamInvitationController::class, 'decline'])->name('invitations.decline');
 
@@ -43,6 +48,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/users', [AdminUsersController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [AdminUsersController::class, 'show'])->name('users.show');
     Route::post('/users/{user}/verification', VerificationDecisionController::class)->name('users.verification');
+    Route::post('/users/{user}/sanctions', [AdminSanctionsController::class, 'issue'])->name('users.sanctions');
+    Route::post('/sanctions/{sanction}/lift', [AdminSanctionsController::class, 'lift'])->name('sanctions.lift');
     Route::get('/tasks', [AdminTasksController::class, 'index'])->name('tasks.index');
     Route::get('/tasks/{task}', [AdminTasksController::class, 'show'])->name('tasks.show');
     Route::post('/tasks/{task}/decision', AdminTaskDecisionController::class)->name('tasks.decision');
@@ -50,12 +57,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/reports', [AdminReportsController::class, 'index'])->name('reports.index');
     Route::get('/reports/{report}', [AdminReportsController::class, 'show'])->name('reports.show');
     Route::post('/reports/{report}/decision', AdminReportDecisionController::class)->name('reports.decision');
+    Route::get('/flags', [AdminFlagsController::class, 'index'])->name('flags.index');
+    Route::get('/flags/{flag}', [AdminFlagsController::class, 'show'])->name('flags.show');
+    Route::post('/flags/{flag}/decision', [AdminFlagsController::class, 'decision'])->name('flags.decision');
+    Route::post('/tasks/{task}/close', AdminTaskClosureController::class)->name('tasks.close');
     Route::get('/ratings', [AdminRatingsController::class, 'index'])->name('ratings.index');
     Route::get('/ratings/{rating}', [AdminRatingsController::class, 'show'])->name('ratings.show');
     Route::post('/ratings/{rating}/moderate', [AdminRatingsController::class, 'moderate'])->name('ratings.moderate');
 });
 
-Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
+Route::middleware(['auth', 'account.active', 'account.verified', 'can.post'])->group(function () {
     Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::get('/my-tasks', [TaskController::class, 'mine'])->name('tasks.mine');
@@ -65,7 +76,7 @@ Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
     Route::post('/tasks/{task}/cancel', [TaskController::class, 'cancel'])->name('tasks.cancel');
 });
 
-Route::middleware(['auth', 'account.verified'])->group(function () {
+Route::middleware(['auth', 'account.active', 'account.verified'])->group(function () {
     Route::get('/tasks/{task}/agreement', [AgreementController::class, 'create'])->name('agreements.create');
     Route::post('/tasks/{task}/agreement', [AgreementController::class, 'store'])->name('agreements.store');
     Route::get('/agreements/{agreement}', [AgreementController::class, 'show'])->name('agreements.show');
@@ -81,13 +92,22 @@ Route::middleware(['auth', 'account.verified'])->group(function () {
     Route::post('/agreements/{agreement}/payments/confirm-received', [CompletionPaymentController::class, 'confirmReceived'])->name('agreements.payments.confirm-received');
     Route::post('/agreements/{agreement}/payments/not-received', [CompletionPaymentController::class, 'reportNotReceived'])->name('agreements.payments.not-received');
     Route::post('/agreements/{agreement}/reports', [ReportController::class, 'store'])->name('agreements.reports.store');
+    Route::post('/agreements/{agreement}/problem-reports', [GeneralReportController::class, 'agreement'])->name('agreements.problem-reports.store');
+    Route::post('/tasks/{task}/problem-reports', [GeneralReportController::class, 'task'])->name('tasks.problem-reports.store');
+    Route::post('/tasks/{task}/applications/{application}/problem-reports', [GeneralReportController::class, 'applicant'])->name('applications.problem-reports.store');
+    Route::post('/users/{user}/problem-reports', [GeneralReportController::class, 'profile'])->name('users.problem-reports.store');
     Route::get('/my-reports', [ReportController::class, 'mine'])->name('reports.mine');
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
     Route::post('/reports/{report}/statements', [ReportController::class, 'reply'])->name('reports.reply');
     Route::get('/reports/{report}/evidence/{evidence}', [ReportController::class, 'evidence'])->name('reports.evidence');
 });
 
-Route::middleware(['auth', 'account.verified', 'can.apply'])->group(function () {
+Route::middleware(['auth', 'account.active'])->group(function () {
+    Route::get('/my-sanctions', [SanctionsController::class, 'index'])->name('sanctions.mine');
+    Route::post('/my-sanctions/{sanction}/acknowledge', [SanctionsController::class, 'acknowledge'])->name('sanctions.acknowledge');
+});
+
+Route::middleware(['auth', 'account.active', 'account.verified', 'can.apply'])->group(function () {
     Route::get('/browse', [BrowseController::class, 'index'])->name('browse.index');
     Route::get('/browse/{task}', [BrowseController::class, 'show'])->name('browse.show');
     Route::post('/browse/{task}/apply', [ApplicationController::class, 'store'])->name('applications.store');
@@ -96,11 +116,11 @@ Route::middleware(['auth', 'account.verified', 'can.apply'])->group(function () 
     Route::post('/my-applications/{application}/withdraw', [ApplicationController::class, 'withdraw'])->name('applications.withdraw');
 });
 
-Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
+Route::middleware(['auth', 'account.active', 'account.verified', 'can.post'])->group(function () {
     Route::post('/tasks/{task}/applications/{application}/accept', [ApplicationController::class, 'accept'])->name('tasks.applications.accept');
     Route::post('/tasks/{task}/applications/{application}/decline', [ApplicationController::class, 'decline'])->name('tasks.applications.decline');
 });
 
-Route::middleware('auth')->get('/users/{user}', [UserProfileController::class, 'show'])->name('users.show');
+Route::middleware(['auth', 'account.active'])->get('/users/{user}', [UserProfileController::class, 'show'])->name('users.show');
 
 require __DIR__.'/settings.php';

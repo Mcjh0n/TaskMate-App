@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'account.verified' => \App\Http\Middleware\EnsureAccountVerified::class,
             'can.post' => \App\Http\Middleware\EnsureCanPost::class,
             'can.apply' => \App\Http\Middleware\EnsureCanApply::class,
+            'account.active' => \App\Http\Middleware\EnsureAccountActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

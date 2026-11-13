@@ -19,11 +19,12 @@ class AdminReportDecisionRequest extends FormRequest
     {
         $decision = $this->input('decision');
         $resolving = $decision === 'resolve';
-        $requiresNote = in_array($decision, ['resolve', 'dismiss'], true);
+        $requiresNote = in_array($decision, ['resolve', 'dismiss', 'escalate'], true);
         return [
-            'decision' => ['required', Rule::in(['start_review', 'resolve', 'dismiss'])],
+            'decision' => ['required', Rule::in(['start_review', 'escalate', 'resolve', 'dismiss'])],
             'outcome' => [$resolving ? 'required' : 'nullable', Rule::in(array_column(ReportOutcome::cases(), 'value'))],
             'note' => [$requiresNote ? 'required' : 'nullable', 'string', 'max:3000'],
+            'resolution_message' => ['nullable', 'string', 'max:3000'],
         ];
     }
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use LogicException;
 
 class AgreementVersion extends Model
@@ -30,4 +31,5 @@ class AgreementVersion extends Model
     public function agreement(): BelongsTo { return $this->belongsTo(Agreement::class); }
     public function proposer(): BelongsTo { return $this->belongsTo(User::class, 'proposed_by'); }
     public function confirmations(): HasMany { return $this->hasMany(AgreementConfirmation::class); }
+    public function contentFlags(): MorphMany { return $this->morphMany(ContentFlag::class, 'flaggable'); }
 }

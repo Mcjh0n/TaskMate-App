@@ -139,6 +139,16 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->hasMany(Rating::class, 'ratee_id');
     }
 
+    public function sanctions(): HasMany
+    {
+        return $this->hasMany(UserSanction::class);
+    }
+
+    public function contentFlags(): HasMany
+    {
+        return $this->hasMany(ContentFlag::class, 'source_user_id');
+    }
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasTeams, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 

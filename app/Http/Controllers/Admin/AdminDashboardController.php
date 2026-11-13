@@ -10,6 +10,8 @@ use App\Models\Task;
 use App\Enums\TaskStatus;
 use App\Enums\ReportStatus;
 use App\Models\Report;
+use App\Models\ContentFlag;
+use App\Models\UserSanction;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -44,6 +46,10 @@ class AdminDashboardController extends Controller
                 'highRiskTasksAwaitingReview' => Task::query()->where('status', TaskStatus::PendingReview->value)->where('risk_level', 'high')->count(),
                 'openReports' => Report::query()->where('status', ReportStatus::Open->value)->count(),
                 'reportsUnderReview' => Report::query()->where('status', ReportStatus::UnderReview->value)->count(),
+                'highPriorityReports' => Report::query()->where('priority', 'high')->whereIn('status', [ReportStatus::Open->value, ReportStatus::UnderReview->value])->count(),
+                'escalatedReports' => Report::query()->whereNotNull('escalated_at')->whereIn('status', [ReportStatus::Open->value, ReportStatus::UnderReview->value])->count(),
+                'openFlags' => ContentFlag::query()->where('status', 'open')->count(),
+                'activeSuspensions' => UserSanction::query()->where('type', 'suspension')->whereNull('lifted_at')->where('starts_at', '<=', now())->where('ends_at', '>', now())->count(),
             ],
             'recentActions' => $recentActions,
         ]);

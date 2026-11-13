@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Enums\PaymentEventType;
 use App\Enums\ReportStatus;
-use App\Enums\ReportType;
 use App\Http\Requests\StoreNonPaymentReportRequest;
 use App\Http\Requests\StoreReportStatementRequest;
 use App\Models\Agreement;
 use App\Models\Report;
 use App\Models\ReportEvidence;
+use App\Models\Task;
 use App\Services\ReportWorkflow;
+use App\Enums\TaskStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -38,6 +39,11 @@ class ReportController extends Controller
         $agreement = $report->agreement;
         $version = $agreement?->currentVersion;
         $events = $agreement?->paymentEvents ?? collect();
+        $isReporter = $report->reporter_id === $request->user()->id;
+        $isAdmin = $request->user()->isAdmin();
+        $canReply = $request->user()->can('reply', $report);
+        $task = $report->task;
+        $task->loadMissing(['screenings', 'applications.applicant:id,name,user_type,verification_status']);
 
         return Inertia::render('reports/show', [
             'report' => [
@@ -48,10 +54,12 @@ class ReportController extends Controller
                 'statusLabel' => $report->status->label(),
                 'outcome' => $report->outcome?->value,
                 'outcomeLabel' => $report->outcome?->label(),
-                'adminNote' => in_array($report->status, [ReportStatus::Resolved, ReportStatus::Dismissed], true) ? $report->admin_note : null,
+                'adminNote' => null,
+                'resolutionMessage' => $isReporter ? $report->resolution_message : null,
+                'priority' => $report->priority,
                 'description' => $report->description,
                 'createdAt' => $report->created_at?->toDateTimeString(),
-                'reporter' => ['id' => $report->reporter_id, 'name' => $report->reporter->name, 'type' => $this->typeLabel($report->reporter), 'verificationStatus' => $report->reporter->verification_status->value],
+                'reporter' => $isReporter || $isAdmin ? ['id' => $report->reporter_id, 'name' => $report->reporter->name, 'type' => $this->typeLabel($report->reporter), 'verificationStatus' => $report->reporter->verification_status->value] : ['id' => null, 'name' => 'Reporter', 'type' => null, 'verificationStatus' => null],
                 'reportedUser' => ['id' => $report->reported_user_id, 'name' => $report->reportedUser->name, 'type' => $this->typeLabel($report->reportedUser), 'verificationStatus' => $report->reportedUser->verification_status->value],
                 'task' => ['id' => $report->task_id, 'title' => $report->task->title],
                 'agreement' => $agreement ? [
@@ -73,21 +81,32 @@ class ReportController extends Controller
                     'note' => $event->note, 'createdAt' => $event->created_at?->toDateTimeString(),
                     'amountMismatch' => $event->amount !== null && (float) $event->amount !== (float) ($version?->final_amount ?? 0),
                 ])->values(),
-                'statements' => $report->statements->map(fn ($statement) => ['id' => $statement->id, 'name' => $statement->user->name, 'role' => $statement->role, 'body' => $statement->body, 'createdAt' => $statement->created_at?->toDateTimeString()])->values(),
+                'statements' => $report->statements->map(fn ($statement) => ['id' => $statement->id, 'name' => ! $isReporter && ! $isAdmin && $statement->role === 'reporter' ? 'Reporter' : $statement->user->name, 'role' => $statement->role, 'body' => $statement->body, 'createdAt' => $statement->created_at?->toDateTimeString()])->values(),
                 'evidence' => $report->evidence->map(fn (ReportEvidence $evidence) => ['id' => $evidence->id, 'name' => $evidence->original_name, 'mime' => $evidence->mime, 'sizeBytes' => $evidence->size_bytes, 'downloadUrl' => route('reports.evidence', [$report, $evidence])])->values(),
+                'relatedTask' => $isAdmin ? [
+                    'id' => $task->id, 'title' => $task->title, 'status' => $task->status->label(), 'category' => $task->category,
+                    'description' => $task->description, 'requiredActivities' => $task->required_activities, 'deliverables' => $task->deliverables,
+                    'skillRequirements' => $task->skill_requirements, 'workMode' => $task->work_mode, 'workplaceName' => $task->workplace_name,
+                    'workplaceAddress' => $task->workplace_address, 'screenings' => $task->screenings->map(fn ($screening) => ['riskLevel' => $screening->risk_level, 'riskScore' => $screening->risk_score, 'factors' => $screening->factors, 'createdAt' => $screening->created_at?->toDateTimeString()])->values(),
+                    'applications' => $task->applications->map(fn ($application) => ['name' => $application->applicant->name, 'status' => $application->status->value])->values(),
+                    'flags' => $task->contentFlags()->get()->map(fn ($flag) => ['category' => $flag->category, 'matched' => $flag->matched, 'field' => $flag->field, 'status' => $flag->status->value])->values(),
+                ] : null,
             ],
             'viewerId' => $request->user()->id,
-            'canReply' => $request->user()->can('reply', $report),
+            'canReply' => $canReply,
             'status' => $request->session()->get('status'),
             'statementMaxLength' => config('taskmate.reports.statement_max_length', 3000),
             'notice' => $this->notice(),
+            'responseTargetDays' => config('taskmate.moderation.response_target_days'),
+            'contactLine' => config('taskmate.moderation.sanction_notice_contact'),
         ]);
     }
 
     public function mine(Request $request): Response
     {
+        $replyable = collect(config('taskmate.reports.types', []))->filter(fn ($settings) => $settings['respondent_can_reply'] ?? false)->keys()->all();
         $reports = \App\Models\Report::query()
-            ->where(fn ($query) => $query->where('reporter_id', $request->user()->id)->orWhere('reported_user_id', $request->user()->id))
+            ->where(fn ($query) => $query->where('reporter_id', $request->user()->id)->orWhere(fn ($respondent) => $respondent->where('reported_user_id', $request->user()->id)->whereIn('type', $replyable)))
             ->with(['task:id,title', 'reporter:id,name', 'reportedUser:id,name'])
             ->latest()
             ->paginate(12)
@@ -97,7 +116,8 @@ class ReportController extends Controller
                 'status' => $report->status->value,
                 'statusLabel' => $report->status->label(),
                 'taskTitle' => $report->task->title,
-                'otherParty' => $request->user()->id === $report->reporter_id ? $report->reportedUser->name : $report->reporter->name,
+                'otherParty' => $request->user()->id === $report->reporter_id ? $report->reportedUser->name : 'Reporter',
+                'isReporter' => $request->user()->id === $report->reporter_id,
                 'createdAt' => $report->created_at?->toDateTimeString(),
             ]);
 

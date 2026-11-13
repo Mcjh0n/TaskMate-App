@@ -8,10 +8,11 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Services\RatingWorkflow;
+use App\Services\SanctionService;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request, RatingWorkflow $ratings): Response
+    public function __invoke(Request $request, RatingWorkflow $ratings, SanctionService $sanctions): Response
     {
         $email = strtolower($request->user()->email);
 
@@ -41,6 +42,9 @@ class DashboardController extends Controller
                 : null,
             'verifiedAt' => $request->user()->verified_at?->toDateTimeString(),
             'ratingsWaiting' => $request->user()->canApply() || $request->user()->canPost() ? $ratings->pendingFor($request->user()) : [],
+            'warningSanction' => $sanctions->warning($request->user()) ? ['id' => $sanctions->warning($request->user())->id, 'reason' => $sanctions->warning($request->user())->reason] : null,
+            'activeSuspension' => $sanctions->suspended($request->user()) ? ['id' => $sanctions->suspended($request->user())->id, 'reason' => $sanctions->suspended($request->user())->reason, 'endsAt' => $sanctions->suspended($request->user())->ends_at?->toDateTimeString()] : null,
+            'sanctionContact' => config('taskmate.moderation.sanction_notice_contact'),
         ]);
     }
 }

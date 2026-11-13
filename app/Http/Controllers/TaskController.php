@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Services\RatingSummary;
+use App\Services\OffPlatformScanner;
 
 class TaskController extends Controller
 {
@@ -28,13 +29,16 @@ class TaskController extends Controller
         ]);
     }
 
-    public function store(StoreTaskRequest $request, TaskModerationService $moderation): RedirectResponse
+    public function store(StoreTaskRequest $request, TaskModerationService $moderation, OffPlatformScanner $scanner): RedirectResponse
     {
-        [$task, $assessment] = DB::transaction(function () use ($request, $moderation): array {
+        [$task, $assessment] = DB::transaction(function () use ($request, $moderation, $scanner): array {
             $task = $request->user()->tasks()->make($request->safe()->except('guidelines_confirmed'));
             $task->status = TaskStatus::PendingReview;
             $task->guidelines_confirmed_at = now();
             $task->save();
+            foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
+                if ($task->{$field}) $scanner->flag($task, $request->user(), $field, $task->{$field});
+            }
 
             return [$task, $moderation->screenAndApply($task)];
         });
@@ -106,6 +110,13 @@ class TaskController extends Controller
                 && $task->status === TaskStatus::Assigned
                 && $task->applications()->where('status', ApplicationStatus::Accepted->value)->count() === 1
                 && ! $task->agreement()->exists(),
+            'problemReport' => [
+                'taskAction' => route('tasks.problem-reports.store', $task),
+                'types' => collect(config('taskmate.reports.types', []))->except($task->agreement()->exists() ? ['non_payment'] : ['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values(),
+                'applicantActions' => $applicants->map(fn ($application) => ['applicationId' => $application['id'], 'action' => route('applications.problem-reports.store', [$task, $application['id']])])->values(),
+                'flaggedApplicants' => $task->applications()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->pluck('id')->all(),
+                'offPlatformWarning' => $task->contentFlags()->where('source_user_id', '!=', $request->user()->id)->where('status', 'open')->exists(),
+            ],
         ]);
     }
 
@@ -123,12 +134,12 @@ class TaskController extends Controller
         ]);
     }
 
-    public function update(UpdateTaskRequest $request, Task $task, TaskModerationService $moderation): RedirectResponse
+    public function update(UpdateTaskRequest $request, Task $task, TaskModerationService $moderation, OffPlatformScanner $scanner): RedirectResponse
     {
         if ($task->status === TaskStatus::Assigned || $task->applications()->whereIn('status', [ApplicationStatus::Pending->value, ApplicationStatus::Accepted->value])->exists()) {
             abort(403, 'This task has active applicants or is assigned. Cancel it and post a new task to change its details.');
         }
-        $assessment = DB::transaction(function () use ($request, $task, $moderation): RiskAssessment {
+        $assessment = DB::transaction(function () use ($request, $task, $moderation, $scanner): RiskAssessment {
             $task->fill($request->safe()->except('guidelines_confirmed'));
             $task->guidelines_confirmed_at = now();
             $task->status = TaskStatus::PendingReview;
@@ -136,6 +147,9 @@ class TaskController extends Controller
             $task->reviewed_by = null;
             $task->reviewed_at = null;
             $task->save();
+            foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
+                if ($task->{$field}) $scanner->flag($task, $request->user(), $field, $task->{$field});
+            }
 
             return $moderation->screenAndApply($task);
         });
@@ -190,6 +204,7 @@ class TaskController extends Controller
             'statusLabel' => $task->status->label(),
             'hasActiveApplications' => $task->applications()->whereIn('status', [ApplicationStatus::Pending->value, ApplicationStatus::Accepted->value])->exists(),
             'reviewNote' => in_array($task->status, [TaskStatus::ChangesRequested, TaskStatus::Rejected], true) ? $task->review_note : null,
+            'removalReason' => $task->status === TaskStatus::Removed ? $task->removal_reason : null,
             'createdAt' => $task->created_at?->toDateTimeString(),
             'applicantsCount' => $task->applications()->count(),
         ];

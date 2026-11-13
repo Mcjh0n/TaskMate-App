@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use LogicException;
 
 class AgreementMessage extends Model
@@ -18,4 +19,5 @@ class AgreementMessage extends Model
     }
     public function agreement(): BelongsTo { return $this->belongsTo(Agreement::class); }
     public function user(): BelongsTo { return $this->belongsTo(User::class); }
+    public function contentFlags(): MorphMany { return $this->morphMany(ContentFlag::class, 'flaggable'); }
 }

@@ -34,6 +34,6 @@ class TaskPolicy
     {
         return $task->poster_id === $user->id
             && ! $task->agreement()->exists()
-            && ! in_array($task->status, [\App\Enums\TaskStatus::Cancelled, \App\Enums\TaskStatus::Rejected], true);
+            && ! in_array($task->status, [\App\Enums\TaskStatus::Cancelled, \App\Enums\TaskStatus::Rejected, \App\Enums\TaskStatus::Removed], true);
     }
 }
