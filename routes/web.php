@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUsersController;
 use App\Http\Controllers\Admin\VerificationDecisionController;
 use App\Http\Controllers\VerificationDetailsController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +31,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/users', [AdminUsersController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [AdminUsersController::class, 'show'])->name('users.show');
     Route::post('/users/{user}/verification', VerificationDecisionController::class)->name('users.verification');
+});
+
+Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
+    Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::get('/my-tasks', [TaskController::class, 'mine'])->name('tasks.mine');
+    Route::get('/tasks/{task}', [TaskController::class, 'show'])->name('tasks.show');
+    Route::get('/tasks/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit');
+    Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::post('/tasks/{task}/cancel', [TaskController::class, 'cancel'])->name('tasks.cancel');
 });
 
 require __DIR__.'/settings.php';

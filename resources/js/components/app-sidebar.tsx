@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, FolderGit2, LayoutGrid } from 'lucide-react';
+import { BookOpen, BriefcaseBusiness, FolderGit2, LayoutGrid, Plus } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -15,6 +15,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { create as createTask, mine as myTasks } from '@/routes/tasks';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -30,6 +31,13 @@ export function AppSidebar() {
             icon: LayoutGrid,
         },
     ];
+
+    if (page.props.auth.user?.can_post_tasks) {
+        mainNavItems.push(
+            { title: 'Post a Task', href: createTask().url, icon: Plus },
+            { title: 'My Tasks', href: myTasks().url, icon: BriefcaseBusiness },
+        );
+    }
 
     const footerNavItems: NavItem[] = [
         {

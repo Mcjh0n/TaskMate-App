@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
                     'email_verified_at' => $user->email_verified_at,
                     'user_type' => $user->user_type?->value,
                     'is_admin' => $user->is_admin,
+                    'can_post_tasks' => $user->canPost(),
                     'verification_status' => $user->verification_status?->value,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,

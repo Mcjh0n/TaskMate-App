@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\Task;
+use App\Models\User;
+
+class TaskPolicy
+{
+    public function viewAny(User $user): bool
+    {
+        return $user->canPost();
+    }
+
+    public function create(User $user): bool
+    {
+        return $user->canPost();
+    }
+
+    public function view(User $user, Task $task): bool
+    {
+        return $task->poster_id === $user->id;
+    }
+
+    public function update(User $user, Task $task): bool
+    {
+        return $task->poster_id === $user->id && $task->status->posterMayEdit();
+    }
+
+    public function cancel(User $user, Task $task): bool
+    {
+        return $task->poster_id === $user->id
+            && ! in_array($task->status, [\App\Enums\TaskStatus::Cancelled, \App\Enums\TaskStatus::Rejected], true);
+    }
+}

@@ -98,6 +98,11 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         return $this->belongsTo(self::class, 'verified_by');
     }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class, 'poster_id');
+    }
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasTeams, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 

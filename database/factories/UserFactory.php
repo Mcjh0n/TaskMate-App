@@ -83,6 +83,23 @@ class UserFactory extends Factory
         return $this->state(fn () => ['verification_status' => VerificationStatus::Verified]);
     }
 
+    public function facultyStaff(): static
+    {
+        return $this->state(fn () => ['user_type' => UserType::FacultyStaff]);
+    }
+
+    public function organization(): static
+    {
+        return $this->state(fn () => [
+            'user_type' => UserType::Organization,
+            'organization_name' => fake()->company().' (Synthetic)',
+            'position' => 'Representative',
+            'supporting_info' => 'Synthetic organization profile for testing.',
+            'id_number' => null,
+            'affiliation' => null,
+        ]);
+    }
+
     /* @chisel-2fa */
     /**
      * Indicate that the model has two-factor authentication configured.

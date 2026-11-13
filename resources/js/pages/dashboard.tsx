@@ -39,7 +39,7 @@ export default function Dashboard({ pendingInvitations = [], status, verificatio
                     <VerificationStatusBadge status={auth.user.verification_status} />
                     {auth.user.verification_status === 'pending' && (
                         <div role="status" className="rounded-lg border px-4 py-3 text-sm">
-                            Your account is awaiting review. Some actions are unavailable until then.
+                            Your account is awaiting review. Posting and applying are unavailable until your account is verified.
                         </div>
                     )}
                     {auth.user.verification_status === 'more_info_requested' && (
