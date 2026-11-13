@@ -52,7 +52,7 @@ class AdminTasksController extends Controller
 
     public function show(Task $task): Response
     {
-        $task->load(['poster', 'screenings', 'adminActions.admin:id,name']);
+        $task->load(['poster', 'screenings', 'adminActions.admin:id,name', 'applications.applicant:id,name']);
         $latestScreening = $task->screenings->first();
 
         return Inertia::render('admin/tasks/show', [
@@ -101,6 +101,13 @@ class AdminTasksController extends Controller
                 'adminName' => $action->admin?->name,
                 'note' => $action->note,
                 'createdAt' => $action->created_at?->toDateTimeString(),
+            ])->values(),
+            'applications' => $task->applications->map(fn ($application) => [
+                'id' => $application->id,
+                'applicantName' => $application->applicant->name,
+                'status' => $application->status->label(),
+                'appliedAt' => $application->created_at?->toDateTimeString(),
+                'userId' => $application->applicant->id,
             ])->values(),
             'canReview' => $task->status === TaskStatus::PendingReview && $task->poster_id !== auth()->id(),
             'riskQuestions' => collect(config('taskmate.risk_questions', []))->mapWithKeys(fn (array $items, string $key) => [$key => $this->optionsFor($items)]),

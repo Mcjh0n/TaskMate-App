@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\AdminTaskDecisionController;
 use App\Http\Controllers\Admin\VerificationDecisionController;
 use App\Http\Controllers\VerificationDetailsController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\BrowseController;
+use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +48,20 @@ Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
     Route::get('/tasks/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit');
     Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::post('/tasks/{task}/cancel', [TaskController::class, 'cancel'])->name('tasks.cancel');
+});
+
+Route::middleware(['auth', 'account.verified', 'can.apply'])->group(function () {
+    Route::get('/browse', [BrowseController::class, 'index'])->name('browse.index');
+    Route::get('/browse/{task}', [BrowseController::class, 'show'])->name('browse.show');
+    Route::post('/browse/{task}/apply', [ApplicationController::class, 'store'])->name('applications.store');
+    Route::get('/my-applications', [ApplicationController::class, 'mine'])->name('applications.mine');
+    Route::get('/my-applications/{application}/task', [BrowseController::class, 'applicationTask'])->name('applications.task');
+    Route::post('/my-applications/{application}/withdraw', [ApplicationController::class, 'withdraw'])->name('applications.withdraw');
+});
+
+Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
+    Route::post('/tasks/{task}/applications/{application}/accept', [ApplicationController::class, 'accept'])->name('tasks.applications.accept');
+    Route::post('/tasks/{task}/applications/{application}/decline', [ApplicationController::class, 'decline'])->name('tasks.applications.decline');
 });
 
 require __DIR__.'/settings.php';

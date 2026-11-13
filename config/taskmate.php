@@ -116,4 +116,18 @@ return [
     'in_person_requires_admin_review' => true,
     // PROVISIONAL: the team, adviser, and university must approve this response.
     'high_risk_action' => 'escalate',
+
+    'browse' => [
+        'per_page' => 12,
+        'sort_options' => [
+            'newest' => 'Newest',
+            'budget_high' => 'Budget: high to low',
+            'budget_low' => 'Budget: low to high',
+        ],
+        // Filters beyond category and work mode are provisional and must be confirmed by the team (FR-26).
+    ],
+
+    'applications' => [
+        'message_max_length' => 1000,
+    ],
 ];

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\TaskStatus;
+use App\Enums\ApplicationStatus;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
@@ -45,7 +46,10 @@ class TaskController extends Controller
         $tasks = $request->user()->tasks()
             ->latest()
             ->paginate(12)
-            ->through(fn (Task $task) => $this->summary($task));
+            ->through(fn (Task $task) => [
+                ...$this->summary($task),
+                'applicantsCount' => $task->applications()->count(),
+            ]);
 
         return Inertia::render('tasks/mine', [
             'tasks' => $tasks,
@@ -57,17 +61,39 @@ class TaskController extends Controller
     {
         Gate::authorize('view', $task);
 
+        $applicants = in_array($task->status, [TaskStatus::Approved, TaskStatus::Assigned], true)
+            ? $task->applications()->with('applicant:id,name,user_type,verification_status,affiliation')->latest()->get()->map(fn ($application) => [
+                'id' => $application->id,
+                'applicant' => [
+                    'id' => $application->applicant->id,
+                    'name' => $application->applicant->name,
+                    'type' => config('taskmate.user_types.'.$application->applicant->user_type->value),
+                    'affiliation' => $application->applicant->affiliation,
+                    'verificationStatus' => $application->applicant->verification_status->value,
+                ],
+                'message' => $application->message,
+                'proposedAmount' => $application->proposed_amount,
+                'status' => $application->status->value,
+                'statusLabel' => $application->status->label(),
+                'appliedAt' => $application->created_at?->toDateTimeString(),
+            ])->values()
+            : collect();
+
         return Inertia::render('tasks/show', [
             'task' => $this->details($task),
             'statusLabel' => $task->status->label(),
             'canEdit' => $request->user()->can('update', $task),
             'canCancel' => $request->user()->can('cancel', $task),
             'status' => $request->session()->get('status'),
+            'applicants' => $applicants,
         ]);
     }
 
     public function edit(Request $request, Task $task): Response
     {
+        if ($task->status === TaskStatus::Assigned || $task->applications()->whereIn('status', [ApplicationStatus::Pending->value, ApplicationStatus::Accepted->value])->exists()) {
+            abort(403, 'This task has active applicants or is assigned. Cancel it and post a new task to change its details.');
+        }
         Gate::authorize('update', $task);
 
         return Inertia::render('tasks/edit', [
@@ -79,6 +105,9 @@ class TaskController extends Controller
 
     public function update(UpdateTaskRequest $request, Task $task, TaskModerationService $moderation): RedirectResponse
     {
+        if ($task->status === TaskStatus::Assigned || $task->applications()->whereIn('status', [ApplicationStatus::Pending->value, ApplicationStatus::Accepted->value])->exists()) {
+            abort(403, 'This task has active applicants or is assigned. Cancel it and post a new task to change its details.');
+        }
         $assessment = DB::transaction(function () use ($request, $task, $moderation): RiskAssessment {
             $task->fill($request->safe()->except('guidelines_confirmed'));
             $task->guidelines_confirmed_at = now();
@@ -97,8 +126,16 @@ class TaskController extends Controller
     public function cancel(Request $request, Task $task): RedirectResponse
     {
         Gate::authorize('cancel', $task);
-        $task->status = TaskStatus::Cancelled;
-        $task->save();
+        DB::transaction(function () use ($task): void {
+            $lockedTask = Task::query()->lockForUpdate()->findOrFail($task->id);
+            $now = now();
+            $lockedTask->applications()->where('status', ApplicationStatus::Pending->value)
+                ->update(['status' => ApplicationStatus::Declined->value, 'responded_at' => $now, 'updated_at' => $now]);
+            $lockedTask->applications()->where('status', ApplicationStatus::Accepted->value)
+                ->update(['status' => ApplicationStatus::Cancelled->value, 'responded_at' => $now, 'updated_at' => $now]);
+            $lockedTask->status = TaskStatus::Cancelled;
+            $lockedTask->save();
+        });
 
         return redirect()->route('tasks.mine')->with('status', 'Your task was cancelled.');
     }
@@ -131,8 +168,10 @@ class TaskController extends Controller
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
             'status' => $task->status->value,
             'statusLabel' => $task->status->label(),
+            'hasActiveApplications' => $task->applications()->whereIn('status', [ApplicationStatus::Pending->value, ApplicationStatus::Accepted->value])->exists(),
             'reviewNote' => in_array($task->status, [TaskStatus::ChangesRequested, TaskStatus::Rejected], true) ? $task->review_note : null,
             'createdAt' => $task->created_at?->toDateTimeString(),
+            'applicantsCount' => $task->applications()->count(),
         ];
     }
 

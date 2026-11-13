@@ -1,0 +1,154 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Enums\TaskStatus;
+use App\Http\Requests\BrowseTasksRequest;
+use App\Models\Task;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class BrowseController extends Controller
+{
+    public function index(BrowseTasksRequest $request): Response
+    {
+        $filters = $request->validated();
+        $tasks = Task::query()
+            ->with('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at')
+            ->where('status', TaskStatus::Approved->value)
+            ->where(fn ($query) => $query->whereNull('deadline')->orWhereDate('deadline', '>=', today()))
+            ->when($filters['search'] ?? null, function ($query, string $search) {
+                $query->where(fn ($query) => $query
+                    ->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('required_activities', 'like', "%{$search}%"));
+            })
+            ->when($filters['category'] ?? null, fn ($query, string $category) => $query->where('category', $category))
+            ->when($filters['work_mode'] ?? null, fn ($query, string $mode) => $query->where('work_mode', $mode))
+            ->when($filters['complexity'] ?? null, fn ($query, string $complexity) => $query->where('complexity', $complexity))
+            ->when(isset($filters['min_budget']), fn ($query) => $query->where('budget', '>=', $filters['min_budget']))
+            ->when(isset($filters['max_budget']), fn ($query) => $query->where('budget', '<=', $filters['max_budget']))
+            ->when(($filters['sort'] ?? 'newest') === 'budget_high', fn ($query) => $query->orderByDesc('budget'))
+            ->when(($filters['sort'] ?? 'newest') === 'budget_low', fn ($query) => $query->orderBy('budget'))
+            ->when(($filters['sort'] ?? 'newest') === 'newest', fn ($query) => $query->latest())
+            ->paginate((int) config('taskmate.browse.per_page', 12))
+            ->withQueryString()
+            ->through(fn (Task $task) => $this->listing($task, $request->user()->id));
+
+        return Inertia::render('browse/index', [
+            'tasks' => $tasks,
+            'filters' => $filters,
+            'options' => [
+                'categories' => $this->options(config('taskmate.categories', [])),
+                'workModes' => $this->options(config('taskmate.work_modes', [])),
+                'complexities' => $this->options(config('taskmate.complexity_levels', [])),
+                'sorts' => $this->options(config('taskmate.browse.sort_options', [])),
+            ],
+        ]);
+    }
+
+    public function show(Request $request, Task $task): Response
+    {
+        abort_unless($task->status === TaskStatus::Approved, 404);
+        abort_if($task->deadline !== null && $task->deadline->toDateString() < today()->toDateString(), 404);
+        $task->load('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at');
+        $application = $task->applications()->where('applicant_id', $request->user()->id)->first();
+
+        return Inertia::render('browse/show', [
+            'task' => $this->details($task),
+            'poster' => $this->poster($task),
+            'application' => $application ? [
+                'status' => $application->status->value,
+                'statusLabel' => $application->status->label(),
+                'appliedAt' => $application->created_at?->toDateTimeString(),
+            ] : null,
+            'canApply' => $application === null && $task->status === TaskStatus::Approved
+                && ($task->deadline === null || $task->deadline->toDateString() >= today()->toDateString())
+                && $task->poster_id !== $request->user()->id,
+            'status' => $request->session()->get('status'),
+            'messageMaxLength' => (int) config('taskmate.applications.message_max_length', 1000),
+        ]);
+    }
+
+    public function applicationTask(Request $request, \App\Models\Application $application): Response
+    {
+        abort_unless($application->applicant_id === $request->user()->id, 404);
+        $task = $application->task()->with('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at')->firstOrFail();
+
+        return Inertia::render('browse/show', [
+            'task' => $this->details($task),
+            'poster' => $this->poster($task),
+            'application' => [
+                'status' => $application->status->value,
+                'statusLabel' => $application->status->label(),
+                'appliedAt' => $application->created_at?->toDateTimeString(),
+            ],
+            'limitedView' => $task->status !== TaskStatus::Approved,
+            'currentTaskStatus' => $task->status->label(),
+            'messageMaxLength' => (int) config('taskmate.applications.message_max_length', 1000),
+        ]);
+    }
+
+    private function listing(Task $task, int $studentId): array
+    {
+        return [
+            'id' => $task->id,
+            'title' => $task->title,
+            'category' => config('taskmate.categories.'.$task->category, $task->category),
+            'budget' => $task->budget,
+            'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
+            'estimatedDurationHours' => $task->estimated_duration_hours,
+            'complexity' => config('taskmate.complexity_levels.'.$task->complexity, $task->complexity),
+            'deadline' => $task->deadline?->toDateString(),
+            'posterName' => $task->poster->isOrganization() ? $task->poster->organization_name : $task->poster->name,
+            'posterType' => config('taskmate.user_types.'.$task->poster->user_type->value),
+            'posterVerificationStatus' => $task->poster->verification_status->value,
+            'hasApplied' => $task->applications()->where('applicant_id', $studentId)->exists(),
+        ];
+    }
+
+    private function details(Task $task): array
+    {
+        return [
+            'id' => $task->id,
+            'title' => $task->title,
+            'category' => config('taskmate.categories.'.$task->category, $task->category),
+            'description' => $task->description,
+            'requiredActivities' => $task->required_activities,
+            'deliverables' => $task->deliverables,
+            'estimatedDurationHours' => $task->estimated_duration_hours,
+            'skillRequirements' => $task->skill_requirements,
+            'complexity' => config('taskmate.complexity_levels.'.$task->complexity, $task->complexity),
+            'budget' => $task->budget,
+            'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
+            'workplaceName' => $task->workplace_name,
+            'workplaceAddress' => $task->workplace_address,
+            'workplaceSetting' => $task->workplace_setting ? config('taskmate.risk_questions.workplace_setting.'.$task->workplace_setting, $task->workplace_setting) : null,
+            'deadline' => $task->deadline?->toDateString(),
+            'physicalDemand' => config('taskmate.risk_questions.physical_demand.'.$task->physical_demand, $task->physical_demand),
+            'academicInvolvement' => config('taskmate.risk_questions.academic_involvement.'.$task->academic_involvement, $task->academic_involvement),
+            'hazardExposure' => $task->hazard_exposure,
+            'hazardDescription' => $task->hazard_exposure ? $task->hazard_description : null,
+            'privateMeetingRequired' => $task->private_meeting_required,
+        ];
+    }
+
+    private function poster(Task $task): array
+    {
+        $poster = $task->poster;
+
+        return [
+            'displayName' => $poster->isOrganization() ? $poster->organization_name : $poster->name,
+            'accountType' => config('taskmate.user_types.'.$poster->user_type->value),
+            'affiliation' => $poster->isOrganization() ? $poster->organization_name : $poster->affiliation,
+            'verificationStatus' => $poster->verification_status->value,
+            'memberSince' => $poster->created_at?->toDateString(),
+        ];
+    }
+
+    private function options(array $values): array
+    {
+        return collect($values)->map(fn (string $label, string $value) => compact('value', 'label'))->values()->all();
+    }
+}

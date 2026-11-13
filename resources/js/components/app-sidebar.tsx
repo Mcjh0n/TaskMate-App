@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, BriefcaseBusiness, FolderGit2, LayoutGrid, Plus } from 'lucide-react';
+import { BookOpen, BriefcaseBusiness, FolderGit2, LayoutGrid, Plus, Search } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
@@ -16,6 +16,8 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { create as createTask, mine as myTasks } from '@/routes/tasks';
+import browse from '@/routes/browse';
+import applications from '@/routes/applications';
 import type { NavItem } from '@/types';
 
 export function AppSidebar() {
@@ -36,6 +38,12 @@ export function AppSidebar() {
         mainNavItems.push(
             { title: 'Post a Task', href: createTask().url, icon: Plus },
             { title: 'My Tasks', href: myTasks().url, icon: BriefcaseBusiness },
+        );
+    }
+    if (page.props.auth.user?.can_apply_tasks) {
+        mainNavItems.push(
+            { title: 'Browse Tasks', href: browse.index().url, icon: Search },
+            { title: 'My Applications', href: applications.mine().url, icon: BriefcaseBusiness },
         );
     }
 

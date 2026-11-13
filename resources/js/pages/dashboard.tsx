@@ -42,6 +42,11 @@ export default function Dashboard({ pendingInvitations = [], status, verificatio
                             Your account is awaiting review. Posting and applying are unavailable until your account is verified.
                         </div>
                     )}
+                    {auth.user.user_type === 'student' && auth.user.verification_status !== 'verified' && (
+                        <div role="status" className="w-full rounded-lg border px-4 py-3 text-sm">
+                            Task browsing and applications are available after your account is verified.
+                        </div>
+                    )}
                     {auth.user.verification_status === 'more_info_requested' && (
                         <div role="status" className="w-full rounded-lg border border-blue-300 px-4 py-3 text-sm dark:border-blue-800">
                             <p>The administrator needs more information before completing the review.</p>

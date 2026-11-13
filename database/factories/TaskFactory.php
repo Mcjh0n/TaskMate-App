@@ -39,4 +39,9 @@ class TaskFactory extends Factory
             'guidelines_confirmed_at' => now(),
         ];
     }
+
+    public function approved(): static
+    {
+        return $this->state(fn () => ['status' => TaskStatus::Approved]);
+    }
 }

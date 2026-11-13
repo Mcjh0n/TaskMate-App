@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Models\Task;
+use App\Enums\ApplicationStatus;
+use App\Enums\TaskStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,6 +23,12 @@ class UpdateTaskRequest extends FormRequest
     public function authorize(): bool
     {
         $task = $this->route('task');
+
+        if ($task instanceof Task && $task->poster_id === $this->user()?->id
+            && ($task->status === TaskStatus::Assigned
+                || $task->applications()->whereIn('status', [ApplicationStatus::Pending->value, ApplicationStatus::Accepted->value])->exists())) {
+            abort(403, 'This task has active applicants or is assigned. Cancel it and post a new task to change its details.');
+        }
 
         return $task instanceof Task && ($this->user()?->can('update', $task) ?? false);
     }

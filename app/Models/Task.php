@@ -76,6 +76,11 @@ class Task extends Model
         return $this->hasMany(TaskScreening::class)->latest('id');
     }
 
+    public function applications(): HasMany
+    {
+        return $this->hasMany(Application::class);
+    }
+
     public function adminActions(): MorphMany
     {
         return $this->morphMany(AdminAction::class, 'subject');

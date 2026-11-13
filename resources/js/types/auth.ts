@@ -7,6 +7,7 @@ export type User = {
     user_type: 'student' | 'faculty_staff' | 'organization';
     is_admin: boolean;
     can_post_tasks: boolean;
+    can_apply_tasks: boolean;
     verification_status: 'pending' | 'verified' | 'rejected' | 'more_info_requested';
     /* @chisel-2fa */
     two_factor_enabled?: boolean;

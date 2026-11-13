@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import InputError from '@/components/input-error';
 import admin from '@/routes/admin';
+import adminUsers from '@/routes/admin/users';
 
 type Hit = { phrase: string; type: string; field: string; start: number; length: number };
 type Factor = { key: string; label: string; points: number; reason: string };
@@ -21,7 +22,8 @@ type Task = {
     poster: { id: number; name: string; type: string; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; otherTasksCount: number };
 };
 type Action = { id: number; action: string; adminName: string | null; note: string | null; createdAt: string | null };
-type Props = { task: Task; screening: Screening | null; screeningHistory: Screening[]; adminActions: Action[]; canReview: boolean; riskQuestions: Record<string, { value: string; label: string }[]>; status?: string | null };
+type AdminApplication = { id: number; applicantName: string; status: string; appliedAt: string | null; userId: number };
+type Props = { task: Task; screening: Screening | null; screeningHistory: Screening[]; adminActions: Action[]; applications: AdminApplication[]; canReview: boolean; riskQuestions: Record<string, { value: string; label: string }[]>; status?: string | null };
 
 function HighlightedText({ text, field, hits }: { text: string | null; field: string; hits: Hit[] }) {
     if (!text) return <span>—</span>;
@@ -44,7 +46,7 @@ function DecisionForm({ taskId, decision, label, noteRequired }: { taskId: numbe
     </Form>;
 }
 
-export default function AdminTaskReview({ task, screening, screeningHistory, adminActions, canReview, riskQuestions, status }: Props) {
+export default function AdminTaskReview({ task, screening, screeningHistory, adminActions, applications, canReview, riskQuestions, status }: Props) {
     const hits = screening?.keywordHits ?? [];
     const hasProhibitedHit = hits.some((hit) => hit.type === 'prohibited');
     const requiresOverrideNote = screening?.riskLevel === 'high' || hasProhibitedHit;
@@ -56,6 +58,7 @@ export default function AdminTaskReview({ task, screening, screeningHistory, adm
         <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Safety answers</h2><p><strong>Physical demand:</strong> {labels('physical_demand', task.physicalDemand)}</p><p><strong>Academic involvement:</strong> {labels('academic_involvement', task.academicInvolvement)}</p><p><strong>Hazard exposure:</strong> {task.hazardExposure ? 'Yes' : 'No'}{task.hazardExposure && task.hazardDescription && <span>: {task.hazardDescription}</span>}</p><p><strong>Private or isolated one-on-one meeting required:</strong> {task.privateMeetingRequired ? 'Yes' : 'No'}</p></section>
         <section className="space-y-4 rounded-xl border p-5"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">Screening breakdown</h2>{screening && <><RiskLevelBadge level={screening.riskLevel} /><span>Score: {screening.riskScore}</span></>}</div>{screening ? <><p className="text-sm">Screening outcome: {screening.outcome.replaceAll('_', ' ')}</p><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="py-2">Factor</th><th className="py-2">Points</th><th className="py-2">Reason</th></tr></thead><tbody>{screening.factors.map((factor) => <tr key={factor.key} className="border-b"><td className="py-2">{factor.label}</td><td className="py-2">{factor.points}</td><td className="py-2">{factor.reason}</td></tr>)}</tbody></table></div>{screening.keywordHits.length > 0 && <div><h3 className="font-medium">Keyword indicators</h3><ul className="list-disc pl-5 text-sm">{screening.keywordHits.map((hit, index) => <li key={`${hit.phrase}-${hit.field}-${index}`}><mark>{hit.phrase}</mark> ({hit.type}, in {hit.field.replaceAll('_', ' ')})</li>)}</ul></div>}{screening.hardTriggers.length > 0 && <div><h3 className="font-medium">Hard triggers</h3><ul className="list-disc pl-5 text-sm">{screening.hardTriggers.map((trigger) => <li key={trigger.key}>{trigger.reason}</li>)}</ul></div>}</> : <p className="text-sm text-muted-foreground">No screening history is available.</p>}</section>
         {screeningHistory.length > 1 && <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Screening history</h2>{screeningHistory.map((item, index) => <div key={`${item.createdAt}-${index}`} className="border-t pt-3 text-sm"><div className="flex flex-wrap gap-3"><RiskLevelBadge level={item.riskLevel} /><span>Score {item.riskScore}</span><span>{item.outcome.replaceAll('_', ' ')}</span><span>{item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}</span></div></div>)}</section>}
+        <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Applications</h2>{applications.length ? applications.map((application) => <div key={application.id} className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-sm"><Link className="underline underline-offset-4" href={adminUsers.show(application.userId)}>{application.applicantName}</Link><span>{application.status}</span><span>{application.appliedAt ? new Date(application.appliedAt).toLocaleString() : '—'}</span></div>) : <p className="text-sm text-muted-foreground">No applications have been submitted.</p>}</section>
         <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Admin action history</h2>{adminActions.length ? adminActions.map((action) => <div key={action.id} className="border-t pt-3 text-sm"><p className="font-medium">{action.action.replaceAll('_', ' ')} · {action.adminName ?? 'Administrator'} · {action.createdAt ? new Date(action.createdAt).toLocaleString() : ''}</p>{action.note && <p className="mt-1 whitespace-pre-wrap">{action.note}</p>}</div>) : <p className="text-sm text-muted-foreground">No admin decisions have been recorded for this task.</p>}</section>
         {canReview ? <section className="space-y-4 rounded-xl border p-5"><h2 className="text-lg font-semibold">Review decision</h2><div className="grid gap-3 md:grid-cols-3"><DecisionForm taskId={task.id} decision="approve" label="Approve task" noteRequired={requiresOverrideNote} /><DecisionForm taskId={task.id} decision="reject" label="Reject task" noteRequired /><DecisionForm taskId={task.id} decision="request_changes" label="Request changes" noteRequired /></div></section> : task.status === 'pending_review' ? <p className="rounded-lg border p-4 text-sm">You cannot review a task you posted yourself.</p> : null}</div></>;
 }
