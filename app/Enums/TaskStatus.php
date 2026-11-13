@@ -10,6 +10,7 @@ enum TaskStatus: string
     case Rejected = 'rejected';
     case Cancelled = 'cancelled';
     case Assigned = 'assigned';
+    case InProgress = 'in_progress';
 
     public function label(): string
     {
@@ -20,6 +21,7 @@ enum TaskStatus: string
             self::Rejected => 'Rejected',
             self::Cancelled => 'Cancelled',
             self::Assigned => 'Assigned',
+            self::InProgress => 'In progress',
         };
     }
 

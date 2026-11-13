@@ -10,6 +10,7 @@ use App\Http\Controllers\VerificationDetailsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\BrowseController;
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\AgreementController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
@@ -38,6 +39,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/tasks', [AdminTasksController::class, 'index'])->name('tasks.index');
     Route::get('/tasks/{task}', [AdminTasksController::class, 'show'])->name('tasks.show');
     Route::post('/tasks/{task}/decision', AdminTaskDecisionController::class)->name('tasks.decision');
+    Route::get('/agreements/{agreement}', [AgreementController::class, 'adminShow'])->name('agreements.show');
 });
 
 Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
@@ -48,6 +50,16 @@ Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
     Route::get('/tasks/{task}/edit', [TaskController::class, 'edit'])->name('tasks.edit');
     Route::put('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::post('/tasks/{task}/cancel', [TaskController::class, 'cancel'])->name('tasks.cancel');
+});
+
+Route::middleware(['auth', 'account.verified'])->group(function () {
+    Route::get('/tasks/{task}/agreement', [AgreementController::class, 'create'])->name('agreements.create');
+    Route::post('/tasks/{task}/agreement', [AgreementController::class, 'store'])->name('agreements.store');
+    Route::get('/agreements/{agreement}', [AgreementController::class, 'show'])->name('agreements.show');
+    Route::post('/agreements/{agreement}/versions', [AgreementController::class, 'revise'])->name('agreements.revise');
+    Route::post('/agreements/{agreement}/confirm', [AgreementController::class, 'confirm'])->name('agreements.confirm');
+    Route::post('/agreements/{agreement}/send-back', [AgreementController::class, 'sendBack'])->name('agreements.send-back');
+    Route::post('/agreements/{agreement}/cancel', [AgreementController::class, 'cancel'])->name('agreements.cancel');
 });
 
 Route::middleware(['auth', 'account.verified', 'can.apply'])->group(function () {

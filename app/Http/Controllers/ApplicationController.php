@@ -35,7 +35,7 @@ class ApplicationController extends Controller
     public function mine(Request $request): Response
     {
         $applications = $request->user()->applications()
-            ->with(['task.poster:id,name,user_type,organization_name'])
+            ->with(['task.poster:id,name,user_type,organization_name', 'agreement'])
             ->latest()
             ->paginate(12)
             ->through(fn (Application $application) => [
@@ -50,6 +50,9 @@ class ApplicationController extends Controller
                 'statusLabel' => $application->status->label(),
                 'taskStatus' => $application->task->status->label(),
                 'taskApproved' => $application->task->status === TaskStatus::Approved,
+                'agreementId' => $application->agreement?->id,
+                'agreementStatus' => $application->agreement?->status->value,
+                'agreementStatusLabel' => $application->agreement?->status->label(),
                 'appliedAt' => $application->created_at?->toDateTimeString(),
             ]);
 

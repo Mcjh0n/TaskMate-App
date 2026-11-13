@@ -109,6 +109,11 @@ class AdminTasksController extends Controller
                 'appliedAt' => $application->created_at?->toDateTimeString(),
                 'userId' => $application->applicant->id,
             ])->values(),
+            'agreement' => $task->agreement ? [
+                'id' => $task->agreement->id,
+                'status' => $task->agreement->status->value,
+                'locked_at' => $task->agreement->locked_at?->toDateTimeString(),
+            ] : null,
             'canReview' => $task->status === TaskStatus::PendingReview && $task->poster_id !== auth()->id(),
             'riskQuestions' => collect(config('taskmate.risk_questions', []))->mapWithKeys(fn (array $items, string $key) => [$key => $this->optionsFor($items)]),
         ]);

@@ -1,0 +1,167 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Enums\AgreementStatus;
+use App\Enums\TaskStatus;
+use App\Http\Requests\CancelAgreementRequest;
+use App\Http\Requests\ConfirmAgreementRequest;
+use App\Http\Requests\SendBackAgreementRequest;
+use App\Http\Requests\StoreAgreementVersionRequest;
+use App\Http\Requests\StoreInitialAgreementRequest;
+use App\Models\Agreement;
+use App\Models\AgreementVersion;
+use App\Models\Task;
+use App\Services\AgreementWorkflow;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class AgreementController extends Controller
+{
+    public function create(Task $task, Request $request): Response
+    {
+        Gate::authorize('create', [Agreement::class, $task]);
+        $accepted = $task->applications()->where('status', 'accepted')->firstOrFail();
+        $deadline = $task->deadline?->toDateString();
+        $defaultDueDate = $deadline && $deadline > today()->toDateString() ? $deadline : today()->addDays(7)->toDateString();
+
+        return Inertia::render('agreements/create', [
+            'task' => $this->taskSummary($task),
+            'studentName' => $accepted->applicant->name,
+            'defaults' => [
+                'deliverables' => $task->deliverables,
+                'finalAmount' => $accepted->proposed_amount ?? $task->budget,
+                'startDate' => today()->addDay()->toDateString(),
+                'dueDate' => $defaultDueDate,
+                'workplaceName' => $task->workplace_name,
+                'workplaceAddress' => $task->workplace_address,
+                'workMode' => $task->work_mode,
+            ],
+            'termsMaxLength' => config('taskmate.agreement.terms_max_length', 3000),
+        ]);
+    }
+
+    public function store(StoreInitialAgreementRequest $request, Task $task, AgreementWorkflow $workflow): RedirectResponse
+    {
+        $agreement = $workflow->create($task, $request->user(), $request->validated());
+        return redirect()->route('agreements.show', $agreement)->with('status', 'Your agreement proposal was sent.');
+    }
+
+    public function show(Agreement $agreement, Request $request): Response
+    {
+        Gate::authorize('view', $agreement);
+        $agreement->load([
+            'task:id,title,budget,status,work_mode,workplace_name,workplace_address',
+            'poster:id,name,user_type,organization_name',
+            'student:id,name,user_type,affiliation',
+            'currentVersion.proposer:id,name',
+            'versions.proposer:id,name',
+            'versions.confirmations.user:id,name',
+            'messages.user:id,name',
+        ]);
+
+        return Inertia::render('agreements/show', [
+            ...$this->present($agreement),
+            'viewerId' => $request->user()->id,
+            'termsMaxLength' => config('taskmate.agreement.terms_max_length', 3000),
+            'notice' => 'This agreement records what the poster and student agreed. It is not a legal contract. TaskMate does not process, hold, or guarantee payment. Payment is made directly between the two of you.',
+            'status' => $request->session()->get('status'),
+        ]);
+    }
+
+    public function revise(StoreAgreementVersionRequest $request, Agreement $agreement, AgreementWorkflow $workflow): RedirectResponse
+    {
+        $workflow->revise($agreement, $request->user(), $request->validated());
+        return back()->with('status', 'A new agreement version was sent. Both parties need to confirm this version.');
+    }
+
+    public function confirm(ConfirmAgreementRequest $request, Agreement $agreement, AgreementWorkflow $workflow): RedirectResponse
+    {
+        $workflow->confirm($agreement, $request->user(), (int) $request->validated('version_id'));
+        $agreement->refresh();
+        return back()->with('status', $agreement->status === AgreementStatus::Agreed
+            ? 'Both parties confirmed the agreement. The terms are now locked and work may begin.'
+            : 'Your confirmation was recorded for this version.');
+    }
+
+    public function sendBack(SendBackAgreementRequest $request, Agreement $agreement, AgreementWorkflow $workflow): RedirectResponse
+    {
+        $data = $request->validated();
+        $workflow->sendBack($agreement, $request->user(), (int) $data['version_id'], $data['body']);
+        return back()->with('status', 'Your comment was sent. Submit a new version to change the proposed terms.');
+    }
+
+    public function cancel(CancelAgreementRequest $request, Agreement $agreement, AgreementWorkflow $workflow): RedirectResponse
+    {
+        $workflow->cancel($agreement, $request->user(), $request->validated('reason'));
+        return back()->with('status', 'The agreement and task were cancelled.');
+    }
+
+    public function adminShow(Agreement $agreement): Response
+    {
+        $agreement->load([
+            'task:id,title,budget,status,work_mode,workplace_name,workplace_address',
+            'poster:id,name,user_type,organization_name', 'student:id,name,user_type,affiliation',
+            'currentVersion.proposer:id,name', 'versions.proposer:id,name', 'versions.confirmations.user:id,name', 'messages.user:id,name',
+        ]);
+
+        return Inertia::render('admin/agreements/show', [
+            ...$this->present($agreement),
+            'notice' => 'This agreement records what the poster and student agreed. It is not a legal contract. TaskMate does not process, hold, or guarantee payment. Payment is made directly between the two of you.',
+        ]);
+    }
+
+    private function present(Agreement $agreement): array
+    {
+        $version = fn (AgreementVersion $item): array => [
+            'id' => $item->id,
+            'versionNumber' => $item->version_number,
+            'proposerId' => $item->proposed_by,
+            'proposerName' => $item->proposer->name,
+            'deliverables' => $item->deliverables,
+            'terms' => $item->terms,
+            'finalAmount' => $item->final_amount,
+            'startDate' => $item->start_date?->toDateString(),
+            'dueDate' => $item->due_date?->toDateString(),
+            'workMode' => config('taskmate.work_modes.'.$item->work_mode, $item->work_mode),
+            'workplaceName' => $item->workplace_name,
+            'workplaceAddress' => $item->workplace_address,
+            'paymentArrangement' => $item->payment_arrangement,
+            'comment' => $item->comment,
+            'createdAt' => $item->created_at?->toDateTimeString(),
+            'confirmations' => $item->confirmations->map(fn ($confirmation) => [
+                'userId' => $confirmation->user_id,
+                'userName' => $confirmation->user->name,
+                'confirmedAt' => $confirmation->confirmed_at?->toDateTimeString(),
+            ])->values(),
+        ];
+        $task = $agreement->task;
+
+        return [
+            'agreement' => [
+                'id' => $agreement->id,
+                'status' => $agreement->status->value,
+                'statusLabel' => $agreement->status->label(),
+                'lockedAt' => $agreement->locked_at?->toDateTimeString(),
+                'cancelledAt' => $agreement->cancelled_at?->toDateTimeString(),
+                'cancelledBy' => $agreement->cancelled_by,
+                'cancellationReason' => $agreement->cancellation_reason,
+                'recordReference' => $agreement->status === AgreementStatus::Agreed ? $agreement->currentVersion->content_hash : null,
+                'task' => ['id' => $task->id, 'title' => $task->title, 'budget' => $task->budget, 'status' => $task->status->value],
+                'poster' => ['id' => $agreement->poster_id, 'name' => $agreement->poster->isOrganization() ? $agreement->poster->organization_name : $agreement->poster->name],
+                'student' => ['id' => $agreement->student_id, 'name' => $agreement->student->name],
+                'currentVersion' => $agreement->currentVersion ? $version($agreement->currentVersion) : null,
+                'versions' => $agreement->versions->map($version)->values(),
+                'messages' => $agreement->messages->map(fn ($message) => ['id' => $message->id, 'userId' => $message->user_id, 'userName' => $message->user->name, 'body' => $message->body, 'createdAt' => $message->created_at?->toDateTimeString()])->values(),
+            ],
+        ];
+    }
+
+    private function taskSummary(Task $task): array
+    {
+        return ['id' => $task->id, 'title' => $task->title, 'budget' => $task->budget, 'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode), 'workplaceName' => $task->workplace_name, 'workplaceAddress' => $task->workplace_address];
+    }
+}

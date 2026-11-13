@@ -23,4 +23,9 @@ class ApplicationFactory extends Factory
             'status' => ApplicationStatus::Pending,
         ];
     }
+
+    public function accepted(): static
+    {
+        return $this->state(fn () => ['status' => ApplicationStatus::Accepted, 'responded_at' => now()]);
+    }
 }

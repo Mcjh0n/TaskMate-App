@@ -130,4 +130,9 @@ return [
     'applications' => [
         'message_max_length' => 1000,
     ],
+
+    'agreement' => [
+        'terms_max_length' => 3000,
+        // Required terms fields and payment-arrangement options are provisional and must be confirmed by the team.
+    ],
 ];

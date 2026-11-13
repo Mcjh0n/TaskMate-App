@@ -7,6 +7,7 @@ use Database\Factories\ApplicationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /** @property ApplicationStatus $status @property Carbon|null $responded_at */
@@ -34,5 +35,10 @@ class Application extends Model
     public function applicant(): BelongsTo
     {
         return $this->belongsTo(User::class, 'applicant_id');
+    }
+
+    public function agreement(): HasOne
+    {
+        return $this->hasOne(Agreement::class);
     }
 }

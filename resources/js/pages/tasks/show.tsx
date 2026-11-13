@@ -4,6 +4,7 @@ import { TaskStatusBadge } from '@/components/task-status-badge';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
 import { VerificationStatusBadge } from '@/components/verification-status-badge';
 import taskApplications from '@/routes/tasks/applications';
+import agreements from '@/routes/agreements';
 import { edit, mine, cancel } from '@/routes/tasks';
 
 type Applicant = {
@@ -19,9 +20,9 @@ type Task = {
     privateMeetingRequired: boolean; deadline: string | null; reviewNote: string | null; createdAt: string | null;
     hasActiveApplications: boolean; applicantsCount: number;
 };
-type Props = { task: Task; statusLabel: string; canEdit: boolean; canCancel: boolean; status?: string | null; applicants: Applicant[] };
+type Props = { task: Task; statusLabel: string; canEdit: boolean; canCancel: boolean; status?: string | null; applicants: Applicant[]; agreement: { id: number; status: string; statusLabel: string } | null; canProposeAgreement: boolean };
 
-export default function ShowTask({ task, statusLabel, canEdit, canCancel, status, applicants }: Props) {
+export default function ShowTask({ task, statusLabel, canEdit, canCancel, status, applicants, agreement, canProposeAgreement }: Props) {
     return (
         <>
             <Head title={task.title} />
@@ -56,6 +57,8 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, status
                     <p className="text-sm text-muted-foreground">TaskMate records agreements and payment status only. Payments are made directly between users. TaskMate does not hold, process, or guarantee payment.</p>
                 </section>
                 {task.reviewNote && <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">Review note: {task.reviewNote}</div>}
+                {agreement && <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-5"><div><h2 className="font-semibold">Agreement</h2><p className="text-sm">Status: {agreement.statusLabel}</p></div><Button asChild><Link href={agreements.show(agreement.id)}>View agreement</Link></Button></section>}
+                {canProposeAgreement && <Button asChild><Link href={agreements.create(task.id)}>Propose agreement</Link></Button>}
                 {applicants.length > 0 && <section className="space-y-4 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Applicants ({applicants.length})</h2>
                     {applicants.map((application) => <article key={application.id} className="space-y-3 border-t pt-4">

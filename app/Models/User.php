@@ -109,6 +109,16 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->hasMany(Application::class, 'applicant_id');
     }
 
+    public function postedAgreements(): HasMany
+    {
+        return $this->hasMany(Agreement::class, 'poster_id');
+    }
+
+    public function studentAgreements(): HasMany
+    {
+        return $this->hasMany(Agreement::class, 'student_id');
+    }
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasTeams, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
 

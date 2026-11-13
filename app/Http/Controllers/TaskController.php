@@ -49,6 +49,7 @@ class TaskController extends Controller
             ->through(fn (Task $task) => [
                 ...$this->summary($task),
                 'applicantsCount' => $task->applications()->count(),
+                'canCancel' => $request->user()->can('cancel', $task),
             ]);
 
         return Inertia::render('tasks/mine', [
@@ -86,6 +87,15 @@ class TaskController extends Controller
             'canCancel' => $request->user()->can('cancel', $task),
             'status' => $request->session()->get('status'),
             'applicants' => $applicants,
+            'agreement' => $task->agreement ? [
+                'id' => $task->agreement->id,
+                'status' => $task->agreement->status->value,
+                'statusLabel' => $task->agreement->status->label(),
+            ] : null,
+            'canProposeAgreement' => $task->poster_id === $request->user()->id
+                && $task->status === TaskStatus::Assigned
+                && $task->applications()->where('status', ApplicationStatus::Accepted->value)->count() === 1
+                && ! $task->agreement()->exists(),
         ]);
     }
 

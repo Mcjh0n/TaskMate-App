@@ -44,4 +44,9 @@ class TaskFactory extends Factory
     {
         return $this->state(fn () => ['status' => TaskStatus::Approved]);
     }
+
+    public function assigned(): static
+    {
+        return $this->state(fn () => ['status' => TaskStatus::Assigned]);
+    }
 }
