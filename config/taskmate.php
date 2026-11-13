@@ -155,4 +155,27 @@ return [
         'non_payment_wait_days' => 3,
         'statement_max_length' => 3000,
     ],
+
+    'ratings' => [
+        // PROVISIONAL: rating visibility, moderation, and appeals are not decided by the team.
+        'dimensions' => [
+            'poster_to_student' => [
+                'work_quality' => 'Work quality',
+                'reliability' => 'Reliability',
+                'communication' => 'Communication',
+                'professionalism' => 'Professionalism',
+                'timeliness' => 'Timeliness',
+            ],
+            'student_to_poster' => [
+                'job_description_accuracy' => 'Job description accuracy',
+                'reliability' => 'Reliability',
+                'communication' => 'Communication',
+                'professionalism' => 'Professionalism',
+            ],
+        ],
+        'window_days' => 30,
+        'visibility' => 'after_both',
+        'min_count_for_average' => 3,
+        'comment_max_length' => 1000,
+    ],
 ];

@@ -13,9 +13,10 @@ type Props = {
     status?: string | null;
     verificationNote?: string | null;
     verifiedAt?: string | null;
+    ratingsWaiting?: { id: number; taskTitle: string; daysLeft: number }[];
 };
 
-export default function Dashboard({ pendingInvitations = [], status, verificationNote, verifiedAt }: Props) {
+export default function Dashboard({ pendingInvitations = [], status, verificationNote, verifiedAt, ratingsWaiting = [] }: Props) {
     const { auth } = usePage().props;
     const [showInvitations, setShowInvitations] = useState(
         pendingInvitations.length > 0,
@@ -68,6 +69,7 @@ export default function Dashboard({ pendingInvitations = [], status, verificatio
                     )}
                 </div>
                 <SafetyNotice />
+                {ratingsWaiting.length > 0 && <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Ratings waiting for you</h2>{ratingsWaiting.map((rating) => <div key={rating.id} className="flex flex-wrap items-center justify-between gap-3 border-t pt-3"><div><p className="font-medium">{rating.taskTitle}</p><p className="text-sm text-muted-foreground">{rating.daysLeft} day{rating.daysLeft === 1 ? '' : 's'} left</p></div><Link className="text-sm underline" href={`/agreements/${rating.id}/rate`}>Rate your experience</Link></div>)}</section>}
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                         <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />

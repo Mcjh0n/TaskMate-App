@@ -52,7 +52,7 @@ class AdminUsersController extends Controller
 
     public function show(User $user): Response
     {
-        $user->load(['adminActions.admin:id,name', 'verifiedBy:id,name']);
+        $user->load(['adminActions.admin:id,name', 'verifiedBy:id,name', 'ratingsReceived.task:id,title', 'ratingsReceived.rater:id,name', 'ratingsReceived.scores', 'ratingsGiven.task:id,title', 'ratingsGiven.ratee:id,name', 'ratingsGiven.scores']);
 
         return Inertia::render('admin/users/show', [
             'user' => [
@@ -82,6 +82,24 @@ class AdminUsersController extends Controller
                     'note' => $action->note,
                     'createdAt' => $action->created_at?->toDateTimeString(),
                 ])->values(),
+            'ratingsReceived' => $user->ratingsReceived->map(fn ($rating) => $this->ratingRecord($rating, $rating->rater->name))->values(),
+            'ratingsGiven' => $user->ratingsGiven->map(fn ($rating) => $this->ratingRecord($rating, $rating->ratee->name))->values(),
         ]);
+    }
+
+    private function ratingRecord($rating, string $otherParty): array
+    {
+        return [
+            'id' => $rating->id,
+            'direction' => $rating->direction->value,
+            'overall' => $rating->overall_experience,
+            'comment' => $rating->comment,
+            'taskTitle' => $rating->task->title,
+            'otherParty' => $otherParty,
+            'hidden' => $rating->is_hidden,
+            'hiddenReason' => $rating->hidden_reason,
+            'scores' => $rating->scores->map(fn ($score) => ['dimension' => $score->dimension, 'score' => $score->score])->values(),
+            'date' => $rating->created_at?->toDateTimeString(),
+        ];
     }
 }

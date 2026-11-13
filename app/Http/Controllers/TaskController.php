@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\RatingSummary;
 
 class TaskController extends Controller
 {
@@ -52,6 +53,8 @@ class TaskController extends Controller
                 'canCancel' => $request->user()->can('cancel', $task),
                 'paymentStatus' => $task->agreement?->paymentStatus()->value,
                 'paymentStatusLabel' => $task->agreement?->paymentStatus()->label(),
+                'agreementId' => $task->agreement?->id,
+                'needsRating' => $task->status === TaskStatus::Completed && $task->agreement?->ratings()->where('rater_id', $request->user()->id)->doesntExist(),
             ]);
 
         return Inertia::render('tasks/mine', [
@@ -60,7 +63,7 @@ class TaskController extends Controller
         ]);
     }
 
-    public function show(Request $request, Task $task): Response
+    public function show(Request $request, Task $task, RatingSummary $ratingSummaries): Response
     {
         Gate::authorize('view', $task);
 
@@ -73,6 +76,8 @@ class TaskController extends Controller
                     'type' => config('taskmate.user_types.'.$application->applicant->user_type->value),
                     'affiliation' => $application->applicant->affiliation,
                     'verificationStatus' => $application->applicant->verification_status->value,
+                    'profileUrl' => route('users.show', $application->applicant),
+                    'ratingSummary' => $ratingSummaries->forUser($application->applicant),
                 ],
                 'message' => $application->message,
                 'proposedAmount' => $application->proposed_amount,
@@ -95,6 +100,7 @@ class TaskController extends Controller
                 'statusLabel' => $task->agreement->status->label(),
                 'paymentStatus' => $task->agreement->paymentStatus()->value,
                 'paymentStatusLabel' => $task->agreement->paymentStatus()->label(),
+                'needsRating' => $task->status === TaskStatus::Completed && $task->agreement->ratings()->where('rater_id', $request->user()->id)->doesntExist(),
             ] : null,
             'canProposeAgreement' => $task->poster_id === $request->user()->id
                 && $task->status === TaskStatus::Assigned

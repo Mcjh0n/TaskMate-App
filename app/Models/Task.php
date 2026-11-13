@@ -96,4 +96,9 @@ class Task extends Model
     {
         return $this->morphMany(AdminAction::class, 'subject');
     }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
 }

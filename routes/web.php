@@ -13,6 +13,9 @@ use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\AgreementController;
 use App\Http\Controllers\CompletionPaymentController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\RatingController;
+use App\Http\Controllers\UserProfileController;
+use App\Http\Controllers\Admin\AdminRatingsController;
 use App\Http\Controllers\Admin\AdminReportsController;
 use App\Http\Controllers\Admin\AdminReportDecisionController;
 use App\Http\Controllers\Teams\TeamInvitationController;
@@ -47,6 +50,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/reports', [AdminReportsController::class, 'index'])->name('reports.index');
     Route::get('/reports/{report}', [AdminReportsController::class, 'show'])->name('reports.show');
     Route::post('/reports/{report}/decision', AdminReportDecisionController::class)->name('reports.decision');
+    Route::get('/ratings', [AdminRatingsController::class, 'index'])->name('ratings.index');
+    Route::get('/ratings/{rating}', [AdminRatingsController::class, 'show'])->name('ratings.show');
+    Route::post('/ratings/{rating}/moderate', [AdminRatingsController::class, 'moderate'])->name('ratings.moderate');
 });
 
 Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
@@ -63,6 +69,8 @@ Route::middleware(['auth', 'account.verified'])->group(function () {
     Route::get('/tasks/{task}/agreement', [AgreementController::class, 'create'])->name('agreements.create');
     Route::post('/tasks/{task}/agreement', [AgreementController::class, 'store'])->name('agreements.store');
     Route::get('/agreements/{agreement}', [AgreementController::class, 'show'])->name('agreements.show');
+    Route::get('/agreements/{agreement}/rate', [RatingController::class, 'create'])->name('agreements.rate');
+    Route::post('/agreements/{agreement}/rate', [RatingController::class, 'store'])->name('agreements.rate.store');
     Route::post('/agreements/{agreement}/versions', [AgreementController::class, 'revise'])->name('agreements.revise');
     Route::post('/agreements/{agreement}/confirm', [AgreementController::class, 'confirm'])->name('agreements.confirm');
     Route::post('/agreements/{agreement}/send-back', [AgreementController::class, 'sendBack'])->name('agreements.send-back');
@@ -92,5 +100,7 @@ Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {
     Route::post('/tasks/{task}/applications/{application}/accept', [ApplicationController::class, 'accept'])->name('tasks.applications.accept');
     Route::post('/tasks/{task}/applications/{application}/decline', [ApplicationController::class, 'decline'])->name('tasks.applications.decline');
 });
+
+Route::middleware('auth')->get('/users/{user}', [UserProfileController::class, 'show'])->name('users.show');
 
 require __DIR__.'/settings.php';

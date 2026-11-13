@@ -7,10 +7,11 @@ import { PaymentStatusBadge } from '@/components/payment-status-badge';
 import taskApplications from '@/routes/tasks/applications';
 import agreements from '@/routes/agreements';
 import { edit, mine, cancel } from '@/routes/tasks';
+import { RatingSummary } from '@/components/rating-summary';
 
 type Applicant = {
     id: number;
-    applicant: { id: number; name: string; type: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested' };
+    applicant: { id: number; name: string; type: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
     message: string; proposedAmount: string | null; status: string; statusLabel: string; appliedAt: string | null;
 };
 type Task = {
@@ -63,7 +64,7 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, status
                 {applicants.length > 0 && <section className="space-y-4 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Applicants ({applicants.length})</h2>
                     {applicants.map((application) => <article key={application.id} className="space-y-3 border-t pt-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-medium">{application.applicant.name}</h3><p className="text-sm text-muted-foreground">{application.applicant.type}{application.applicant.affiliation ? ` · ${application.applicant.affiliation}` : ''}</p></div><VerificationStatusBadge status={application.applicant.verificationStatus} /></div>
+                        <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-medium"><Link className="underline" href={application.applicant.profileUrl}>{application.applicant.name}</Link></h3><p className="text-sm text-muted-foreground">{application.applicant.type}{application.applicant.affiliation ? ` · ${application.applicant.affiliation}` : ''}</p><RatingSummary summary={application.applicant.ratingSummary} /></div><VerificationStatusBadge status={application.applicant.verificationStatus} /></div>
                         <p className="whitespace-pre-wrap text-sm">{application.message}</p>
                         <p className="text-sm">Suggested amount: {application.proposedAmount ? `₱${Number(application.proposedAmount).toLocaleString()}` : 'No suggestion'} · Applied {application.appliedAt ? new Date(application.appliedAt).toLocaleDateString() : '—'}</p>
                         <div className="flex items-center gap-2"><ApplicationStatusBadge status={application.status} label={application.statusLabel} />{application.status === 'pending' && task.status === 'approved' && <><Form {...taskApplications.accept.form({ task: task.id, application: application.id })}><Button size="sm" type="submit">Accept</Button></Form><Form {...taskApplications.decline.form({ task: task.id, application: application.id })}><Button size="sm" variant="outline" type="submit">Decline</Button></Form></>}</div>

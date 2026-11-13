@@ -9,6 +9,7 @@ use App\Enums\PaymentEventType;
 use App\Models\Agreement;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\RatingVisibility;
 
 class AgreementPolicy
 {
@@ -68,6 +69,16 @@ class AgreementPolicy
     public function reportNonPayment(User $user, Agreement $agreement): bool
     {
         return $agreement->student_id === $user->id && $agreement->status === AgreementStatus::Agreed;
+    }
+
+    public function rate(User $user, Agreement $agreement): bool
+    {
+        return ! $user->isAdmin()
+            && $agreement->status === AgreementStatus::Agreed
+            && $agreement->task->status === TaskStatus::Completed
+            && $this->isParty($user, $agreement)
+            && ! $agreement->ratings()->where('rater_id', $user->id)->exists()
+            && ! app(RatingVisibility::class)->windowClosed($agreement);
     }
 
     private function isParty(User $user, Agreement $agreement): bool

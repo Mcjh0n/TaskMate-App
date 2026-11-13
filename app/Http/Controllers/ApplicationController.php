@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 use Illuminate\Validation\ValidationException;
+use App\Services\RatingWorkflow;
+use App\Services\RatingSummary;
 
 class ApplicationController extends Controller
 {
@@ -56,6 +58,8 @@ class ApplicationController extends Controller
                 'paymentStatus' => $application->agreement?->paymentStatus()->value,
                 'paymentStatusLabel' => $application->agreement?->paymentStatus()->label(),
                 'appliedAt' => $application->created_at?->toDateTimeString(),
+                'needsRating' => $application->task->status === TaskStatus::Completed && $application->agreement?->ratings()->where('rater_id', $request->user()->id)->doesntExist(),
+                'agreementId' => $application->agreement?->id,
             ]);
 
         return Inertia::render('applications/index', [

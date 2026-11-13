@@ -8,6 +8,7 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\RatingSummary;
 
 class BrowseController extends Controller
 {
@@ -48,7 +49,7 @@ class BrowseController extends Controller
         ]);
     }
 
-    public function show(Request $request, Task $task): Response
+    public function show(Request $request, Task $task, RatingSummary $ratingSummaries): Response
     {
         abort_unless($task->status === TaskStatus::Approved, 404);
         abort_if($task->deadline !== null && $task->deadline->toDateString() < today()->toDateString(), 404);
@@ -57,7 +58,7 @@ class BrowseController extends Controller
 
         return Inertia::render('browse/show', [
             'task' => $this->details($task),
-            'poster' => $this->poster($task),
+            'poster' => [...$this->poster($task), 'profileUrl' => route('users.show', $task->poster), 'ratingSummary' => $ratingSummaries->forUser($task->poster)],
             'application' => $application ? [
                 'status' => $application->status->value,
                 'statusLabel' => $application->status->label(),
@@ -71,14 +72,14 @@ class BrowseController extends Controller
         ]);
     }
 
-    public function applicationTask(Request $request, \App\Models\Application $application): Response
+    public function applicationTask(Request $request, \App\Models\Application $application, RatingSummary $ratingSummaries): Response
     {
         abort_unless($application->applicant_id === $request->user()->id, 404);
         $task = $application->task()->with('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at')->firstOrFail();
 
         return Inertia::render('browse/show', [
             'task' => $this->details($task),
-            'poster' => $this->poster($task),
+            'poster' => [...$this->poster($task), 'profileUrl' => route('users.show', $task->poster), 'ratingSummary' => $ratingSummaries->forUser($task->poster)],
             'application' => [
                 'status' => $application->status->value,
                 'statusLabel' => $application->status->label(),

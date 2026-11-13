@@ -40,6 +40,7 @@ class Agreement extends Model
     public function completion(): HasOne { return $this->hasOne(TaskCompletion::class); }
     public function paymentEvents(): HasMany { return $this->hasMany(PaymentEvent::class)->orderBy('id'); }
     public function reports(): HasMany { return $this->hasMany(Report::class); }
+    public function ratings(): HasMany { return $this->hasMany(Rating::class); }
 
     public function paymentStatus(): PaymentStatus
     {

@@ -8,6 +8,7 @@ import { VerificationStatusBadge } from '@/components/verification-status-badge'
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
 import browse from '@/routes/browse';
 import applications from '@/routes/applications';
+import { RatingSummary } from '@/components/rating-summary';
 
 type Task = {
     id: number; title: string; category: string; description: string; requiredActivities: string; deliverables: string;
@@ -16,7 +17,7 @@ type Task = {
     physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean; hazardDescription: string | null;
     privateMeetingRequired: boolean;
 };
-type Poster = { displayName: string; accountType: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; memberSince: string | null };
+type Poster = { displayName: string; accountType: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; memberSince: string | null; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
 type Application = { status: string; statusLabel: string; appliedAt: string | null };
 type Props = { task: Task; poster: Poster; application: Application | null; canApply?: boolean; limitedView?: boolean; currentTaskStatus?: string; status?: string | null; messageMaxLength: number };
 
@@ -52,10 +53,11 @@ export default function BrowseTaskDetail({ task, poster, application, canApply =
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">About the poster</h2>
-                    <p className="font-medium">{poster.displayName}</p>
+                    <p className="font-medium"><Link href={poster.profileUrl} className="underline">{poster.displayName}</Link></p>
                     <p className="text-sm">{poster.accountType}{poster.affiliation ? ` · ${poster.affiliation}` : ''}</p>
                     <VerificationStatusBadge status={poster.verificationStatus} />
                     <p className="text-sm text-muted-foreground">Member since {poster.memberSince ? new Date(poster.memberSince).toLocaleDateString() : '—'}</p>
+                    <RatingSummary summary={poster.ratingSummary} />
                 </section>
                 <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">Verification and screening help inform your decision but do not guarantee the safety of a person or task. Do not agree to anything that makes you uncomfortable, and report concerns.</div>
                 {application ? (

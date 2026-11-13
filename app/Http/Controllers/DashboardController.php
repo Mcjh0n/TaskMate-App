@@ -7,10 +7,11 @@ use App\Enums\VerificationStatus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\RatingWorkflow;
 
 class DashboardController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, RatingWorkflow $ratings): Response
     {
         $email = strtolower($request->user()->email);
 
@@ -39,6 +40,7 @@ class DashboardController extends Controller
                 ? $request->user()->verification_note
                 : null,
             'verifiedAt' => $request->user()->verified_at?->toDateTimeString(),
+            'ratingsWaiting' => $request->user()->canApply() || $request->user()->canPost() ? $ratings->pendingFor($request->user()) : [],
         ]);
     }
 }

@@ -17,6 +17,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\ReportStatus;
 use App\Services\ReportWorkflow;
 use App\Services\AgreementWorkflow;
+use App\Services\RatingVisibility;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -166,6 +167,35 @@ class AgreementController extends Controller
                 'messages' => $agreement->messages->map(fn ($message) => ['id' => $message->id, 'userId' => $message->user_id, 'userName' => $message->user->name, 'body' => $message->body, 'createdAt' => $message->created_at?->toDateTimeString()])->values(),
             ],
             'completionPayment' => $this->completionPaymentData($agreement, $viewer),
+            'ratings' => $viewer ? $this->ratingData($agreement, $viewer) : null,
+        ];
+    }
+
+    private function ratingData(Agreement $agreement, \App\Models\User $viewer): array
+    {
+        $visibility = app(RatingVisibility::class);
+        $own = $agreement->ratings()->where('rater_id', $viewer->id)->with('scores')->first();
+        $otherId = $viewer->id === $agreement->poster_id ? $agreement->student_id : $agreement->poster_id;
+        $other = $agreement->ratings()->where('rater_id', $otherId)->with('scores')->first();
+        $otherVisible = $other && $visibility->isVisibleToOthers($other) ? $other : null;
+        $until = $agreement->task->completion?->completed_at?->copy()->addDays((int) config('taskmate.ratings.window_days', 30));
+        return [
+            'canRate' => auth()->user()->can('rate', $agreement),
+            'rateUrl' => route('agreements.rate', $agreement),
+            'windowDate' => $until?->toDateTimeString(),
+            'own' => $own ? [
+                'overall' => $own->overall_experience,
+                'comment' => $own->comment,
+                'scores' => $own->scores->map(fn ($score) => ['dimension' => $score->dimension, 'label' => config('taskmate.ratings.dimensions.'.$own->direction->value.'.'.$score->dimension, $score->dimension), 'score' => $score->score])->values(),
+            ] : null,
+            'other' => $otherVisible ? [
+                'overall' => $otherVisible->overall_experience,
+                'comment' => $otherVisible->comment,
+                'raterName' => $otherVisible->rater->isOrganization() ? $otherVisible->rater->organization_name : $otherVisible->rater->name,
+                'scores' => $otherVisible->scores->map(fn ($score) => ['dimension' => $score->dimension, 'label' => config('taskmate.ratings.dimensions.'.$otherVisible->direction->value.'.'.$score->dimension, $score->dimension), 'score' => $score->score])->values(),
+            ] : null,
+            'waiting' => $otherVisible === null && $agreement->task->status === TaskStatus::Completed,
+            'visibility' => config('taskmate.ratings.visibility', 'after_both'),
         ];
     }
 

@@ -3,6 +3,7 @@ import AdminLayout from '@/layouts/admin-layout';
 import InputError from '@/components/input-error';
 import { VerificationStatusBadge } from '@/components/verification-status-badge';
 import { Textarea } from '@/components/ui/textarea';
+import { ratingNotice } from '@/components/rating-summary';
 import admin from '@/routes/admin';
 
 type Account = {
@@ -25,6 +26,7 @@ type Account = {
 };
 
 type HistoryItem = { id: number; action: string; actorName: string | null; note: string | null; createdAt: string | null };
+type UserRating = { id: number; direction: string; overall: number; comment: string | null; taskTitle: string; otherParty: string; hidden: boolean; hiddenReason: string | null; scores: { dimension: string; score: number }[]; date: string | null };
 
 function DecisionForm({ userId, decision, label, needsNote = false }: { userId: number; decision: string; label: string; needsNote?: boolean }) {
     return (
@@ -46,7 +48,7 @@ function DecisionForm({ userId, decision, label, needsNote = false }: { userId: 
     );
 }
 
-export default function AdminUserShow({ user, history }: { user: Account; history: HistoryItem[] }) {
+export default function AdminUserShow({ user, history, ratingsReceived = [], ratingsGiven = [] }: { user: Account; history: HistoryItem[]; ratingsReceived?: UserRating[]; ratingsGiven?: UserRating[] }) {
     return (
         <>
             <Head title={`Review ${user.name}`} />
@@ -106,6 +108,7 @@ export default function AdminUserShow({ user, history }: { user: Account; histor
                         </article>
                     )) : <p className="rounded-lg border p-4 text-sm text-muted-foreground">No account actions have been recorded.</p>}
                 </section>
+                <section className="space-y-4"><h2 className="text-lg font-semibold">Ratings received and given</h2><p className="rounded-lg border p-4 text-sm">{ratingNotice}</p>{[['Received', ratingsReceived], ['Given', ratingsGiven]].map(([title, records]) => <div key={title as string} className="space-y-2"><h3 className="font-medium">{title as string}</h3>{(records as UserRating[]).length ? (records as UserRating[]).map((rating) => <article key={rating.id} className="rounded-lg border p-4 text-sm"><p className="font-medium">{rating.taskTitle} · {rating.overall}/5 · {rating.direction.replaceAll('_', ' ')}</p><p>{title === 'Received' ? 'From' : 'To'} {rating.otherParty} · {rating.date ?? '—'}{rating.hidden ? ' · Hidden' : ''}</p>{rating.comment && <p className="mt-2 whitespace-pre-wrap">{rating.comment}</p>}{rating.hiddenReason && <p className="mt-1 text-muted-foreground">Hide reason: {rating.hiddenReason}</p>}<p className="mt-2">{rating.scores.map((score) => `${score.dimension}: ${score.score}/5`).join(' · ')}</p></article>) : <p className="rounded border p-3 text-sm text-muted-foreground">No ratings {String(title).toLowerCase()}.</p>}</div>)}</section>
             </div>
         </>
     );
