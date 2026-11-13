@@ -1,0 +1,123 @@
+import { Form, Head } from '@inertiajs/react';
+import AdminLayout from '@/layouts/admin-layout';
+import InputError from '@/components/input-error';
+import { VerificationStatusBadge } from '@/components/verification-status-badge';
+import { Textarea } from '@/components/ui/textarea';
+import admin from '@/routes/admin';
+
+type Account = {
+    id: number;
+    name: string;
+    email: string;
+    userType: string;
+    userTypeLabel: string;
+    verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested';
+    idNumber: string | null;
+    affiliation: string | null;
+    organizationName: string | null;
+    position: string | null;
+    supportingInfo: string | null;
+    verificationNote: string | null;
+    registeredAt: string | null;
+    verifiedAt: string | null;
+    verifiedBy: string | null;
+    isSelf: boolean;
+};
+
+type HistoryItem = { id: number; action: string; actorName: string | null; note: string | null; createdAt: string | null };
+
+function DecisionForm({ userId, decision, label, needsNote = false }: { userId: number; decision: string; label: string; needsNote?: boolean }) {
+    return (
+        <Form {...admin.users.verification.form(userId)} className="space-y-2 rounded-lg border p-4">
+            {({ processing, errors }) => (
+                <>
+                    <input type="hidden" name="decision" value={decision} />
+                    {needsNote && (
+                        <>
+                            <label className="block text-sm font-medium" htmlFor={`note-${decision}`}>Note for the account holder</label>
+                            <Textarea id={`note-${decision}`} name="note" required maxLength={2000} placeholder="Explain the decision in clear terms." />
+                            <InputError message={errors.note} />
+                        </>
+                    )}
+                    <button disabled={processing} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50" type="submit">{label}</button>
+                </>
+            )}
+        </Form>
+    );
+}
+
+export default function AdminUserShow({ user, history }: { user: Account; history: HistoryItem[] }) {
+    return (
+        <>
+            <Head title={`Review ${user.name}`} />
+            <div className="space-y-8">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <p className="text-sm text-muted-foreground">Account review</p>
+                        <h1 className="mt-1 text-2xl font-semibold">{user.name}</h1>
+                        <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                    <VerificationStatusBadge status={user.verificationStatus} />
+                </div>
+
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+                    These checks are based on information the user submitted. They do not guarantee the person&apos;s future behavior or the safety of a task.
+                </div>
+
+                <section className="space-y-4">
+                    <h2 className="text-lg font-semibold">Submitted details</h2>
+                    <dl className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
+                        <Detail label="Account type" value={user.userTypeLabel} />
+                        <Detail label="Email" value={user.email} />
+                        {user.userType !== 'organization' && <Detail label={user.userType === 'student' ? 'Student ID number' : 'Employee ID number'} value={user.idNumber} />}
+                        {user.userType !== 'organization' && <Detail label="Affiliation" value={user.affiliation} />}
+                        {user.userType === 'organization' && <Detail label="Organization name" value={user.organizationName} />}
+                        {user.userType === 'organization' && <Detail label="Representative position" value={user.position} />}
+                        {user.userType === 'organization' && <div className="sm:col-span-2"><Detail label="Organization description" value={user.supportingInfo} /></div>}
+                        <Detail label="Registered" value={user.registeredAt} />
+                        <Detail label="Verified" value={user.verifiedAt ? `${user.verifiedAt}${user.verifiedBy ? ` by ${user.verifiedBy}` : ''}` : null} />
+                        <div className="sm:col-span-2"><Detail label="Current verification note" value={user.verificationNote} /></div>
+                    </dl>
+                </section>
+
+                {user.isSelf ? (
+                    <p className="rounded-lg border p-4 text-sm">You cannot change your own account verification.</p>
+                ) : (
+                    <section className="space-y-4">
+                        <h2 className="text-lg font-semibold">Review decision</h2>
+                        <div className="grid gap-3 md:grid-cols-3">
+                            <DecisionForm userId={user.id} decision="verified" label="Approve account" />
+                            <DecisionForm userId={user.id} decision="rejected" label="Reject account" needsNote />
+                            <DecisionForm userId={user.id} decision="more_info_requested" label="Request more information" needsNote />
+                        </div>
+                    </section>
+                )}
+
+                <section className="space-y-3">
+                    <h2 className="text-lg font-semibold">Account history</h2>
+                    {history.length ? history.map((item) => (
+                        <article key={item.id} className="rounded-lg border p-4 text-sm">
+                            <div className="flex flex-wrap justify-between gap-2">
+                                <p className="font-medium">{item.action.replaceAll('_', ' ')}</p>
+                                <p className="text-muted-foreground">{item.createdAt ?? '—'}</p>
+                            </div>
+                            <p className="mt-1 text-muted-foreground">By {item.actorName ?? 'an administrator'}</p>
+                            {item.note && <p className="mt-2 whitespace-pre-wrap">{item.note}</p>}
+                        </article>
+                    )) : <p className="rounded-lg border p-4 text-sm text-muted-foreground">No account actions have been recorded.</p>}
+                </section>
+            </div>
+        </>
+    );
+}
+
+function Detail({ label, value }: { label: string; value: string | null }) {
+    return (
+        <div>
+            <dt className="text-sm text-muted-foreground">{label}</dt>
+            <dd className="mt-1 whitespace-pre-wrap break-words text-sm">{value || 'Not provided'}</dd>
+        </div>
+    );
+}
+
+AdminUserShow.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

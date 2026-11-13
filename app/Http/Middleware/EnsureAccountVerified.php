@@ -10,8 +10,8 @@ class EnsureAccountVerified
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->user()?->isVerified()) {
-            return to_route('dashboard')->with('status', 'Your account is awaiting verification by an administrator.');
+        if (config('taskmate.require_verification', true) && ! $request->user()?->isVerified()) {
+            return to_route('dashboard')->with('status', 'Your account must be verified before you can continue.');
         }
 
         return $next($request);

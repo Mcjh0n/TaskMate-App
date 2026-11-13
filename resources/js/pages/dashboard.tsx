@@ -1,18 +1,21 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import PendingInvitationsModal from '@/components/pending-invitations-modal';
 import { SafetyNotice } from '@/components/safety-notice';
 import { VerificationStatusBadge } from '@/components/verification-status-badge';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { dashboard } from '@/routes';
+import verificationDetails from '@/routes/verification/details';
 import type { DashboardInvitation } from '@/types';
 
 type Props = {
     pendingInvitations?: DashboardInvitation[];
     status?: string | null;
+    verificationNote?: string | null;
+    verifiedAt?: string | null;
 };
 
-export default function Dashboard({ pendingInvitations = [], status }: Props) {
+export default function Dashboard({ pendingInvitations = [], status, verificationNote, verifiedAt }: Props) {
     const { auth } = usePage().props;
     const [showInvitations, setShowInvitations] = useState(
         pendingInvitations.length > 0,
@@ -36,12 +39,26 @@ export default function Dashboard({ pendingInvitations = [], status }: Props) {
                     <VerificationStatusBadge status={auth.user.verification_status} />
                     {auth.user.verification_status === 'pending' && (
                         <div role="status" className="rounded-lg border px-4 py-3 text-sm">
-                            Your account is awaiting verification by an administrator. Some actions are unavailable until then.
+                            Your account is awaiting review. Some actions are unavailable until then.
+                        </div>
+                    )}
+                    {auth.user.verification_status === 'more_info_requested' && (
+                        <div role="status" className="w-full rounded-lg border border-blue-300 px-4 py-3 text-sm dark:border-blue-800">
+                            <p>The administrator needs more information before completing the review.</p>
+                            {verificationNote && <p className="mt-2">{verificationNote}</p>}
+                            <Link className="mt-3 inline-block underline underline-offset-4" href={verificationDetails.edit()}>Update your submitted details</Link>
                         </div>
                     )}
                     {auth.user.verification_status === 'rejected' && (
-                        <div role="status" className="rounded-lg border border-red-300 px-4 py-3 text-sm text-red-900 dark:border-red-800 dark:text-red-200">
-                            Your account verification was rejected. Some actions are unavailable. Please contact an administrator for help.
+                        <div role="status" className="w-full rounded-lg border border-red-300 px-4 py-3 text-sm text-red-900 dark:border-red-800 dark:text-red-200">
+                            <p>Your account verification was rejected. Please review the note and update your submitted details.</p>
+                            {verificationNote && <p className="mt-2">{verificationNote}</p>}
+                            <Link className="mt-3 inline-block underline underline-offset-4" href={verificationDetails.edit()}>Update your submitted details</Link>
+                        </div>
+                    )}
+                    {auth.user.verification_status === 'verified' && (
+                        <div role="status" className="rounded-lg border border-green-300 px-4 py-3 text-sm text-green-900 dark:border-green-800 dark:text-green-200">
+                            Your account is verified{verifiedAt ? ` as of ${new Date(verifiedAt).toLocaleDateString()}` : ''}.
                         </div>
                     )}
                 </div>

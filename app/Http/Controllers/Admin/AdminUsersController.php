@@ -1,0 +1,87 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Enums\UserType;
+use App\Enums\VerificationStatus;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AdminUsersIndexRequest;
+use App\Models\AdminAction;
+use App\Models\User;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class AdminUsersController extends Controller
+{
+    public function index(AdminUsersIndexRequest $request): Response
+    {
+        $filters = $request->validated();
+        $users = User::query()
+            ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(fn ($query) => $query
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('email', 'like', "%{$search}%")))
+            ->when($filters['user_type'] ?? null, fn ($query, string $type) => $query->where('user_type', $type))
+            ->when($filters['verification_status'] ?? null, fn ($query, string $status) => $query->where('verification_status', $status))
+            ->orderByRaw("CASE verification_status WHEN 'pending' THEN 0 WHEN 'more_info_requested' THEN 1 WHEN 'rejected' THEN 2 ELSE 3 END")
+            ->orderBy('name')
+            ->paginate(15)
+            ->withQueryString()
+            ->through(fn (User $user) => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'userType' => $user->user_type->value,
+                'userTypeLabel' => config('taskmate.user_types.'.$user->user_type->value),
+                'verificationStatus' => $user->verification_status->value,
+                'registeredAt' => $user->created_at?->toDateTimeString(),
+            ]);
+
+        return Inertia::render('admin/users/index', [
+            'users' => $users,
+            'filters' => $filters,
+            'userTypes' => collect(UserType::cases())->map(fn (UserType $type) => [
+                'value' => $type->value,
+                'label' => config('taskmate.user_types.'.$type->value),
+            ])->values(),
+            'verificationStatuses' => collect(VerificationStatus::cases())->map(fn (VerificationStatus $status) => [
+                'value' => $status->value,
+                'label' => str($status->value)->replace('_', ' ')->title()->toString(),
+            ])->values(),
+        ]);
+    }
+
+    public function show(User $user): Response
+    {
+        $user->load(['adminActions.admin:id,name', 'verifiedBy:id,name']);
+
+        return Inertia::render('admin/users/show', [
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'userType' => $user->user_type->value,
+                'userTypeLabel' => config('taskmate.user_types.'.$user->user_type->value),
+                'verificationStatus' => $user->verification_status->value,
+                'idNumber' => $user->id_number,
+                'affiliation' => $user->affiliation,
+                'organizationName' => $user->organization_name,
+                'position' => $user->position,
+                'supportingInfo' => $user->supporting_info,
+                'verificationNote' => $user->verification_note,
+                'registeredAt' => $user->created_at?->toDateTimeString(),
+                'verifiedAt' => $user->verified_at?->toDateTimeString(),
+                'verifiedBy' => $user->verifiedBy?->name,
+                'isSelf' => auth()->id() === $user->id,
+            ],
+            'history' => $user->adminActions
+                ->sortByDesc('created_at')
+                ->map(fn (AdminAction $action) => [
+                    'id' => $action->id,
+                    'action' => $action->action,
+                    'actorName' => $action->admin?->name,
+                    'note' => $action->note,
+                    'createdAt' => $action->created_at?->toDateTimeString(),
+                ])->values(),
+        ]);
+    }
+}

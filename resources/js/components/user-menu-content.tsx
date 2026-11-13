@@ -37,6 +37,13 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+                {user.is_admin && (
+                    <DropdownMenuItem asChild>
+                        <Link className="block w-full cursor-pointer" href="/admin" prefetch onClick={cleanup}>
+                            Admin dashboard
+                        </Link>
+                    </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full cursor-pointer"

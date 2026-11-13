@@ -6,12 +6,7 @@ export type User = {
     email_verified_at: string | null;
     user_type: 'student' | 'faculty_staff' | 'organization';
     is_admin: boolean;
-    verification_status: 'pending' | 'verified' | 'rejected';
-    affiliation: string | null;
-    id_number: string | null;
-    organization_name: string | null;
-    position: string | null;
-    supporting_info: string | null;
+    verification_status: 'pending' | 'verified' | 'rejected' | 'more_info_requested';
     /* @chisel-2fa */
     two_factor_enabled?: boolean;
     /* @end-chisel-2fa */

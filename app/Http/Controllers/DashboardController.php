@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\TeamInvitation;
+use App\Enums\VerificationStatus;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -34,6 +35,10 @@ class DashboardController extends Controller
         return Inertia::render('dashboard', [
             'pendingInvitations' => $pendingInvitations,
             'status' => $request->session()->get('status'),
+            'verificationNote' => in_array($request->user()->verification_status, [VerificationStatus::Rejected, VerificationStatus::MoreInfoRequested], true)
+                ? $request->user()->verification_note
+                : null,
+            'verifiedAt' => $request->user()->verified_at?->toDateTimeString(),
         ]);
     }
 }

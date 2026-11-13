@@ -48,11 +48,11 @@ class CreateNewUser implements CreatesNewUsers
             ...$profileRules,
             'password' => $this->passwordRules(),
             'user_type' => ['required', Rule::in(array_keys(config('taskmate.user_types', [])))],
-            'id_number' => ['required_if:user_type,student,faculty_staff', 'nullable', 'string', 'max:255'],
-            'affiliation' => ['required_if:user_type,student,faculty_staff', 'nullable', 'string', 'max:255'],
-            'organization_name' => ['required_if:user_type,organization', 'nullable', 'string', 'max:255'],
-            'position' => ['required_if:user_type,organization', 'nullable', 'string', 'max:255'],
-            'supporting_info' => ['required_if:user_type,organization', 'nullable', 'string', 'max:1000'],
+            'id_number' => ['required_if:user_type,student,faculty_staff', 'prohibited_unless:user_type,student,faculty_staff', 'nullable', 'string', 'max:255'],
+            'affiliation' => ['required_if:user_type,student,faculty_staff', 'prohibited_unless:user_type,student,faculty_staff', 'nullable', 'string', 'max:255'],
+            'organization_name' => ['required_if:user_type,organization', 'prohibited_unless:user_type,organization', 'nullable', 'string', 'max:255'],
+            'position' => ['required_if:user_type,organization', 'prohibited_unless:user_type,organization', 'nullable', 'string', 'max:255'],
+            'supporting_info' => ['required_if:user_type,organization', 'prohibited_unless:user_type,organization', 'nullable', 'string', 'max:1000'],
         ])->validate();
 
         return DB::transaction(function () use ($input) {

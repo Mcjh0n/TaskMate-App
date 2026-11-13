@@ -18,6 +18,12 @@ import { send } from '@/routes/verification';
 
 type PageProps = {
     auth: Auth;
+    accountDetails: {
+        affiliation?: string | null;
+        organizationName?: string | null;
+        position?: string | null;
+        supportingInfo?: string | null;
+    };
 };
 
 export default function Profile(
@@ -31,7 +37,7 @@ export default function Profile(
     },
     /* @end-chisel-email-verification */
 ) {
-    const { auth } = usePage<PageProps>().props;
+    const { auth, accountDetails } = usePage<PageProps>().props;
     const isOrganization = auth.user.user_type === 'organization';
 
     return (
@@ -79,24 +85,24 @@ export default function Profile(
                                 <>
                                     <div className="grid gap-2">
                                         <Label htmlFor="organization_name">Organization name</Label>
-                                        <Input id="organization_name" name="organization_name" defaultValue={auth.user.organization_name ?? ''} required />
+                                        <Input id="organization_name" name="organization_name" defaultValue={accountDetails.organizationName ?? ''} required />
                                         <InputError message={errors.organization_name} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="position">Your position</Label>
-                                        <Input id="position" name="position" defaultValue={auth.user.position ?? ''} required />
+                                        <Input id="position" name="position" defaultValue={accountDetails.position ?? ''} required />
                                         <InputError message={errors.position} />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="supporting_info">About the organization and why it posts tasks</Label>
-                                        <Textarea id="supporting_info" name="supporting_info" defaultValue={auth.user.supporting_info ?? ''} maxLength={1000} required />
+                                        <Textarea id="supporting_info" name="supporting_info" defaultValue={accountDetails.supportingInfo ?? ''} maxLength={1000} required />
                                         <InputError message={errors.supporting_info} />
                                     </div>
                                 </>
                             ) : (
                                 <div className="grid gap-2">
                                     <Label htmlFor="affiliation">{auth.user.user_type === 'student' ? 'College and program' : 'College or office'}</Label>
-                                    <Input id="affiliation" name="affiliation" defaultValue={auth.user.affiliation ?? ''} required />
+                                    <Input id="affiliation" name="affiliation" defaultValue={accountDetails.affiliation ?? ''} required />
                                     <InputError message={errors.affiliation} />
                                 </div>
                             )}

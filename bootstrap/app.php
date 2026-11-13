@@ -28,6 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\EnsureAdmin::class,
             'account.verified' => \App\Http\Middleware\EnsureAccountVerified::class,
+            'can.post' => \App\Http\Middleware\EnsureCanPost::class,
+            'can.apply' => \App\Http\Middleware\EnsureCanApply::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

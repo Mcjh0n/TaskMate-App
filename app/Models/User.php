@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -67,7 +70,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
     public function canPost(): bool
     {
-        if (! $this->isVerified()) {
+        if ($this->isAdmin() || ! $this->isVerified()) {
             return false;
         }
 
@@ -78,7 +81,22 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 
     public function canApply(): bool
     {
-        return $this->isStudent() && $this->isVerified();
+        return ! $this->isAdmin() && $this->isStudent() && $this->isVerified();
+    }
+
+    public function adminActions(): MorphMany
+    {
+        return $this->morphMany(AdminAction::class, 'subject');
+    }
+
+    public function adminActionsPerformed(): HasMany
+    {
+        return $this->hasMany(AdminAction::class, 'admin_id');
+    }
+
+    public function verifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'verified_by');
     }
     /** @use HasFactory<UserFactory> */
     use HasFactory, HasTeams, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable;
@@ -92,6 +110,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         return [
             'email_verified_at' => 'datetime',
+            'verified_at' => 'datetime',
             'is_admin' => 'boolean',
             'password' => 'hashed',
             'user_type' => UserType::class,

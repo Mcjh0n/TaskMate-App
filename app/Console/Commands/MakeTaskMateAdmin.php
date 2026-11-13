@@ -23,6 +23,8 @@ class MakeTaskMateAdmin extends Command
 
         $user->is_admin = true;
         $user->verification_status = 'verified';
+        $user->verified_at = now();
+        $user->verified_by = null;
         $user->save();
 
         $this->components->info("{$user->email} is now a verified TaskMate administrator.");

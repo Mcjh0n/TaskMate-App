@@ -131,6 +131,15 @@ class RegistrationTest extends TestCase
             'position' => 'Synthetic Representative',
             'supporting_info' => str_repeat('x', 1001),
         ])->assertSessionHasErrors('supporting_info');
+
+        $this->from(route('register'))->post(route('register.store'), [
+            ...$this->baseRegistration('extra-id@example.test'),
+            'user_type' => 'organization',
+            'organization_name' => 'Synthetic Organization',
+            'position' => 'Synthetic Representative',
+            'supporting_info' => 'Synthetic details.',
+            'id_number' => 'FAKE-UNNEEDED-ID',
+        ])->assertSessionHasErrors('id_number');
     }
 
     public function test_admin_and_unknown_user_types_are_rejected(): void
@@ -174,6 +183,8 @@ class RegistrationTest extends TestCase
         $this->actingAs($user)->get(route('profile.edit'))
             ->assertInertia(fn (Assert $page) => $page
                 ->where('auth.user.id', $user->id)
+                ->missing('auth.user.id_number')
+                ->missing('auth.user.supporting_info')
                 ->missing('auth.user.verification_note'));
     }
 
@@ -187,6 +198,7 @@ class RegistrationTest extends TestCase
 
         $this->assertTrue($user->fresh()->is_admin);
         $this->assertSame(VerificationStatus::Verified, $user->fresh()->verification_status);
+        $this->assertNotNull($user->fresh()->verified_at);
     }
 
     public function test_make_admin_command_fails_clearly_when_user_is_missing(): void
