@@ -29,6 +29,11 @@ class TaskPostingTest extends TestCase
             'work_mode' => 'onsite',
             'workplace_name' => 'Synthetic Student Center',
             'workplace_address' => 'Synthetic campus room 101',
+            'physical_demand' => 'none',
+            'academic_involvement' => 'none',
+            'hazard_exposure' => '0',
+            'private_meeting_required' => '0',
+            'workplace_setting' => 'on_campus',
             'deadline' => now()->addWeek()->toDateString(),
             'guidelines_confirmed' => '1',
         ], $overrides);
@@ -73,6 +78,7 @@ class TaskPostingTest extends TestCase
         $this->actingAs($poster)->post(route('tasks.store'), [])->assertSessionHasErrors([
             'title', 'category', 'description', 'required_activities', 'deliverables',
             'estimated_duration_hours', 'complexity', 'budget', 'work_mode', 'guidelines_confirmed',
+            'physical_demand', 'academic_involvement', 'hazard_exposure', 'private_meeting_required',
         ]);
         $this->assertDatabaseCount('tasks', 0);
     }
@@ -164,5 +170,24 @@ class TaskPostingTest extends TestCase
             ->component('tasks/mine')
             ->has('tasks.data', 1)
             ->where('tasks.data.0.title', 'My synthetic task'));
+    }
+
+    public function test_safety_answers_require_hazard_details_and_in_person_setting(): void
+    {
+        $poster = $this->verifiedPoster();
+        $this->actingAs($poster)->post(route('tasks.store'), $this->taskData([
+            'hazard_exposure' => '1',
+            'hazard_description' => '',
+        ]))->assertSessionHasErrors('hazard_description');
+        $this->post(route('tasks.store'), $this->taskData(['workplace_setting' => '']))
+            ->assertSessionHasErrors('workplace_setting');
+
+        $this->post(route('tasks.store'), $this->taskData([
+            'work_mode' => 'remote',
+            'workplace_name' => 'Ignore me',
+            'workplace_address' => 'Ignore me',
+            'workplace_setting' => 'off_campus_private_or_residential',
+        ]))->assertRedirect();
+        $this->assertNull(Task::latest('id')->firstOrFail()->workplace_setting);
     }
 }

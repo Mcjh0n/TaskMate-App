@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Enums\RiskLevel;
+use App\Enums\TaskStatus;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AdminTaskIndexRequest;
+use App\Models\AdminAction;
+use App\Models\Task;
+use App\Models\TaskScreening;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class AdminTasksController extends Controller
+{
+    public function index(AdminTaskIndexRequest $request): Response
+    {
+        $filters = $request->validated();
+        $tasks = Task::query()
+            ->with('poster:id,name,user_type,verification_status')
+            ->when($filters['search'] ?? null, fn ($query, string $search) => $query->where(fn ($query) => $query
+                ->where('title', 'like', "%{$search}%")
+                ->orWhereHas('poster', fn ($poster) => $poster->where('name', 'like', "%{$search}%"))))
+            ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
+            ->when($filters['risk_level'] ?? null, fn ($query, string $level) => $query->where('risk_level', $level))
+            ->when($filters['work_mode'] ?? null, fn ($query, string $mode) => $query->where('work_mode', $mode))
+            ->orderByRaw("CASE risk_level WHEN 'high' THEN 0 WHEN 'moderate' THEN 1 WHEN 'low' THEN 2 ELSE 3 END")
+            ->orderBy('created_at')
+            ->paginate(15)
+            ->withQueryString()
+            ->through(fn (Task $task) => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'posterName' => $task->poster->name,
+                'posterType' => config('taskmate.user_types.'.$task->poster->user_type->value),
+                'riskLevel' => $task->risk_level,
+                'status' => $task->status->value,
+                'statusLabel' => $task->status->label(),
+                'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
+                'submittedAt' => $task->created_at?->toDateTimeString(),
+            ]);
+
+        return Inertia::render('admin/tasks/index', [
+            'tasks' => $tasks,
+            'filters' => $filters,
+            'statuses' => collect(TaskStatus::cases())->map(fn (TaskStatus $status) => ['value' => $status->value, 'label' => $status->label()])->values(),
+            'riskLevels' => collect(RiskLevel::cases())->map(fn (RiskLevel $level) => ['value' => $level->value, 'label' => $level->label()])->values(),
+            'workModes' => collect(config('taskmate.work_modes', []))->map(fn (string $label, string $value) => compact('value', 'label'))->values(),
+        ]);
+    }
+
+    public function show(Task $task): Response
+    {
+        $task->load(['poster', 'screenings', 'adminActions.admin:id,name']);
+        $latestScreening = $task->screenings->first();
+
+        return Inertia::render('admin/tasks/show', [
+            'task' => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'category' => config('taskmate.categories.'.$task->category, $task->category),
+                'categoryKey' => $task->category,
+                'description' => $task->description,
+                'requiredActivities' => $task->required_activities,
+                'deliverables' => $task->deliverables,
+                'estimatedDurationHours' => $task->estimated_duration_hours,
+                'skillRequirements' => $task->skill_requirements,
+                'complexity' => config('taskmate.complexity_levels.'.$task->complexity, $task->complexity),
+                'budget' => $task->budget,
+                'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
+                'workplaceName' => $task->workplace_name,
+                'workplaceAddress' => $task->workplace_address,
+                'workplaceSetting' => $task->workplace_setting,
+                'deadline' => $task->deadline?->toDateString(),
+                'physicalDemand' => $this->questionLabel('physical_demand', $task->physical_demand),
+                'academicInvolvement' => $this->questionLabel('academic_involvement', $task->academic_involvement),
+                'hazardExposure' => $task->hazard_exposure,
+                'hazardDescription' => $task->hazard_description,
+                'privateMeetingRequired' => $task->private_meeting_required,
+                'status' => $task->status->value,
+                'statusLabel' => $task->status->label(),
+                'reviewNote' => $task->review_note,
+                'submittedAt' => $task->created_at?->toDateTimeString(),
+                'poster' => [
+                    'id' => $task->poster->id,
+                    'name' => $task->poster->name,
+                    'type' => config('taskmate.user_types.'.$task->poster->user_type->value),
+                    'verificationStatus' => $task->poster->verification_status->value,
+                    'otherTasksCount' => $task->poster->tasks()->whereKeyNot($task->id)->count(),
+                ],
+            ],
+            'screening' => $latestScreening ? $this->screeningData($latestScreening) : null,
+            'screeningHistory' => $task->screenings->map(fn (TaskScreening $screening) => [
+                ...$this->screeningData($screening),
+                'createdAt' => $screening->created_at?->toDateTimeString(),
+            ])->values(),
+            'adminActions' => $task->adminActions->sortByDesc('created_at')->map(fn (AdminAction $action) => [
+                'id' => $action->id,
+                'action' => $action->action,
+                'adminName' => $action->admin?->name,
+                'note' => $action->note,
+                'createdAt' => $action->created_at?->toDateTimeString(),
+            ])->values(),
+            'canReview' => $task->status === TaskStatus::PendingReview && $task->poster_id !== auth()->id(),
+            'riskQuestions' => collect(config('taskmate.risk_questions', []))->mapWithKeys(fn (array $items, string $key) => [$key => $this->optionsFor($items)]),
+        ]);
+    }
+
+    private function screeningData(TaskScreening $screening): array
+    {
+        return [
+            'riskLevel' => $screening->risk_level,
+            'riskScore' => $screening->risk_score,
+            'factors' => $screening->factors,
+            'keywordHits' => $screening->keyword_hits,
+            'hardTriggers' => $screening->hard_triggers,
+            'outcome' => $screening->outcome,
+        ];
+    }
+
+    private function questionLabel(string $question, ?string $value): ?string
+    {
+        return $value === null ? null : config("taskmate.risk_questions.{$question}.{$value}", $value);
+    }
+
+    private function optionsFor(array $options): array
+    {
+        return collect($options)->map(fn (string $label, string $value) => compact('value', 'label'))->values()->all();
+    }
+}

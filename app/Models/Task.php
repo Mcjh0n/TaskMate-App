@@ -7,6 +7,8 @@ use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -36,6 +38,12 @@ class Task extends Model
         'workplace_name',
         'workplace_address',
         'deadline',
+        'physical_demand',
+        'academic_involvement',
+        'hazard_exposure',
+        'hazard_description',
+        'private_meeting_required',
+        'workplace_setting',
     ];
 
     protected function casts(): array
@@ -45,8 +53,11 @@ class Task extends Model
             'estimated_duration_hours' => 'decimal:1',
             'budget' => 'decimal:2',
             'deadline' => 'date',
+            'hazard_exposure' => 'boolean',
+            'private_meeting_required' => 'boolean',
             'guidelines_confirmed_at' => 'datetime',
             'reviewed_at' => 'datetime',
+            'screened_at' => 'datetime',
         ];
     }
 
@@ -58,5 +69,15 @@ class Task extends Model
     public function reviewer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'reviewed_by');
+    }
+
+    public function screenings(): HasMany
+    {
+        return $this->hasMany(TaskScreening::class)->latest('id');
+    }
+
+    public function adminActions(): MorphMany
+    {
+        return $this->morphMany(AdminAction::class, 'subject');
     }
 }

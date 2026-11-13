@@ -6,8 +6,11 @@ use App\Enums\TaskStatus;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
+use App\Services\RiskScreening\RiskAssessment;
+use App\Services\RiskScreening\TaskModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -23,14 +26,18 @@ class TaskController extends Controller
         ]);
     }
 
-    public function store(StoreTaskRequest $request): RedirectResponse
+    public function store(StoreTaskRequest $request, TaskModerationService $moderation): RedirectResponse
     {
-        $task = $request->user()->tasks()->make($request->safe()->except('guidelines_confirmed'));
-        $task->status = TaskStatus::PendingReview;
-        $task->guidelines_confirmed_at = now();
-        $task->save();
+        [$task, $assessment] = DB::transaction(function () use ($request, $moderation): array {
+            $task = $request->user()->tasks()->make($request->safe()->except('guidelines_confirmed'));
+            $task->status = TaskStatus::PendingReview;
+            $task->guidelines_confirmed_at = now();
+            $task->save();
 
-        return redirect()->route('tasks.show', $task)->with('status', 'Your task was submitted for review.');
+            return [$task, $moderation->screenAndApply($task)];
+        });
+
+        return redirect()->route('tasks.show', $task)->with('status', $moderation->posterMessage($assessment));
     }
 
     public function mine(Request $request): Response
@@ -70,22 +77,21 @@ class TaskController extends Controller
         ]);
     }
 
-    public function update(UpdateTaskRequest $request, Task $task): RedirectResponse
+    public function update(UpdateTaskRequest $request, Task $task, TaskModerationService $moderation): RedirectResponse
     {
-        $wasReviewed = in_array($task->status, [TaskStatus::Approved, TaskStatus::ChangesRequested], true);
-        $task->fill($request->safe()->except('guidelines_confirmed'));
-        $task->guidelines_confirmed_at = now();
-
-        if ($wasReviewed) {
+        $assessment = DB::transaction(function () use ($request, $task, $moderation): RiskAssessment {
+            $task->fill($request->safe()->except('guidelines_confirmed'));
+            $task->guidelines_confirmed_at = now();
             $task->status = TaskStatus::PendingReview;
             $task->review_note = null;
             $task->reviewed_by = null;
             $task->reviewed_at = null;
-        }
+            $task->save();
 
-        $task->save();
+            return $moderation->screenAndApply($task);
+        });
 
-        return redirect()->route('tasks.show', $task)->with('status', 'Your task was updated and submitted for review.');
+        return redirect()->route('tasks.show', $task)->with('status', $moderation->posterMessage($assessment));
     }
 
     public function cancel(Request $request, Task $task): RedirectResponse
@@ -104,6 +110,9 @@ class TaskController extends Controller
             'workModes' => $this->optionsFor(config('taskmate.work_modes', [])),
             'complexities' => $this->optionsFor(config('taskmate.complexity_levels', [])),
             'guidelines' => config('taskmate.task_guidelines', []),
+            'riskQuestions' => collect(config('taskmate.risk_questions', []))
+                ->map(fn (array $items) => $this->optionsFor($items))
+                ->all(),
         ];
     }
 
@@ -142,6 +151,12 @@ class TaskController extends Controller
             'workplaceAddress' => $task->workplace_address,
             'deadline' => $task->deadline?->toDateString(),
             'guidelinesConfirmedAt' => $task->guidelines_confirmed_at?->toDateTimeString(),
+            'physicalDemand' => $task->physical_demand,
+            'academicInvolvement' => $task->academic_involvement,
+            'hazardExposure' => $task->hazard_exposure,
+            'hazardDescription' => $task->hazard_description,
+            'privateMeetingRequired' => $task->private_meeting_required,
+            'workplaceSetting' => $task->workplace_setting,
         ];
     }
 }

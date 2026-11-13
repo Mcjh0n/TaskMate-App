@@ -11,16 +11,19 @@ type TaskData = {
     title: string; category: string; description: string; requiredActivities: string; deliverables: string;
     estimatedDurationHours: string; skillRequirements: string | null; complexity: string; budget: string;
     workModeValue: string; workplaceName: string | null; workplaceAddress: string | null; deadline: string | null;
+    physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean; hazardDescription: string | null;
+    privateMeetingRequired: boolean; workplaceSetting: string | null;
 };
 type Props = {
     action: { url: string; method: string };
-    options: { categories: Option[]; workModes: Option[]; complexities: Option[]; guidelines: string[] };
+    options: { categories: Option[]; workModes: Option[]; complexities: Option[]; guidelines: string[]; riskQuestions: { physical_demand: Option[]; academic_involvement: Option[]; workplace_setting: Option[] } };
     task: TaskData | null;
     resetWarning: boolean;
 };
 
 export default function TaskForm({ action, options, task, resetWarning }: Props) {
     const [workMode, setWorkMode] = useState(task?.workModeValue ?? '');
+    const [hazardExposure, setHazardExposure] = useState(task?.hazardExposure ? '1' : '0');
     const hasWorkplace = workMode === 'onsite' || workMode === 'hybrid';
 
     return (
@@ -38,6 +41,16 @@ export default function TaskForm({ action, options, task, resetWarning }: Props)
                         <div className="grid gap-2"><Label htmlFor="skill_requirements">Skills or experience needed (optional)</Label><Textarea id="skill_requirements" name="skill_requirements" defaultValue={task?.skillRequirements ?? ''} /><InputError message={errors.skill_requirements} /></div>
                         <div className="grid gap-2"><Label htmlFor="estimated_duration_hours">Estimated duration in hours</Label><Input id="estimated_duration_hours" name="estimated_duration_hours" type="number" min="0.5" max="500" step="0.1" defaultValue={task?.estimatedDurationHours} required /><InputError message={errors.estimated_duration_hours} /></div>
                         <div className="grid gap-2"><Label htmlFor="complexity">Complexity</Label><select id="complexity" name="complexity" defaultValue={task?.complexity ? options.complexities.find((option) => option.label === task.complexity)?.value ?? '' : ''} className="h-10 rounded-md border bg-background px-3 text-sm" required><option value="" disabled>Select complexity</option>{options.complexities.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><InputError message={errors.complexity} /></div>
+                    </section>
+                    <section className="space-y-4 rounded-xl border p-5">
+                        <h2 className="text-lg font-semibold">Safety questions</h2>
+                        <p className="text-sm text-muted-foreground">Your answers help us review tasks for safety. Honest answers speed up approval. Screening cannot guarantee a task is safe.</p>
+                        <div className="grid gap-2"><Label htmlFor="physical_demand">Physical demand</Label><select id="physical_demand" name="physical_demand" defaultValue={task?.physicalDemand ?? ''} className="h-10 rounded-md border bg-background px-3 text-sm" required><option value="" disabled>Select an answer</option>{options.riskQuestions.physical_demand.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><InputError message={errors.physical_demand} /></div>
+                        <div className="grid gap-2"><Label htmlFor="academic_involvement">Academic involvement</Label><select id="academic_involvement" name="academic_involvement" defaultValue={task?.academicInvolvement ?? ''} className="h-10 rounded-md border bg-background px-3 text-sm" required><option value="" disabled>Select an answer</option>{options.riskQuestions.academic_involvement.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><InputError message={errors.academic_involvement} /></div>
+                        <div className="grid gap-2"><Label htmlFor="hazard_exposure">Does this task involve exposure to hazards?</Label><select id="hazard_exposure" name="hazard_exposure" value={hazardExposure} onChange={(event) => setHazardExposure(event.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm" required><option value="0">No</option><option value="1">Yes</option></select><InputError message={errors.hazard_exposure} /></div>
+                        {hazardExposure === '1' && <div className="grid gap-2"><Label htmlFor="hazard_description">Describe the hazard exposure</Label><Textarea id="hazard_description" name="hazard_description" defaultValue={task?.hazardDescription ?? ''} required /><InputError message={errors.hazard_description} /></div>}
+                        <div className="grid gap-2"><Label htmlFor="private_meeting_required">Does the task require a one-on-one meeting in a private or isolated place?</Label><select id="private_meeting_required" name="private_meeting_required" defaultValue={task?.privateMeetingRequired ? '1' : '0'} className="h-10 rounded-md border bg-background px-3 text-sm" required><option value="0">No</option><option value="1">Yes</option></select><InputError message={errors.private_meeting_required} /></div>
+                        {hasWorkplace && <div className="grid gap-2"><Label htmlFor="workplace_setting">Workplace setting</Label><select id="workplace_setting" name="workplace_setting" defaultValue={task?.workplaceSetting ?? ''} className="h-10 rounded-md border bg-background px-3 text-sm" required><option value="" disabled>Select a setting</option>{options.riskQuestions.workplace_setting.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><InputError message={errors.workplace_setting} /></div>}
                     </section>
                     <section className="space-y-4 rounded-xl border p-5">
                         <h2 className="text-lg font-semibold">Work details</h2>

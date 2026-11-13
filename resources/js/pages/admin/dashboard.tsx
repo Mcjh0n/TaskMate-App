@@ -18,6 +18,8 @@ type Props = {
         moreInfoRequested: number;
         verified: number;
         rejected: number;
+        tasksAwaitingReview: number;
+        highRiskTasksAwaitingReview: number;
     };
     recentActions: Action[];
 };
@@ -48,6 +50,16 @@ export default function AdminDashboard({ counts, recentActions }: Props) {
                             <p className="mt-3 text-3xl font-semibold">{counts[card.key as keyof Props['counts']]}</p>
                         </div>
                     ))}
+                </section>
+                <section aria-label="Task review counts" className="grid gap-4 sm:grid-cols-2">
+                    <Link href={admin.tasks.index()} className="rounded-lg border p-4 hover:bg-muted/50">
+                        <span className="text-sm text-muted-foreground">Tasks awaiting review</span>
+                        <p className="mt-3 text-3xl font-semibold">{counts.tasksAwaitingReview}</p>
+                    </Link>
+                    <Link href={admin.tasks.index({ query: { risk_level: 'high', status: 'pending_review' } })} className="rounded-lg border p-4 hover:bg-muted/50">
+                        <span className="text-sm text-muted-foreground">High-risk tasks awaiting review</span>
+                        <p className="mt-3 text-3xl font-semibold">{counts.highRiskTasksAwaitingReview}</p>
+                    </Link>
                 </section>
 
                 <section className="space-y-3">

@@ -6,6 +6,8 @@ use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Models\AdminAction;
 use App\Models\User;
+use App\Models\Task;
+use App\Enums\TaskStatus;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,6 +38,8 @@ class AdminDashboardController extends Controller
                 'moreInfoRequested' => User::query()->where('verification_status', VerificationStatus::MoreInfoRequested->value)->count(),
                 'verified' => User::query()->where('verification_status', VerificationStatus::Verified->value)->count(),
                 'rejected' => User::query()->where('verification_status', VerificationStatus::Rejected->value)->count(),
+                'tasksAwaitingReview' => Task::query()->where('status', TaskStatus::PendingReview->value)->count(),
+                'highRiskTasksAwaitingReview' => Task::query()->where('status', TaskStatus::PendingReview->value)->where('risk_level', 'high')->count(),
             ],
             'recentActions' => $recentActions,
         ]);

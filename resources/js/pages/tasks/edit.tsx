@@ -7,9 +7,11 @@ type TaskData = {
     id: number; title: string; category: string; description: string; requiredActivities: string; deliverables: string;
     estimatedDurationHours: string; skillRequirements: string | null; complexity: string; budget: string;
     workModeValue: string; workplaceName: string | null; workplaceAddress: string | null; deadline: string | null;
+    physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean; hazardDescription: string | null;
+    privateMeetingRequired: boolean; workplaceSetting: string | null;
 };
 type Props = {
-    options: { categories: Option[]; workModes: Option[]; complexities: Option[]; guidelines: string[] };
+    options: { categories: Option[]; workModes: Option[]; complexities: Option[]; guidelines: string[]; riskQuestions: { physical_demand: Option[]; academic_involvement: Option[]; workplace_setting: Option[] } };
     task: TaskData;
     resetWarning: boolean;
 };

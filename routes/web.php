@@ -3,6 +3,8 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUsersController;
+use App\Http\Controllers\Admin\AdminTasksController;
+use App\Http\Controllers\Admin\AdminTaskDecisionController;
 use App\Http\Controllers\Admin\VerificationDecisionController;
 use App\Http\Controllers\VerificationDetailsController;
 use App\Http\Controllers\TaskController;
@@ -31,6 +33,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/users', [AdminUsersController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [AdminUsersController::class, 'show'])->name('users.show');
     Route::post('/users/{user}/verification', VerificationDecisionController::class)->name('users.verification');
+    Route::get('/tasks', [AdminTasksController::class, 'index'])->name('tasks.index');
+    Route::get('/tasks/{task}', [AdminTasksController::class, 'show'])->name('tasks.show');
+    Route::post('/tasks/{task}/decision', AdminTaskDecisionController::class)->name('tasks.decision');
 });
 
 Route::middleware(['auth', 'account.verified', 'can.post'])->group(function () {

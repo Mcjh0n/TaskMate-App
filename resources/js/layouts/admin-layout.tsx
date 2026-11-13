@@ -8,6 +8,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
     const links = [
         { label: 'Dashboard', href: admin.dashboard().url },
         { label: 'Users', href: admin.users.index().url },
+        { label: 'Tasks', href: admin.tasks.index().url },
     ];
 
     return (
