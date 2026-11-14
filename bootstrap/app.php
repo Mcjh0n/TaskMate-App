@@ -43,6 +43,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $exception) {
             $request = request();
             $status = $response->getStatusCode();
+            if ($status >= 500 && app()->environment('local') && config('app.debug')) return $response;
             if ($request->expectsJson() || ! in_array($status, [403, 404, 419, 429, 500], true)) return $response;
             return Inertia::render('errors/status', ['status' => $status])->toResponse($request)->setStatusCode($status);
         });

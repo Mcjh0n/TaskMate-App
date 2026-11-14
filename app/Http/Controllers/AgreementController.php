@@ -63,9 +63,11 @@ class AgreementController extends Controller
             'poster:id,name,user_type,organization_name',
             'student:id,name,user_type,affiliation',
             'currentVersion.proposer:id,name',
+            'currentVersion.confirmations.user:id,name',
             'versions.proposer:id,name',
             'versions.confirmations.user:id,name',
             'messages.user:id,name',
+            'task.completion',
             'completion',
             'paymentEvents.actor:id,name',
             'reports',
@@ -116,7 +118,8 @@ class AgreementController extends Controller
         $agreement->load([
             'task:id,title,budget,status,work_mode,workplace_name,workplace_address',
             'poster:id,name,user_type,organization_name', 'student:id,name,user_type,affiliation',
-            'currentVersion.proposer:id,name', 'versions.proposer:id,name', 'versions.confirmations.user:id,name', 'messages.user:id,name',
+            'currentVersion.proposer:id,name', 'currentVersion.confirmations.user:id,name',
+            'versions.proposer:id,name', 'versions.confirmations.user:id,name', 'messages.user:id,name', 'task.completion',
             'completion', 'paymentEvents.actor:id,name', 'reports',
         ]);
 
@@ -161,7 +164,7 @@ class AgreementController extends Controller
                 'cancelledAt' => $agreement->cancelled_at?->toDateTimeString(),
                 'cancelledBy' => $agreement->cancelled_by,
                 'cancellationReason' => $agreement->cancellation_reason,
-                'recordReference' => $agreement->status === AgreementStatus::Agreed ? $agreement->currentVersion->content_hash : null,
+                'recordReference' => $agreement->status === AgreementStatus::Agreed ? $agreement->currentVersion?->content_hash : null,
                 'task' => ['id' => $task->id, 'title' => $task->title, 'budget' => $task->budget, 'status' => $task->status->value],
                 'poster' => ['id' => $agreement->poster_id, 'name' => $agreement->poster->isOrganization() ? $agreement->poster->organization_name : $agreement->poster->name],
                 'student' => ['id' => $agreement->student_id, 'name' => $agreement->student->name],

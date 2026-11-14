@@ -49,6 +49,7 @@ class TaskController extends Controller
     public function mine(Request $request): Response
     {
         $tasks = $request->user()->tasks()
+            ->with('agreement')
             ->latest()
             ->paginate(12)
             ->through(fn (Task $task) => [
