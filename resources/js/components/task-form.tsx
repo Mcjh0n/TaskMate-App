@@ -16,7 +16,7 @@ type TaskData = {
     privateMeetingRequired: boolean; workplaceSetting: string | null;
 };
 type Props = {
-    action: { url: string; method: string };
+    action: { action: string; method: 'post' | 'put' };
     options: { categories: Option[]; workModes: Option[]; complexities: Option[]; guidelines: string[]; riskQuestions: { physical_demand: Option[]; academic_involvement: Option[]; workplace_setting: Option[] } };
     task: TaskData | null;
     resetWarning: boolean;

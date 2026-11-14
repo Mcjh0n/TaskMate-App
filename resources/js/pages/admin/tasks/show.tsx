@@ -26,7 +26,21 @@ type Task = {
 };
 type Action = { id: number; action: string; adminName: string | null; note: string | null; createdAt: string | null };
 type AdminApplication = { id: number; applicantName: string; status: string; appliedAt: string | null; userId: number };
-type Props = { task: Task; screening: Screening | null; screeningHistory: Screening[]; adminActions: Action[]; applications: AdminApplication[]; agreement: { id: number; status: string; locked_at: string | null } | null; completionPayment: CompletionPaymentData | null; canReview: boolean; riskQuestions: Record<string, { value: string; label: string }[]>; status?: string | null };
+type ContentFlag = { id: number; category: string; matched: string[]; field: string; status: string; createdAt: string | null };
+type AgreementSummary = { id: number; status: string; locked_at: string | null };
+type Props = {
+    task: Task;
+    screening: Screening | null;
+    screeningHistory?: Screening[];
+    adminActions?: Action[];
+    applications?: AdminApplication[];
+    flags?: ContentFlag[];
+    agreement?: AgreementSummary | null;
+    completionPayment?: CompletionPaymentData | null;
+    canReview: boolean;
+    riskQuestions?: Record<string, { value: string; label: string }[]>;
+    status?: string | null;
+};
 
 function HighlightedText({ text, field, hits }: { text: string | null; field: string; hits: Hit[] }) {
     if (!text) return <span>—</span>;
@@ -49,7 +63,19 @@ function DecisionForm({ taskId, decision, label, noteRequired }: { taskId: numbe
     </Form>;
 }
 
-export default function AdminTaskReview({ task, screening, screeningHistory, adminActions, applications, canReview, riskQuestions, status }: Props) {
+export default function AdminTaskReview({
+    task,
+    screening,
+    screeningHistory = [],
+    adminActions = [],
+    applications = [],
+    flags = [],
+    agreement = null,
+    completionPayment = null,
+    canReview,
+    riskQuestions = {},
+    status,
+}: Props) {
     const hits = screening?.keywordHits ?? [];
     const hasProhibitedHit = hits.some((hit) => hit.type === 'prohibited');
     const requiresOverrideNote = screening?.riskLevel === 'high' || hasProhibitedHit;
@@ -61,6 +87,7 @@ export default function AdminTaskReview({ task, screening, screeningHistory, adm
         <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Safety answers</h2><p><strong>Physical demand:</strong> {labels('physical_demand', task.physicalDemand)}</p><p><strong>Academic involvement:</strong> {labels('academic_involvement', task.academicInvolvement)}</p><p><strong>Hazard exposure:</strong> {task.hazardExposure ? 'Yes' : 'No'}{task.hazardExposure && task.hazardDescription && <span>: {task.hazardDescription}</span>}</p><p><strong>Private or isolated one-on-one meeting required:</strong> {task.privateMeetingRequired ? 'Yes' : 'No'}</p></section>
         <section className="space-y-4 rounded-xl border p-5"><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">Screening breakdown</h2>{screening && <><RiskLevelBadge level={screening.riskLevel} /><span>Score: {screening.riskScore}</span></>}</div>{screening ? <><p className="text-sm">Screening outcome: {screening.outcome.replaceAll('_', ' ')}</p><div className="overflow-x-auto"><table className="w-full text-left text-sm"><thead><tr className="border-b"><th className="py-2">Factor</th><th className="py-2">Points</th><th className="py-2">Reason</th></tr></thead><tbody>{screening.factors.map((factor) => <tr key={factor.key} className="border-b"><td className="py-2">{factor.label}</td><td className="py-2">{factor.points}</td><td className="py-2">{factor.reason}</td></tr>)}</tbody></table></div>{screening.keywordHits.length > 0 && <div><h3 className="font-medium">Keyword indicators</h3><ul className="list-disc pl-5 text-sm">{screening.keywordHits.map((hit, index) => <li key={`${hit.phrase}-${hit.field}-${index}`}><mark>{hit.phrase}</mark> ({hit.type}, in {hit.field.replaceAll('_', ' ')})</li>)}</ul></div>}{screening.hardTriggers.length > 0 && <div><h3 className="font-medium">Hard triggers</h3><ul className="list-disc pl-5 text-sm">{screening.hardTriggers.map((trigger) => <li key={trigger.key}>{trigger.reason}</li>)}</ul></div>}</> : <p className="text-sm text-muted-foreground">No screening history is available.</p>}</section>
         {screeningHistory.length > 1 && <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Screening history</h2>{screeningHistory.map((item, index) => <div key={`${item.createdAt}-${index}`} className="border-t pt-3 text-sm"><div className="flex flex-wrap gap-3"><RiskLevelBadge level={item.riskLevel} /><span>Score {item.riskScore}</span><span>{item.outcome.replaceAll('_', ' ')}</span><span>{item.createdAt ? formatDateTime(item.createdAt) : ''}</span></div></div>)}</section>}
+        <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Off-platform content flags</h2>{flags.length ? flags.map((flag) => <article key={flag.id} className="border-t pt-3 text-sm"><p className="font-medium">{flag.category} · {flag.status.replaceAll('_', ' ')}</p><p>Field: {flag.field.replaceAll('_', ' ')}</p>{flag.matched.length > 0 && <p>Matched indicators: {flag.matched.join(', ')}</p>}{flag.createdAt && <p className="text-muted-foreground">Flagged {formatDateTime(flag.createdAt)}</p>}</article>) : <p className="text-sm text-muted-foreground">No off-platform content flags have been recorded.</p>}</section>
         {agreement && <section className="space-y-2 rounded-xl border p-5"><h2 className="text-lg font-semibold">Agreement</h2><p>Status: {agreement.status.replaceAll('_', ' ')}</p>{agreement.locked_at && <p>Locked {formatDateTime(agreement.locked_at)}</p>}<Link className="text-sm underline" href={admin.agreements.show(agreement.id)}>View agreement versions and confirmations</Link>{task.status === 'in_progress' && agreement.locked_at && <Form action={`/admin/tasks/${task.id}/close`} method="post" className="mt-4 space-y-2 border-t pt-4">{({ processing }) => <><label className="block text-sm">Close task as cancelled by administrator<textarea name="note" required minLength={5} maxLength={3000} className="mt-1 min-h-24 w-full rounded border bg-background p-3" placeholder="Required reason. Agreement records will remain unchanged." /></label><Button type="submit" disabled={processing}>Close task</Button></>}</Form>}</section>}
         {agreement && completionPayment && <CompletionPaymentPanel agreementId={agreement.id} data={completionPayment} readOnly />}
         <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Applications</h2>{applications.length ? applications.map((application) => <div key={application.id} className="flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-sm"><Link className="underline underline-offset-4" href={adminUsers.show(application.userId)}>{application.applicantName}</Link><span>{application.status}</span><span>{application.appliedAt ? formatDateTime(application.appliedAt) : '—'}</span></div>) : <p className="text-sm text-muted-foreground">No applications have been submitted.</p>}</section>

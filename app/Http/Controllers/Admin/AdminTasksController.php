@@ -54,7 +54,7 @@ class AdminTasksController extends Controller
 
     public function show(Task $task): Response
     {
-        $task->load(['poster', 'screenings', 'adminActions.admin:id,name', 'applications.applicant:id,name', 'agreement.currentVersion', 'agreement.completion', 'agreement.paymentEvents.actor:id,name']);
+        $task->load(['poster', 'screenings', 'contentFlags', 'adminActions.admin:id,name', 'applications.applicant:id,name', 'agreement.currentVersion', 'agreement.completion', 'agreement.paymentEvents.actor:id,name']);
         $latestScreening = $task->screenings->first();
 
         return Inertia::render('admin/tasks/show', [
@@ -110,6 +110,14 @@ class AdminTasksController extends Controller
                 'status' => $application->status->label(),
                 'appliedAt' => $application->created_at?->toDateTimeString(),
                 'userId' => $application->applicant->id,
+            ])->values(),
+            'flags' => $task->contentFlags->map(fn ($flag) => [
+                'id' => $flag->id,
+                'category' => config('taskmate.offplatform.category_labels.'.$flag->category, $flag->category),
+                'matched' => $flag->matched,
+                'field' => $flag->field,
+                'status' => $flag->status->value,
+                'createdAt' => $flag->created_at?->toDateTimeString(),
             ])->values(),
             'agreement' => $task->agreement ? [
                 'id' => $task->agreement->id,

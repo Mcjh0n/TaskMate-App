@@ -375,4 +375,21 @@ class RiskScreeningTest extends TestCase
             $this->assertSame('Task screening history is immutable.', $exception->getMessage());
         }
     }
+
+    public function test_admin_task_review_returns_empty_related_data_as_safe_defaults(): void
+    {
+        $admin = User::factory()->verified()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+        $task = Task::factory()->create(['status' => TaskStatus::PendingReview]);
+
+        $this->actingAs($admin)->get(route('admin.tasks.show', $task))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('admin/tasks/show')
+                ->where('agreement', null)
+                ->where('completionPayment', null)
+                ->has('applications', 0)
+                ->has('screeningHistory', 0)
+                ->has('flags', 0));
+    }
 }
