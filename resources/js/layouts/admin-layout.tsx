@@ -2,6 +2,8 @@ import type { PropsWithChildren } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
+import PrototypeBanner from '@/components/prototype-banner';
+import SiteFooter from '@/components/site-footer';
 
 export default function AdminLayout({ children }: PropsWithChildren) {
     const { url } = usePage();
@@ -15,7 +17,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
     ];
 
     return (
-        <div className="min-h-screen bg-background">
+        <><PrototypeBanner /><div className="min-h-screen bg-background">
             <header className="border-b">
                 <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -39,6 +41,6 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                 </div>
             </header>
             <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
-        </div>
+        </div><SiteFooter /></>
     );
 }

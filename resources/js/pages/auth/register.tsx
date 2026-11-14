@@ -3,7 +3,6 @@ import { useState } from 'react';
 import InputError from '@/components/input-error';
 import PasswordInput from '@/components/password-input';
 import { SafetyNotice } from '@/components/safety-notice';
-import TeamInvitationAlert from '@/components/team-invitation-alert';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,17 +11,15 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { login } from '@/routes';
 import { store } from '@/routes/register';
-import type { TeamInvitationContext } from '@/types';
 
 type UserType = 'student' | 'faculty_staff' | 'organization';
 
 type Props = {
     passwordRules: string;
     institutionalEmailDomains: string[];
-    teamInvitation?: TeamInvitationContext | null;
 };
 
-export default function Register({ passwordRules, institutionalEmailDomains, teamInvitation }: Props) {
+export default function Register({ passwordRules, institutionalEmailDomains }: Props) {
     const [userType, setUserType] = useState<UserType>('student');
     const affiliationLabel = userType === 'student' ? 'College and program' : 'College or office';
     const idLabel = userType === 'student' ? 'Student ID number' : 'Employee ID number';
@@ -38,7 +35,6 @@ export default function Register({ passwordRules, institutionalEmailDomains, tea
             >
                 {({ processing, errors }) => (
                     <>
-                        {teamInvitation && <TeamInvitationAlert invitation={teamInvitation} action="Register" />}
                         <div className="grid gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="user_type">Choose your account type</Label>
@@ -127,7 +123,7 @@ export default function Register({ passwordRules, institutionalEmailDomains, tea
 
                         <div className="text-center text-sm text-muted-foreground">
                             Already have an account?{' '}
-                            <TextLink href={teamInvitation ? login.url({ query: { invitation: teamInvitation.code } }) : login()} data-test="team-invitation-login-link">
+                            <TextLink href={login()} data-test="login-link">
                                 Log in
                             </TextLink>
                         </div>

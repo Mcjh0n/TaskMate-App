@@ -83,6 +83,7 @@ class AdminVerificationTest extends TestCase
                 ->has('users.data', 2)
                 ->where('users.data.0.verificationStatus', 'pending')
                 ->where('users.data.1.verificationStatus', 'verified')
+                ->missing('users.data.1.email')
                 ->missing('users.data.1.idNumber')
                 ->missing('users.data.1.supportingInfo'));
 
@@ -94,7 +95,8 @@ class AdminVerificationTest extends TestCase
         $this->get('/admin/users?search=search%40example.test')
             ->assertInertia(fn (Assert $page) => $page
                 ->has('users.data', 1)
-                ->where('users.data.0.email', 'search@example.test'));
+                ->where('users.data.0.name', 'Synthetic Search Account')
+                ->missing('users.data.0.email'));
     }
 
     public function test_user_list_is_paginated(): void

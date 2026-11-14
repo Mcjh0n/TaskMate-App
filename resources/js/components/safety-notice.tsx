@@ -1,13 +1,6 @@
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SAFETY_NOTICE } from '@/constants/notices';
 
 export function SafetyNotice() {
-    return (
-        <Alert>
-            <AlertDescription>
-                Verification helps confirm who someone is, but it does not
-                guarantee a person&apos;s future behavior or the safety of any
-                task.
-            </AlertDescription>
-        </Alert>
-    );
+    return <Alert><AlertDescription>{SAFETY_NOTICE}</AlertDescription></Alert>;
 }

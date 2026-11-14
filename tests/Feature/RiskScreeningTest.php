@@ -305,11 +305,15 @@ class RiskScreeningTest extends TestCase
         $this->post(route('admin.tasks.decision', $high), ['decision' => 'approve', 'note' => 'Reviewed the workplace plan and approved the override.'])->assertRedirect();
         $this->assertSame(TaskStatus::Approved, $high->fresh()->status);
         $prohibited = Task::factory()->create(['poster_id' => $poster->id, 'risk_level' => 'low']);
-        $prohibited->screenings()->create([
-            'risk_level' => 'moderate', 'risk_score' => 2, 'factors' => [],
-            'keyword_hits' => [['phrase' => 'take my exam', 'type' => 'prohibited', 'field' => 'title', 'start' => 0, 'length' => 12]],
-            'hard_triggers' => [], 'outcome' => 'needs_review',
-        ]);
+        $prohibitedScreening = new TaskScreening;
+        $prohibitedScreening->task()->associate($prohibited);
+        $prohibitedScreening->risk_level = 'moderate';
+        $prohibitedScreening->risk_score = 2;
+        $prohibitedScreening->factors = [];
+        $prohibitedScreening->keyword_hits = [['phrase' => 'take my exam', 'type' => 'prohibited', 'field' => 'title', 'start' => 0, 'length' => 12]];
+        $prohibitedScreening->hard_triggers = [];
+        $prohibitedScreening->outcome = 'needs_review';
+        $prohibitedScreening->save();
         $this->post(route('admin.tasks.decision', $prohibited), ['decision' => 'approve'])->assertSessionHasErrors('note');
         $this->post(route('admin.tasks.decision', $prohibited), ['decision' => 'approve', 'note' => 'Reviewed and approved this exception.'])->assertRedirect();
         $this->assertDatabaseCount('admin_actions', 5);
@@ -357,7 +361,8 @@ class RiskScreeningTest extends TestCase
         $screening = TaskScreening::factory()->create();
 
         try {
-            $screening->update(['risk_score' => 100]);
+            $screening->risk_score = 100;
+            $screening->save();
             $this->fail('A screening row should not be updateable.');
         } catch (\LogicException $exception) {
             $this->assertSame('Task screening history is immutable.', $exception->getMessage());

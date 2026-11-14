@@ -1,6 +1,15 @@
 <?php
 
 return [
+    // Prototype features are enabled for local evaluation unless explicitly disabled.
+    'prototype_mode' => env('TASKMATE_PROTOTYPE_MODE', true),
+    'rate_limits' => [
+        'login' => ['max_attempts' => 5, 'decay_seconds' => 60],
+        'register' => ['max_attempts' => 20, 'decay_seconds' => 3600],
+        'apply' => ['max_attempts' => 30, 'decay_seconds' => 60],
+        'report' => ['max_attempts' => 20, 'decay_seconds' => 3600],
+        'evidence_download' => ['max_attempts' => 30, 'decay_seconds' => 60],
+    ],
     'user_types' => [
         'student' => 'CMU Student',
         'faculty_staff' => 'CMU Faculty / Staff',

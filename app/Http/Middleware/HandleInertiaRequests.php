@@ -44,8 +44,6 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user ? [
                     'id' => $user->id,
                     'name' => $user->name,
-                    'email' => $user->email,
-                    'email_verified_at' => $user->email_verified_at,
                     'user_type' => $user->user_type?->value,
                     'is_admin' => $user->is_admin,
                     'can_post_tasks' => $user->canPost(),
@@ -60,7 +58,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'currentTeam' => fn () => $user?->currentTeam ? $user->toUserTeam($user->currentTeam) : null,
-            'teams' => fn () => $user?->toUserTeams(includeCurrent: true) ?? [],
+            'prototypeMode' => (bool) config('taskmate.prototype_mode', true),
         ];
     }
 }

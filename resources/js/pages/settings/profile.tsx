@@ -1,9 +1,5 @@
 import { Form, Head, usePage } from '@inertiajs/react';
-/* @chisel-email-verification */
-import { Link } from '@inertiajs/react';
-/* @end-chisel-email-verification */
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import DeleteUser from '@/components/delete-user';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,9 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { edit } from '@/routes/profile';
 import type { Auth } from '@/types';
-/* @chisel-email-verification */
-import { send } from '@/routes/verification';
-/* @end-chisel-email-verification */
 
 type PageProps = {
     auth: Auth;
@@ -26,17 +19,7 @@ type PageProps = {
     };
 };
 
-export default function Profile(
-    /* @chisel-email-verification */
-    {
-        mustVerifyEmail,
-        status,
-    }: {
-        mustVerifyEmail: boolean;
-        status?: string;
-    },
-    /* @end-chisel-email-verification */
-) {
+export default function Profile() {
     const { auth, accountDetails } = usePage<PageProps>().props;
     const isOrganization = auth.user.user_type === 'organization';
 
@@ -50,7 +33,7 @@ export default function Profile(
                 <Heading
                     variant="small"
                     title="Profile"
-                    description="Update your name, email, and account details"
+                    description="Update your name and account details"
                 />
 
                 <Form
@@ -81,6 +64,12 @@ export default function Profile(
                                 />
                             </div>
 
+                            <div className="grid gap-2">
+                                <Label htmlFor="email">Email address</Label>
+                                <Input id="email" type="email" name="email" autoComplete="username" placeholder="Leave blank to keep your current email" />
+                                <InputError message={errors.email} />
+                            </div>
+
                             {isOrganization ? (
                                 <>
                                     <div className="grid gap-2">
@@ -107,52 +96,6 @@ export default function Profile(
                                 </div>
                             )}
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    className="mt-1 block w-full"
-                                    defaultValue={auth.user.email}
-                                    name="email"
-                                    required
-                                    autoComplete="username"
-                                    placeholder="Email address"
-                                />
-
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.email}
-                                />
-                            </div>
-
-                            {/* @chisel-email-verification */}
-                            {mustVerifyEmail &&
-                                auth.user.email_verified_at === null && (
-                                    <div>
-                                        <p className="-mt-4 text-sm text-muted-foreground">
-                                            Your email address is unverified.{' '}
-                                            <Link
-                                                href={send()}
-                                                as="button"
-                                                className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
-                                            >
-                                                Click here to re-send the
-                                                verification email.
-                                            </Link>
-                                        </p>
-
-                                        {status ===
-                                            'verification-link-sent' && (
-                                            <div className="mt-2 text-sm font-medium text-green-600">
-                                                A new verification link has been
-                                                sent to your email address.
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-                            {/* @end-chisel-email-verification */}
 
                             <div className="flex items-center gap-4">
                                 <Button
@@ -167,7 +110,6 @@ export default function Profile(
                 </Form>
             </div>
 
-            <DeleteUser />
         </>
     );
 }

@@ -23,6 +23,16 @@ TaskMate records agreements and payment status only. Money moves directly betwee
 8. All user-facing text is in plain, clear English.
 9. If git is initialized, commit after each phase with a clear message.
 
+# Final architecture notes (Phase 10)
+
+- This prototype uses Laravel web routes, Form Requests, policies/middleware, Eloquent models, backed enums, SQLite migrations, and React/TypeScript Inertia pages.
+- TaskMate workflow rules and provisional lists belong in `config/taskmate.php`; never duplicate those lists in controllers or pages.
+- Private report evidence lives on the `evidence` filesystem disk and is downloaded only through an authorized route. Research responses stay outside the TaskMate database.
+- Raw identity fields are limited to the account owner and administrator user detail. Do not add these fields to globally shared Inertia props or summary lists.
+- Starter-kit Teams database structures and routes remain for compatibility, but TaskMate navigation and Teams settings links are hidden. Do not add new TaskMate features that depend on Teams.
+- All research, SUS, safety, and functional evaluation documents are templates until the team approves a protocol. Never add fabricated participant data or results.
+- Every newly registered web route must be reviewed and added explicitly to `tests/Fixtures/web-route-access.php`; `PrivacyAuditTest` fails when a route is missing or its middleware changes.
+
 # STACK AND ENVIRONMENT
 
 Laravel 13, PHP 8.4, React + TypeScript through Inertia (official starter kit), Laravel built-in authentication, SQLite, and Vite are already installed. Do not reinstall them. The starter kit may include Teams support; do not build on it. The environment is Windows PowerShell and the project path contains spaces, so quote paths.

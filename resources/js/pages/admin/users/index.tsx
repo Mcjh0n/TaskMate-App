@@ -7,7 +7,6 @@ import admin from '@/routes/admin';
 type UserRow = {
     id: number;
     name: string;
-    email: string;
     userType: string;
     userTypeLabel: string;
     verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested';
@@ -47,7 +46,7 @@ export default function AdminUsersIndex({ users, filters, userTypes, verificatio
                 </div>
 
                 <form onSubmit={applyFilters} className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-4">
-                    <input className="h-10 rounded-md border bg-background px-3 text-sm" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name or email" aria-label="Search name or email" />
+                      <input className="h-10 rounded-md border bg-background px-3 text-sm" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name" aria-label="Search by name" />
                     <select className="h-10 rounded-md border bg-background px-3 text-sm" value={userType} onChange={(event) => setUserType(event.target.value)} aria-label="Filter by account type">
                         <option value="">All account types</option>
                         {userTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
@@ -64,13 +63,12 @@ export default function AdminUsersIndex({ users, filters, userTypes, verificatio
                         <div className="overflow-x-auto rounded-lg border">
                             <table className="w-full text-left text-sm">
                                 <thead className="bg-muted/50 text-muted-foreground">
-                                    <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Type</th><th className="p-3">Status</th><th className="p-3">Registered</th></tr>
+                                    <tr><th className="p-3">Name</th><th className="p-3">Type</th><th className="p-3">Status</th><th className="p-3">Registered</th></tr>
                                 </thead>
                                 <tbody>
                                     {users.data.map((user) => (
                                         <tr key={user.id} className="border-t">
                                             <td className="p-3"><Link href={admin.users.show(user.id)} className="font-medium underline underline-offset-4">{user.name}</Link></td>
-                                            <td className="p-3">{user.email}</td>
                                             <td className="p-3">{user.userTypeLabel}</td>
                                             <td className="p-3"><VerificationStatusBadge status={user.verificationStatus} /></td>
                                             <td className="whitespace-nowrap p-3">{user.registeredAt ?? '—'}</td>

@@ -1,3 +1,5 @@
+import { formatDate, formatAmount } from '@/lib/format';
+import { PAYMENT_BOUNDARY_NOTICE, STUDENT_TASK_SAFETY_NOTICE } from '@/constants/notices';
 import { Form, Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,7 +40,7 @@ export default function BrowseTaskDetail({ task, poster, application, canApply =
                     {task.skillRequirements && <p><strong>Skills:</strong> {task.skillRequirements}</p>}
                     <p><strong>Estimated duration:</strong> {task.estimatedDurationHours} hours</p>
                     <p><strong>Complexity:</strong> {task.complexity}</p>
-                    {task.deadline && <p><strong>Deadline:</strong> {new Date(task.deadline).toLocaleDateString()}</p>}
+                    {task.deadline && <p><strong>Deadline:</strong> {formatDate(task.deadline)}</p>}
                     <p><strong>Work mode:</strong> {task.workMode}</p>
                     {task.workplaceName && <p><strong>Workplace:</strong> {task.workplaceName}</p>}
                     {task.workplaceAddress && <p><strong>Workplace address:</strong> {task.workplaceAddress}</p>}
@@ -49,18 +51,18 @@ export default function BrowseTaskDetail({ task, poster, application, canApply =
                     <p><strong>Private or isolated one-on-one meeting required:</strong> {task.privateMeetingRequired ? 'Yes' : 'No'}</p>
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Estimated budget: ₱{Number(task.budget).toLocaleString()}</h2>
-                    <p className="text-sm text-muted-foreground">TaskMate records agreements and payment status only. Payments are made directly between users. TaskMate does not hold, process, or guarantee payment.</p>
+                    <h2 className="text-lg font-semibold">Estimated budget: ₱{formatAmount(task.budget)}</h2>
+                    <p className="text-sm text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p>
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">About the poster</h2>
                     <p className="font-medium"><Link href={poster.profileUrl} className="underline">{poster.displayName}</Link></p>
                     <p className="text-sm">{poster.accountType}{poster.affiliation ? ` · ${poster.affiliation}` : ''}</p>
                     <VerificationStatusBadge status={poster.verificationStatus} />
-                    <p className="text-sm text-muted-foreground">Member since {poster.memberSince ? new Date(poster.memberSince).toLocaleDateString() : '—'}</p>
+                    <p className="text-sm text-muted-foreground">Member since {poster.memberSince ? formatDate(poster.memberSince) : '—'}</p>
                     <RatingSummary summary={poster.ratingSummary} />
                 </section>
-                <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">Verification and screening help inform your decision but do not guarantee the safety of a person or task. Do not agree to anything that makes you uncomfortable, and report concerns.</div>
+                <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">{STUDENT_TASK_SAFETY_NOTICE}</div>
                 {problemReport && <ProblemReportForm action={problemReport.action} types={problemReport.types} />}
                 {offPlatformWarning && <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.</div>}
                 {application ? (

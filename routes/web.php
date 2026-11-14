@@ -26,8 +26,13 @@ use App\Http\Controllers\Admin\AdminTaskClosureController;
 use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PublicInformationController;
 
 Route::inertia('/', 'welcome')->name('home');
+Route::get('/how-it-works', PublicInformationController::class)->defaults('page', 'how-it-works')->name('static.how-it-works');
+Route::get('/task-guidelines', PublicInformationController::class)->defaults('page', 'task-guidelines')->name('static.task-guidelines');
+Route::get('/safety-and-limits', PublicInformationController::class)->defaults('page', 'safety-and-limits')->name('static.safety');
+Route::get('/privacy', PublicInformationController::class)->defaults('page', 'privacy')->name('static.privacy');
 
 Route::prefix('{current_team}')
     ->middleware(['auth', 'verified', EnsureTeamMembership::class])

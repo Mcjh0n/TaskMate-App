@@ -38,14 +38,15 @@ class TaskModerationService
             }
 
             $task->save();
-            $task->screenings()->create([
-                'risk_level' => $assessment->level->value,
-                'risk_score' => $assessment->score,
-                'factors' => $assessment->factors,
-                'keyword_hits' => $assessment->keywordHits,
-                'hard_triggers' => $assessment->hardTriggers,
-                'outcome' => $assessment->outcome,
-            ]);
+            $screening = new \App\Models\TaskScreening();
+            $screening->task()->associate($task);
+            $screening->risk_level = $assessment->level->value;
+            $screening->risk_score = $assessment->score;
+            $screening->factors = $assessment->factors;
+            $screening->keyword_hits = $assessment->keywordHits;
+            $screening->hard_triggers = $assessment->hardTriggers;
+            $screening->outcome = $assessment->outcome;
+            $screening->save();
 
             return $assessment;
         });

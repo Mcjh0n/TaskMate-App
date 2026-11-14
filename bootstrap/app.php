@@ -8,6 +8,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -19,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
+            \App\Http\Middleware\EnsureAccountActive::class,
+            \App\Http\Middleware\EnforceTaskMateRateLimits::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
@@ -37,4 +40,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $exception) {
+            $request = request();
+            $status = $response->getStatusCode();
+            if ($request->expectsJson() || ! in_array($status, [403, 404, 419, 429, 500], true)) return $response;
+            return Inertia::render('errors/status', ['status' => $status])->toResponse($request)->setStatusCode($status);
+        });
 })->create();

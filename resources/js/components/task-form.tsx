@@ -1,3 +1,4 @@
+import { PAYMENT_BOUNDARY_NOTICE } from '@/constants/notices';
 import { useState } from 'react';
 import { Form } from '@inertiajs/react';
 import InputError from '@/components/input-error';
@@ -60,7 +61,7 @@ export default function TaskForm({ action, options, task, resetWarning }: Props)
                     </section>
                     <section className="space-y-4 rounded-xl border p-5">
                         <h2 className="text-lg font-semibold">Compensation</h2>
-                        <div className="grid gap-2"><Label htmlFor="budget">Estimated budget (PHP)</Label><Input id="budget" name="budget" type="number" min="1" max="1000000" step="0.01" defaultValue={task?.budget} required /><InputError message={errors.budget} /><p className="text-sm text-muted-foreground">TaskMate records agreements and payment status only. Payments are made directly between users. TaskMate does not hold, process, or guarantee payment.</p></div>
+                        <div className="grid gap-2"><Label htmlFor="budget">Estimated budget (PHP)</Label><Input id="budget" name="budget" type="number" min="1" max="1000000" step="0.01" defaultValue={task?.budget} required /><InputError message={errors.budget} /><p className="text-sm text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p></div>
                     </section>
                     <section className="space-y-4 rounded-xl border p-5">
                         <h2 className="text-lg font-semibold">Rules</h2>

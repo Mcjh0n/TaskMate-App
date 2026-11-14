@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
 
 class CreateNewUser implements CreatesNewUsers
@@ -30,6 +31,10 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
+        if (request()->allFiles() !== []) {
+            throw ValidationException::withMessages(['documents' => 'Identity document and face photo uploads are not accepted.']);
+        }
+
         $profileRules = $this->profileRules();
         $profileRules['email'][] = function (string $attribute, mixed $value, \Closure $fail) use ($input): void {
             if (! in_array($input['user_type'] ?? null, [UserType::Student->value, UserType::FacultyStaff->value], true)) {

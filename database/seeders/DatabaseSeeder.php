@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         if (app()->environment('local')) {
-            $this->call(LocalTaskMateSeeder::class);
+            $this->call(DemoScenarioSeeder::class);
         }
     }
 }

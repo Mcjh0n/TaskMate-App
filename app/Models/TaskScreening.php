@@ -14,9 +14,7 @@ class TaskScreening extends Model
 
     public const UPDATED_AT = null;
 
-    protected $fillable = [
-        'task_id', 'risk_level', 'risk_score', 'factors', 'keyword_hits', 'hard_triggers', 'outcome',
-    ];
+    protected $fillable = ['task_id', 'factors', 'keyword_hits', 'hard_triggers'];
 
     protected function casts(): array
     {

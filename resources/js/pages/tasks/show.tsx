@@ -1,3 +1,5 @@
+import { formatDate, formatAmount } from '@/lib/format';
+import { PAYMENT_BOUNDARY_NOTICE } from '@/constants/notices';
 import { Form, Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { TaskStatusBadge } from '@/components/task-status-badge';
@@ -53,11 +55,11 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, status
                     {task.workplaceName && <p>{task.workplaceName}</p>}{task.workplaceAddress && <p>{task.workplaceAddress}</p>}
                     {task.workplaceSetting && <p>{task.workplaceSetting.replaceAll('_', ' ')}</p>}
                     <p className="text-sm text-muted-foreground">In-person work details are shown to students before they apply. Workplace information should describe a place of work, not a home address.</p>
-                    {task.deadline && <p>Deadline: {new Date(task.deadline).toLocaleDateString()}</p>}
+                    {task.deadline && <p>Deadline: {formatDate(task.deadline)}</p>}
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Compensation</h2><p>Estimated budget: ₱{Number(task.budget).toLocaleString()}</p>
-                    <p className="text-sm text-muted-foreground">TaskMate records agreements and payment status only. Payments are made directly between users. TaskMate does not hold, process, or guarantee payment.</p>
+                    <h2 className="text-lg font-semibold">Compensation</h2><p>Estimated budget: ₱{formatAmount(task.budget)}</p>
+                    <p className="text-sm text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p>
                 </section>
                 {task.reviewNote && <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">Review note: {task.reviewNote}</div>}
                 {task.removalReason && <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-950">This post was removed by an administrator. Reason: {task.removalReason}</div>}
@@ -70,7 +72,7 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, status
                         <p className="whitespace-pre-wrap text-sm">{application.message}</p>
                         {problemReport?.flaggedApplicants.includes(application.id) && <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.</div>}
                         {problemReport?.applicantActions.find((item) => item.applicationId === application.id) && <ProblemReportForm action={problemReport.applicantActions.find((item) => item.applicationId === application.id)!.action} types={problemReport.types} reportLabel="Report this applicant" />}
-                        <p className="text-sm">Suggested amount: {application.proposedAmount ? `₱${Number(application.proposedAmount).toLocaleString()}` : 'No suggestion'} · Applied {application.appliedAt ? new Date(application.appliedAt).toLocaleDateString() : '—'}</p>
+                        <p className="text-sm">Suggested amount: {application.proposedAmount ? `₱${formatAmount(application.proposedAmount)}` : 'No suggestion'} · Applied {application.appliedAt ? formatDate(application.appliedAt) : '—'}</p>
                         <div className="flex items-center gap-2"><ApplicationStatusBadge status={application.status} label={application.statusLabel} />{application.status === 'pending' && task.status === 'approved' && <><Form {...taskApplications.accept.form({ task: task.id, application: application.id })}><Button size="sm" type="submit">Accept</Button></Form><Form {...taskApplications.decline.form({ task: task.id, application: application.id })}><Button size="sm" variant="outline" type="submit">Decline</Button></Form></>}</div>
                     </article>)}
                 </section>}

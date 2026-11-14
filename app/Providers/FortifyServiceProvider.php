@@ -19,7 +19,6 @@ use App\Http\Responses\TwoFactorLoginResponse;
 /* @chisel-email-verification */
 use App\Http\Responses\VerifyEmailResponse;
 /* @end-chisel-email-verification */
-use App\Models\TeamInvitation;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -42,6 +41,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use App\Services\SanctionService;
+use App\Models\TeamInvitation;
 /* @chisel-passkeys */
 use Laravel\Passkeys\Contracts\PasskeyLoginResponse as PasskeyLoginResponseContract;
 
@@ -152,9 +152,9 @@ class FortifyServiceProvider extends ServiceProvider
         /* @end-chisel-2fa */
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
-
-            return Limit::perMinute(5)->by($throttleKey);
+            $limit = config('taskmate.rate_limits.login');
+            return Limit::perSecond($limit['max_attempts'], $limit['decay_seconds'])
+                ->by(Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip()));
         });
 
         /* @chisel-passkeys */
@@ -168,11 +168,7 @@ class FortifyServiceProvider extends ServiceProvider
         /* @end-chisel-passkeys */
     }
 
-    /**
-     * Get the pending team invitation context for auth pages.
-     *
-     * @return array{code: string, teamName: string}|null
-     */
+    /** @return array{code: string, teamName: string}|null */
     private function teamInvitation(Request $request): ?array
     {
         $invitationCode = $request->query('invitation');
@@ -185,18 +181,10 @@ class FortifyServiceProvider extends ServiceProvider
             ->with('team')
             ->where('code', $invitationCode)
             ->whereNull('accepted_at')
-            ->where(fn ($query) => $query
-                ->whereNull('expires_at')
-                ->orWhere('expires_at', '>=', now()))
+            ->where(fn ($query) => $query->whereNull('expires_at')->orWhere('expires_at', '>=', now()))
             ->first();
 
-        if (! $invitation) {
-            return null;
-        }
-
-        return [
-            'code' => $invitation->code,
-            'teamName' => $invitation->team->name,
-        ];
+        return $invitation ? ['code' => $invitation->code, 'teamName' => $invitation->team->name] : null;
     }
+
 }

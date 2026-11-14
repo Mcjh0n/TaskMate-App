@@ -1,7 +1,8 @@
 import { StarRating } from '@/components/star-rating';
+import { RATINGS_NOTICE } from '@/constants/notices';
 
 export type RatingSummaryData = { count: number; average: number | null; dimensions: Record<string, { label: string; average: number }> };
-export const ratingNotice = "Ratings are one person's view of one completed task. They are contextual information and do not guarantee a person's future behavior. Serious problems should be reported, not rated.";
+export const ratingNotice = RATINGS_NOTICE;
 
 export function RatingSummary({ summary }: { summary: RatingSummaryData }) {
     return <section className="space-y-2 rounded-lg border p-3 text-sm" aria-label="Rating summary">

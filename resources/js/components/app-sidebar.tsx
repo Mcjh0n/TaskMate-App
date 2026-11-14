@@ -1,10 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
-import { BookOpen, BriefcaseBusiness, FolderGit2, LayoutGrid, Plus, Search } from 'lucide-react';
+import { BriefcaseBusiness, FolderGit2, LayoutGrid, Plus, Search } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
-import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
-import { TeamSwitcher } from '@/components/team-switcher';
 import {
     Sidebar,
     SidebarContent,
@@ -51,18 +49,6 @@ export function AppSidebar() {
         mainNavItems.push({ title: 'My Reports', href: reports.mine().url, icon: FolderGit2 });
     }
 
-    const footerNavItems: NavItem[] = [
-        {
-            title: 'Repository',
-            href: 'https://github.com/laravel/react-starter-kit',
-            icon: FolderGit2,
-        },
-        {
-            title: 'Documentation',
-            href: 'https://laravel.com/docs/starter-kits#react',
-            icon: BookOpen,
-        },
-    ];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -76,11 +62,6 @@ export function AppSidebar() {
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                 </SidebarMenu>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <TeamSwitcher />
-                    </SidebarMenuItem>
-                </SidebarMenu>
             </SidebarHeader>
 
             <SidebarContent>
@@ -88,7 +69,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

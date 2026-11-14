@@ -1,15 +1,12 @@
+import { formatDate, formatDateTime } from '@/lib/format';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
-import PendingInvitationsModal from '@/components/pending-invitations-modal';
 import { SafetyNotice } from '@/components/safety-notice';
 import { VerificationStatusBadge } from '@/components/verification-status-badge';
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import { dashboard } from '@/routes';
 import verificationDetails from '@/routes/verification/details';
-import type { DashboardInvitation } from '@/types';
 
 type Props = {
-    pendingInvitations?: DashboardInvitation[];
     status?: string | null;
     verificationNote?: string | null;
     verifiedAt?: string | null;
@@ -19,20 +16,12 @@ type Props = {
     sanctionContact?: string;
 };
 
-export default function Dashboard({ pendingInvitations = [], status, verificationNote, verifiedAt, ratingsWaiting = [], warningSanction, activeSuspension, sanctionContact }: Props) {
+export default function Dashboard({ status, verificationNote, verifiedAt, ratingsWaiting = [], warningSanction, activeSuspension, sanctionContact }: Props) {
     const { auth } = usePage().props;
-    const [showInvitations, setShowInvitations] = useState(
-        pendingInvitations.length > 0,
-    );
 
     return (
         <>
             <Head title="Dashboard" />
-            <PendingInvitationsModal
-                invitations={pendingInvitations}
-                open={pendingInvitations.length > 0 && showInvitations}
-                onOpenChange={setShowInvitations}
-            />
             <div className="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
                 {status && (
                     <div role="status" className="rounded-lg border px-4 py-3 text-sm">
@@ -40,7 +29,7 @@ export default function Dashboard({ pendingInvitations = [], status, verificatio
                     </div>
                 )}
                 {warningSanction && <div className="w-full rounded-lg border border-amber-400 bg-amber-50 p-4 text-sm text-amber-950"><p><strong>Account warning:</strong> {warningSanction.reason}</p><button className="mt-2 underline" type="button" onClick={() => router.post(`/my-sanctions/${warningSanction.id}/acknowledge`)}>Acknowledge warning</button></div>}
-                {activeSuspension && <div role="status" className="w-full rounded-lg border border-red-300 p-4 text-sm"><p>Your account is suspended until {activeSuspension.endsAt ? new Date(activeSuspension.endsAt).toLocaleString() : 'further notice'}.</p><p className="mt-1">{activeSuspension.reason}</p><p className="mt-1">{sanctionContact}</p><Link className="mt-2 inline-block underline" href="/my-sanctions">View account actions</Link></div>}
+                {activeSuspension && <div role="status" className="w-full rounded-lg border border-red-300 p-4 text-sm"><p>Your account is suspended until {activeSuspension.endsAt ? formatDateTime(activeSuspension.endsAt) : 'further notice'}.</p><p className="mt-1">{activeSuspension.reason}</p><p className="mt-1">{sanctionContact}</p><Link className="mt-2 inline-block underline" href="/my-sanctions">View account actions</Link></div>}
                 <div className="flex flex-wrap items-center gap-3">
                     <VerificationStatusBadge status={auth.user.verification_status} />
                     {auth.user.verification_status === 'pending' && (
@@ -69,7 +58,7 @@ export default function Dashboard({ pendingInvitations = [], status, verificatio
                     )}
                     {auth.user.verification_status === 'verified' && (
                         <div role="status" className="rounded-lg border border-green-300 px-4 py-3 text-sm text-green-900 dark:border-green-800 dark:text-green-200">
-                            Your account is verified{verifiedAt ? ` as of ${new Date(verifiedAt).toLocaleDateString()}` : ''}.
+                            Your account is verified{verifiedAt ? ` as of ${formatDate(verifiedAt)}` : ''}.
                         </div>
                     )}
                 </div>

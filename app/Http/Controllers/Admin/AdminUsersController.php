@@ -29,7 +29,6 @@ class AdminUsersController extends Controller
             ->through(fn (User $user) => [
                 'id' => $user->id,
                 'name' => $user->name,
-                'email' => $user->email,
                 'userType' => $user->user_type->value,
                 'userTypeLabel' => config('taskmate.user_types.'.$user->user_type->value),
                 'verificationStatus' => $user->verification_status->value,

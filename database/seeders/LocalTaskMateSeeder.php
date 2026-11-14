@@ -63,39 +63,37 @@ class LocalTaskMateSeeder extends Seeder
             $mode = $modes[($index - 1) % count($modes)];
             $poster = $index % 3 === 0 ? $organization : $faculty;
             $title = 'Synthetic approved demo task '.$index;
-            $task = Task::query()->firstOrCreate(
-                ['title' => $title],
-                [
-                    'poster_id' => $poster->id,
-                    'category' => $categories[($index - 1) % count($categories)],
-                    'description' => 'Synthetic demonstration task for local testing only. This task contains no real offer or location.',
-                    'required_activities' => 'Complete a clearly described sample activity for this local demo.',
-                    'deliverables' => 'Provide the synthetic sample deliverable described for this local test.',
-                    'estimated_duration_hours' => ($index % 5) + 1,
-                    'skill_requirements' => 'Synthetic general skills only.',
-                    'complexity' => ['low', 'medium', 'high'][($index - 1) % 3],
-                    'budget' => 500 + ($index * 250),
-                    'work_mode' => $mode,
-                    'workplace_name' => $mode === 'remote' ? null : 'Synthetic Demo Worksite '.$index,
-                    'workplace_address' => $mode === 'remote' ? null : 'Synthetic campus location '.$index,
-                    'physical_demand' => ['none', 'light', 'moderate'][($index - 1) % 3],
-                    'academic_involvement' => 'none',
-                    'hazard_exposure' => false,
-                    'hazard_description' => null,
-                    'private_meeting_required' => false,
-                    'workplace_setting' => $mode === 'remote' ? null : ['on_campus', 'off_campus_public'][($index - 1) % 2],
-                    'deadline' => null,
-                    'status' => TaskStatus::Approved,
-                    'guidelines_confirmed_at' => now(),
-                    'decision_source' => 'admin',
-                    'risk_level' => 'low',
-                    'risk_score' => 0,
-                    'screened_at' => now(),
-                    'reviewed_by' => User::query()->where('email', 'admin@example.test')->value('id'),
-                    'reviewed_at' => now(),
-                    'review_note' => null,
-                ],
-            );
+            $task = Task::query()->where('title', $title)->first() ?? new Task();
+            $task->poster()->associate($poster);
+            $task->title = $title;
+            $task->category = $categories[($index - 1) % count($categories)];
+            $task->description = 'Synthetic demonstration task for local testing only. This task contains no real offer or location.';
+            $task->required_activities = 'Complete a clearly described sample activity for this local demo.';
+            $task->deliverables = 'Provide the synthetic sample deliverable described for this local test.';
+            $task->estimated_duration_hours = ($index % 5) + 1;
+            $task->skill_requirements = 'Synthetic general skills only.';
+            $task->complexity = ['low', 'medium', 'high'][($index - 1) % 3];
+            $task->budget = 500 + ($index * 250);
+            $task->work_mode = $mode;
+            $task->workplace_name = $mode === 'remote' ? null : 'Synthetic Demo Worksite '.$index;
+            $task->workplace_address = $mode === 'remote' ? null : 'Synthetic campus location '.$index;
+            $task->physical_demand = ['none', 'light', 'moderate'][($index - 1) % 3];
+            $task->academic_involvement = 'none';
+            $task->hazard_exposure = false;
+            $task->hazard_description = null;
+            $task->private_meeting_required = false;
+            $task->workplace_setting = $mode === 'remote' ? null : ['on_campus', 'off_campus_public'][($index - 1) % 2];
+            $task->deadline = null;
+            $task->status = TaskStatus::Approved;
+            $task->guidelines_confirmed_at = now();
+            $task->decision_source = 'admin';
+            $task->risk_level = 'low';
+            $task->risk_score = 0;
+            $task->screened_at = now();
+            $task->reviewed_by = User::query()->where('email', 'admin@example.test')->value('id');
+            $task->reviewed_at = now();
+            $task->review_note = null;
+            $task->save();
             $task->status = TaskStatus::Approved;
             $task->decision_source = 'admin';
             $task->risk_level = 'low';
@@ -108,14 +106,13 @@ class LocalTaskMateSeeder extends Seeder
 
             if ($index <= 3) {
                 $applicant = $index === 3 ? $studentTwo : $studentOne;
-                Application::query()->firstOrCreate(
-                    ['task_id' => $task->id, 'applicant_id' => $applicant->id],
-                    [
-                        'message' => 'Synthetic application message '.$index.' for local testing only.',
-                        'proposed_amount' => 1000 + ($index * 100),
-                        'status' => ApplicationStatus::Pending,
-                    ],
-                );
+                $application = Application::query()->where('task_id', $task->id)->where('applicant_id', $applicant->id)->first() ?? new Application();
+                $application->task()->associate($task);
+                $application->applicant()->associate($applicant);
+                $application->message = 'Synthetic application message '.$index.' for local testing only.';
+                $application->proposed_amount = 1000 + ($index * 100);
+                $application->status = ApplicationStatus::Pending;
+                $application->save();
             }
         }
     }

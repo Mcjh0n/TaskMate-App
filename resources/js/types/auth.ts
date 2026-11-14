@@ -1,9 +1,7 @@
 export type User = {
     id: number;
     name: string;
-    email: string;
     avatar?: string;
-    email_verified_at: string | null;
     user_type: 'student' | 'faculty_staff' | 'organization';
     is_admin: boolean;
     can_post_tasks: boolean;
