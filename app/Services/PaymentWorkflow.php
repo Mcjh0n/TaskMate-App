@@ -14,6 +14,8 @@ use Illuminate\Validation\ValidationException;
 
 class PaymentWorkflow
 {
+    public function __construct(private readonly TaskMateNotifications $alerts) {}
+
     public function markPaid(Agreement $agreement, User $poster, array $data): PaymentEvent
     {
         return DB::transaction(function () use ($agreement, $poster, $data): PaymentEvent {
@@ -68,6 +70,15 @@ class PaymentWorkflow
         $payment->note = $note;
         $payment->created_at = now();
         $payment->save();
+        $recipientId = $event === PaymentEventType::MarkedPaid ? $agreement->student_id : $agreement->poster_id;
+        $recipient = User::query()->findOrFail($recipientId);
+        $task = Task::query()->findOrFail($agreement->task_id);
+        $alertEvent = match ($event) {
+            PaymentEventType::MarkedPaid => 'payment.marked',
+            PaymentEventType::ConfirmedReceived => 'payment.received',
+            PaymentEventType::ReportedNotReceived => 'payment.not_received',
+        };
+        $this->alerts->send($recipient, $alertEvent, route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $actor->id);
         return $payment;
     }
 

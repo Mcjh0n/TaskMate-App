@@ -24,7 +24,7 @@ class EnsureAccountActive
         }
         if (! $sanctions->suspended($user)) return $next($request);
 
-        if ($request->routeIs('dashboard', 'sanctions.mine', 'sanctions.acknowledge', 'logout', 'reports.mine')) return $next($request);
+        if ($request->routeIs('dashboard', 'sanctions.mine', 'sanctions.acknowledge', 'logout', 'reports.mine', 'notifications.*')) return $next($request);
         if ($request->routeIs('reports.reply')) {
             $report = $request->route('report');
             if ($report && $user->can('reply', $report)) return $next($request);

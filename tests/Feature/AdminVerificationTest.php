@@ -155,6 +155,9 @@ class AdminVerificationTest extends TestCase
             'subject_id' => $user->id,
             'note' => null,
         ]);
+        $this->assertSame('account.approved', $user->notifications()->firstOrFail()->data['event']);
+        $this->assertSame('/notifications', $user->notifications()->first()->data['url']);
+        $this->assertSame(0, $admin->notifications()->count());
 
         $action = AdminAction::query()->firstOrFail();
         try {
@@ -191,6 +194,9 @@ class AdminVerificationTest extends TestCase
         $this->assertSame(VerificationStatus::MoreInfoRequested, $moreInfo->fresh()->verification_status);
         $this->assertSame('Please add synthetic supporting details.', $moreInfo->fresh()->verification_note);
         $this->assertSame(2, AdminAction::query()->where('admin_id', $admin->id)->count());
+        $this->assertSame('account.rejected', $rejected->notifications()->firstOrFail()->data['event']);
+        $this->assertSame('account.more_info_requested', $moreInfo->notifications()->firstOrFail()->data['event']);
+        $this->assertSame(0, $admin->notifications()->count());
     }
 
     public function test_admin_cannot_change_own_verification_status(): void
@@ -243,6 +249,7 @@ class AdminVerificationTest extends TestCase
             'subject_type' => User::class,
             'subject_id' => $user->id,
         ]);
+        $this->assertSame('account.resubmitted', $admin->notifications()->latest()->firstOrFail()->data['event']);
         $metadata = AdminAction::query()->where('action', 'user_verification_details_updated')->firstOrFail()->metadata;
         $this->assertSame(['actor_type' => 'user', 'fields' => ['id_number', 'affiliation']], $metadata);
     }

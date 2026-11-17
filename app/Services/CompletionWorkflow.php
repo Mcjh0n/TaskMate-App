@@ -13,6 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class CompletionWorkflow
 {
+    public function __construct(private readonly TaskMateNotifications $alerts) {}
+
     public function markDelivered(Agreement $agreement, User $student, ?string $note): TaskCompletion
     {
         return DB::transaction(function () use ($agreement, $student, $note): TaskCompletion {
@@ -32,6 +34,8 @@ class CompletionWorkflow
             $completion->delivered_at = now();
             $completion->delivered_note = $note;
             $completion->save();
+            $poster = User::query()->findOrFail($agreement->poster_id);
+            $this->alerts->send($poster, 'completion.delivered', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $student->id);
             return $completion;
         });
     }
@@ -58,6 +62,9 @@ class CompletionWorkflow
             $completion->save();
             $task->status = TaskStatus::Completed;
             $task->save();
+            $worker = User::query()->findOrFail($agreement->student_id);
+            $this->alerts->send($worker, 'completion.recorded', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $poster->id);
+            $this->alerts->send([$worker, $poster], 'rating.waiting', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $poster->id);
             return $completion;
         });
     }

@@ -27,6 +27,7 @@ use App\Http\Controllers\Teams\TeamInvitationController;
 use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PublicInformationController;
+use App\Http\Controllers\NotificationController;
 
 Route::inertia('/', 'welcome')->name('home');
 Route::get('/how-it-works', PublicInformationController::class)->defaults('page', 'how-it-works')->name('static.how-it-works');
@@ -108,6 +109,10 @@ Route::middleware(['auth', 'account.active', 'account.verified'])->group(functio
 });
 
 Route::middleware(['auth', 'account.active'])->group(function () {
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/summary', [NotificationController::class, 'summary'])->name('notifications.summary');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::get('/notifications/{notification}/open', [NotificationController::class, 'open'])->name('notifications.open');
     Route::get('/my-sanctions', [SanctionsController::class, 'index'])->name('sanctions.mine');
     Route::post('/my-sanctions/{sanction}/acknowledge', [SanctionsController::class, 'acknowledge'])->name('sanctions.acknowledge');
 });

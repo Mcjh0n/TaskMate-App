@@ -14,9 +14,10 @@ type Props = {
     warningSanction?: { id: number; reason: string } | null;
     activeSuspension?: { id: number; reason: string; endsAt: string | null } | null;
     sanctionContact?: string;
+    recentAlerts?: { id: string; title: string; body: string; url: string; readAt: string | null; createdAt: string | null }[];
 };
 
-export default function Dashboard({ status, verificationNote, verifiedAt, ratingsWaiting = [], warningSanction, activeSuspension, sanctionContact }: Props) {
+export default function Dashboard({ status, verificationNote, verifiedAt, ratingsWaiting = [], warningSanction, activeSuspension, sanctionContact, recentAlerts = [] }: Props) {
     const { auth } = usePage().props;
 
     return (
@@ -64,6 +65,7 @@ export default function Dashboard({ status, verificationNote, verifiedAt, rating
                 </div>
                 <SafetyNotice />
                 {ratingsWaiting.length > 0 && <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Ratings waiting for you</h2>{ratingsWaiting.map((rating) => <div key={rating.id} className="flex flex-wrap items-center justify-between gap-3 border-t pt-3"><div><p className="font-medium">{rating.taskTitle}</p><p className="text-sm text-muted-foreground">{rating.daysLeft} day{rating.daysLeft === 1 ? '' : 's'} left</p></div><Link className="text-sm underline" href={`/agreements/${rating.id}/rate`}>Rate your experience</Link></div>)}</section>}
+                <section className="space-y-3 rounded-xl border p-5" aria-label="Recent activity"><div className="flex items-center justify-between"><h2 className="text-lg font-semibold">Recent activity</h2><Link className="text-sm underline" href="/notifications">View all alerts</Link></div>{recentAlerts.length ? recentAlerts.map((alert) => <Link key={alert.id} href={alert.url} className="block border-t pt-3"><p className="font-medium">{alert.title}</p><p className="text-sm text-muted-foreground">{alert.body}</p></Link>) : <p className="rounded border p-3 text-sm text-muted-foreground">No recent activity yet.</p>}</section>
                 <div className="grid auto-rows-min gap-4 md:grid-cols-3">
                     <div className="relative aspect-video overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border">
                         <PlaceholderPattern className="absolute inset-0 size-full stroke-neutral-900/20 dark:stroke-neutral-100/20" />

@@ -166,6 +166,8 @@ class BrowseApplicationsTest extends TestCase
         $withdrawn = Application::query()->where('task_id', $withdrawnTask->id)->firstOrFail();
         $this->post(route('applications.withdraw', $withdrawn), [])->assertRedirect();
         $this->assertSame(ApplicationStatus::Withdrawn, $withdrawn->fresh()->status);
+        $this->assertSame(1, $poster->notifications()->where('data->event', 'application.withdrawn')->count());
+        $this->assertSame(0, $student->notifications()->count());
         $this->post(route('applications.store', $withdrawnTask), $this->applicationData())->assertForbidden();
 
         $declinedTask = $this->task($poster, ['title' => 'Declined application test']);

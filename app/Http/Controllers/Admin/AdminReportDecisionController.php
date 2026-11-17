@@ -9,12 +9,14 @@ use App\Http\Requests\Admin\AdminReportDecisionRequest;
 use App\Models\Report;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use App\Services\TaskMateNotifications;
+use App\Models\User;
 
 class AdminReportDecisionController extends Controller
 {
-    public function __invoke(AdminReportDecisionRequest $request, Report $report): RedirectResponse
+    public function __invoke(AdminReportDecisionRequest $request, Report $report, TaskMateNotifications $alerts): RedirectResponse
     {
-        DB::transaction(function () use ($request, $report): void {
+        DB::transaction(function () use ($request, $report, $alerts): void {
             $report = Report::query()->lockForUpdate()->findOrFail($report->id);
             abort_unless($request->user()->can('review', $report), 403);
             $decision = $request->validated('decision');
@@ -47,6 +49,13 @@ class AdminReportDecisionController extends Controller
                 'note' => $request->validated('note'),
                 'metadata' => ['decision' => $decision, 'outcome' => $report->outcome?->value],
             ]);
+            $event = match ($decision) {
+                'start_review', 'escalate' => 'report.under_review',
+                'resolve' => 'report.resolved',
+                'dismiss' => 'report.dismissed',
+            };
+            $values = $decision === 'resolve' ? ['outcome' => $report->outcome?->value ?? 'inconclusive'] : [];
+            $alerts->send(User::query()->findOrFail($report->reporter_id), $event, route('reports.show', $report->id, false), ['report_id' => $report->id], $values, $request->user()->id);
         });
 
         return back()->with('status', 'The report review was recorded. This does not order or enforce repayment.');

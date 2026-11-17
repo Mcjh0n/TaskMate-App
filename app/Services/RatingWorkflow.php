@@ -15,12 +15,15 @@ use Illuminate\Validation\ValidationException;
 
 class RatingWorkflow
 {
+    public function __construct(private readonly TaskMateNotifications $alerts) {}
+
     public function submit(Agreement $agreement, User $rater, array $data): Rating
     {
         return DB::transaction(function () use ($agreement, $rater, $data): Rating {
             $agreement = Agreement::query()->lockForUpdate()->findOrFail($agreement->id);
             Gate::authorize('rate', $agreement);
             $poster = $agreement->poster_id === $rater->id;
+            $otherRatingExists = $agreement->ratings()->where('rater_id', '!=', $rater->id)->where('is_hidden', false)->exists();
             $direction = $poster ? RatingDirection::PosterToStudent : RatingDirection::StudentToPoster;
             $rating = new Rating;
             $rating->agreement_id = $agreement->id;
@@ -33,6 +36,11 @@ class RatingWorkflow
             $rating->save();
             foreach ($data['scores'] as $dimension => $score) {
                 $rating->scores()->create(['dimension' => $dimension, 'score' => $score]);
+            }
+            if ($otherRatingExists) {
+                $parties = User::query()->whereKey([$agreement->poster_id, $agreement->student_id])->get();
+                $task = $agreement->task()->firstOrFail();
+                $this->alerts->send($parties, 'rating.visible', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $rater->id);
             }
             return $rating;
         });

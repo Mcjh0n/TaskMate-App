@@ -123,8 +123,11 @@ class RatingsTest extends TestCase
             ->where('ratings.other', null)
             ->where('ratings.waiting', true)
             ->missing('ratings.other.comment'));
+        $this->assertSame(0, $pair['student']->notifications()->count());
         $studentPayload = ['overall_experience' => 4, 'scores' => ['job_description_accuracy' => 4, 'reliability' => 4, 'communication' => 4, 'professionalism' => 4]];
         $this->actingAs($pair['student'])->post(route('agreements.rate.store', $pair['agreement']), $studentPayload)->assertRedirect();
+        $this->assertSame('rating.visible', $pair['poster']->notifications()->firstOrFail()->data['event']);
+        $this->assertSame(0, $pair['student']->notifications()->count());
         $this->actingAs($pair['poster'])->get(route('agreements.show', $pair['agreement']))->assertInertia(fn (Assert $page) => $page->where('ratings.other.overall', 4));
     }
 

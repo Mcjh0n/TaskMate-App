@@ -118,6 +118,7 @@ class AgreementWorkflowTest extends TestCase
         $agreement = $this->createAgreement($pair);
         $first = $agreement->currentVersion;
         $this->actingAs($pair['poster'])->post(route('agreements.revise', $agreement), $this->proposalData(['version_id' => $first->id, 'terms' => 'Updated terms', 'comment' => 'Please review this change.']))->assertRedirect();
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'agreement.revised']);
 
         $agreement->refresh();
         $this->assertSame(2, $agreement->versions()->count());
@@ -160,6 +161,10 @@ class AgreementWorkflowTest extends TestCase
         $this->assertDatabaseCount('agreement_confirmations', 2);
         $this->assertSame(ApplicationStatus::Declined, $waitingApplication->fresh()->status);
         $this->assertNotNull($waitingApplication->fresh()->responded_at);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['poster']->id, 'data->event' => 'agreement.confirmed']);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['poster']->id, 'data->event' => 'agreement.locked']);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $waiting->id, 'data->event' => 'application.declined']);
+        $this->assertDatabaseMissing('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'agreement.locked']);
     }
 
     public function test_locked_agreement_refuses_revision_confirmation_and_cancellation(): void
@@ -184,6 +189,7 @@ class AgreementWorkflowTest extends TestCase
         $version = $agreement->currentVersion;
         $this->actingAs($pair['student'])->post(route('agreements.send-back', $agreement), ['version_id' => $version->id, 'body' => 'Please clarify when drafts will be reviewed.'])->assertRedirect();
         $this->assertDatabaseHas('agreement_messages', ['agreement_id' => $agreement->id, 'user_id' => $pair['student']->id, 'body' => 'Please clarify when drafts will be reviewed.']);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['poster']->id, 'data->event' => 'agreement.sent_back']);
         $this->assertSame(1, $agreement->versions()->count());
     }
 
@@ -208,6 +214,12 @@ class AgreementWorkflowTest extends TestCase
         $this->actingAs($pair['student'])->post(route('applications.store', $pair['task']), ['message' => 'Trying to reapply.', 'work_details_confirmed' => '1'])->assertForbidden();
         $this->actingAs($pair['poster'])->post(route('agreements.cancel', $agreement), ['reason' => 'A duplicate cancel.'])->assertForbidden();
         $this->assertSame('The dates no longer work.', $agreement->fresh()->cancellation_reason);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['poster']->id, 'data->event' => 'agreement.cancelled']);
+        if ($pair['student']->id !== $agreement->fresh()->cancelled_by) {
+            $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'application.cancelled']);
+        } else {
+            $this->assertDatabaseMissing('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'application.cancelled']);
+        }
     }
 
     public function test_after_either_party_cancels_the_poster_can_accept_another_applicant_and_start_a_fresh_agreement(): void

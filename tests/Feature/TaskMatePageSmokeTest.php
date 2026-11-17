@@ -82,6 +82,8 @@ class TaskMatePageSmokeTest extends TestCase
 
         $urls = [
             'home' => route('home'),
+            'notifications.index' => route('notifications.index'),
+            'notifications.summary' => route('notifications.summary'),
             'static.how-it-works' => route('static.how-it-works'),
             'static.task-guidelines' => route('static.task-guidelines'),
             'static.safety' => route('static.safety'),

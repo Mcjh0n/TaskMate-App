@@ -136,6 +136,7 @@ class PrivacyAuditTest extends TestCase
             ['/my-applications', 'applications/index'],
             ['/my-reports', 'reports/index'],
             ['/my-sanctions', 'sanctions/index'],
+            ['/notifications', 'notifications/index'],
             ['/settings/profile', 'settings/profile'],
         ];
         foreach ($checks as [$url, $component]) {

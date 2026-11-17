@@ -181,6 +181,7 @@ class RiskScreeningTest extends TestCase
         $this->assertSame('auto_approved', $second->outcome);
         $this->assertSame(TaskStatus::Approved, $remote->fresh()->status);
         $this->assertSame('system', $remote->fresh()->decision_source);
+        $this->assertSame('task.approved', $poster->notifications()->firstOrFail()->data['event']);
 
         foreach (['onsite', 'hybrid'] as $mode) {
             $inPerson = Task::factory()->create(['poster_id' => $poster->id, 'work_mode' => $mode]);
@@ -214,17 +215,22 @@ class RiskScreeningTest extends TestCase
             'taskmate.high_risk_action' => 'escalate',
         ]);
         $poster = $this->verifiedPoster();
+        $admin = $this->verifiedPoster();
+        $admin->forceFill(['is_admin' => true])->save();
         $moderation = app(TaskModerationService::class);
         $moderate = Task::factory()->create(['poster_id' => $poster->id, 'work_mode' => 'remote', 'hazard_exposure' => true]);
         $assessment = $moderation->screenAndApply($moderate);
         $this->assertSame('needs_review', $assessment->outcome);
         $this->assertSame(TaskStatus::PendingReview, $moderate->fresh()->status);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $admin->id, 'data->event' => 'task.awaiting_review']);
 
         $high = Task::factory()->create(['poster_id' => $poster->id, 'academic_involvement' => 'produces_graded_work']);
         config(['taskmate.high_risk_action' => 'escalate']);
         $escalated = $moderation->screenAndApply($high);
         $this->assertSame('escalated', $escalated->outcome);
         $this->assertSame(TaskStatus::PendingReview, $high->fresh()->status);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $admin->id, 'data->event' => 'task.priority_review']);
+        $this->assertStringNotContainsString('risk', strtolower($admin->notifications()->latest()->firstOrFail()->data['body']));
 
         config(['taskmate.high_risk_action' => 'block']);
         $blockedTask = Task::factory()->create(['poster_id' => $poster->id, 'academic_involvement' => 'produces_graded_work']);
@@ -234,6 +240,7 @@ class RiskScreeningTest extends TestCase
         $this->assertSame('system', $blockedTask->fresh()->decision_source);
         $this->assertStringContainsString('current platform rules', $blockedTask->fresh()->review_note);
         $this->assertStringNotContainsString((string) $blocked->score, $blockedTask->fresh()->review_note);
+        $this->assertSame('task.blocked', $poster->notifications()->latest()->firstOrFail()->data['event']);
     }
 
     public function test_re_screening_after_approved_and_changes_requested_edits_appends_history(): void
@@ -289,6 +296,7 @@ class RiskScreeningTest extends TestCase
         $this->assertNotNull($approved->fresh()->reviewed_at);
         $this->assertSame($admin->id, $approved->fresh()->reviewed_by);
         $this->assertDatabaseHas('admin_actions', ['subject_type' => Task::class, 'subject_id' => $approved->id, 'action' => 'task_approved']);
+        $this->assertSame('task.approved', $poster->notifications()->firstOrFail()->data['event']);
 
         $rejected = Task::factory()->create(['poster_id' => $poster->id, 'risk_level' => 'moderate']);
         $this->post(route('admin.tasks.decision', $rejected), ['decision' => 'reject'])->assertSessionHasErrors('note');
@@ -317,6 +325,8 @@ class RiskScreeningTest extends TestCase
         $this->post(route('admin.tasks.decision', $prohibited), ['decision' => 'approve'])->assertSessionHasErrors('note');
         $this->post(route('admin.tasks.decision', $prohibited), ['decision' => 'approve', 'note' => 'Reviewed and approved this exception.'])->assertRedirect();
         $this->assertDatabaseCount('admin_actions', 5);
+        $this->assertSame(5, $poster->notifications()->count());
+        $this->assertEqualsCanonicalizing(['task.approved', 'task.rejected', 'task.changes_requested', 'task.approved', 'task.approved'], $poster->notifications()->get()->pluck('data')->pluck('event')->all());
     }
 
     public function test_admin_cannot_review_own_task_or_a_non_pending_task(): void

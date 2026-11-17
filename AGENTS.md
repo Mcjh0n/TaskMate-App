@@ -35,6 +35,9 @@ TaskMate records agreements and payment status only. Money moves directly betwee
 - A task can have multiple agreement records over time after a negotiating agreement is cancelled. `Task::agreement()` resolves to the latest record; use agreement `poster_id`/`student_id` and task `poster_id` as the authoritative participant roles. Do not infer task or agreement permissions from account type.
 - Cancelling a negotiating agreement cancels its accepted application and reopens the task as approved. Other pending applications remain active until a later agreement locks; locking declines the remaining pending applications.
 - Master's and doctoral students use the Student account type. Ongoing jobs, separate graduate/alumni accounts, outside applicants, and faculty/staff applications are out of scope for this version.
+- In-app notifications use Laravel's database notification table, synchronous after-commit dispatch through `TaskMateNotifications`, and fixed copy from `TaskMateAlertCatalog`. Keep payloads limited to event/title/body/local target/related IDs; never put identity fields, notes, risk data, rating content, evidence, or conversation text in alerts.
+- Notifications poll through `/notifications/summary` only while a signed-in browser tab is visible. There are no email, push, SMS, WebSocket, preference, scheduler, or conversation features in this phase. Retention is configurable and unset by default; `taskmate:prune-notifications` is manual.
+- All new notification routes must be listed in `tests/Fixtures/web-route-access.php`; the route audit test will fail if any route is missing or its middleware changes.
 
 # STACK AND ENVIRONMENT
 

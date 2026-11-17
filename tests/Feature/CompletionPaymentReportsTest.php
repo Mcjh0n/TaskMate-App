@@ -116,11 +116,15 @@ class CompletionPaymentReportsTest extends TestCase
         $this->actingAs($pair['poster'])->post(route('agreements.completion.delivered', $pair['agreement']))->assertForbidden();
         $this->actingAs($pair['student'])->post(route('agreements.completion.delivered', $pair['agreement']), ['note' => 'Synthetic work delivered'])->assertRedirect();
         $this->assertDatabaseHas('task_completions', ['agreement_id' => $pair['agreement']->id, 'delivered_note' => 'Synthetic work delivered']);
+        $this->assertSame('completion.delivered', $pair['poster']->notifications()->firstOrFail()->data['event']);
         $this->actingAs($pair['student'])->post(route('agreements.completion.delivered', $pair['agreement']))->assertInvalid('completion');
         $this->actingAs($pair['outsider'])->post(route('agreements.completion.complete', $pair['agreement']))->assertForbidden();
         $this->actingAs($pair['poster'])->post(route('agreements.completion.complete', $pair['agreement']), ['note' => 'Synthetic completion'])->assertRedirect();
         $this->assertSame(TaskStatus::Completed, $pair['task']->fresh()->status);
         $this->assertSame($pair['poster']->id, $pair['agreement']->completion->fresh()->completed_by);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'completion.recorded']);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'rating.waiting']);
+        $this->assertDatabaseMissing('notifications', ['notifiable_id' => $pair['poster']->id, 'data->event' => 'rating.waiting']);
         $this->actingAs($pair['poster'])->post(route('agreements.completion.complete', $pair['agreement']))->assertInvalid('completion');
         $this->assertFalse($pair['poster']->can('update', $pair['task']->fresh()));
     }
@@ -146,7 +150,9 @@ class CompletionPaymentReportsTest extends TestCase
         $this->postPaid($pair, ['amount' => '1300.00'])->assertRedirect()->assertSessionHas('status');
         $first = PaymentEvent::query()->firstOrFail();
         $this->assertSame(PaymentStatus::MarkedPaid, $pair['agreement']->fresh()->paymentStatus());
+        $this->assertSame('payment.marked', $pair['student']->notifications()->firstOrFail()->data['event']);
         $this->actingAs($pair['student'])->post(route('agreements.payments.confirm-received', $pair['agreement']), ['amount' => '1300.00'])->assertRedirect();
+        $this->assertSame('payment.received', $pair['poster']->notifications()->firstOrFail()->data['event']);
         $this->assertSame(PaymentStatus::ConfirmedReceived, $pair['agreement']->fresh()->paymentStatus());
         $this->assertFalse($pair['agreement']->fresh()->paymentIsSettled());
         $this->postPaid($pair, ['amount' => '1400.00', 'note' => 'Correction recorded as a new event'])->assertRedirect();
@@ -156,6 +162,8 @@ class CompletionPaymentReportsTest extends TestCase
         $this->postPaid($pair)->assertInvalid('payment');
         $this->actingAs($pair['student'])->post(route('agreements.payments.not-received', $pair['agreement']))->assertInvalid('payment');
         $this->assertSame(4, PaymentEvent::query()->count());
+        $this->assertSame(2, $pair['student']->notifications()->where('data->event', 'payment.marked')->count());
+        $this->assertSame(2, $pair['poster']->notifications()->where('data->event', 'payment.received')->count());
         $this->assertSame('1300.00', $first->fresh()->amount);
         $this->assertSame($pair['version']->content_hash, $pair['version']->fresh()->content_hash);
         $this->assertSame(2, $pair['agreement']->confirmations()->count());
@@ -197,6 +205,8 @@ class CompletionPaymentReportsTest extends TestCase
         $this->actingAs($pair['student'])->post(route('agreements.payments.not-received', $pair['agreement']))->assertRedirect();
         $this->actingAs($pair['student'])->post($url, ['description' => 'I did not receive the recorded payment.'])->assertRedirect();
         $report = Report::query()->firstOrFail();
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['poster']->id, 'data->event' => 'payment.not_received']);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['poster']->id, 'data->event' => 'report.filed']);
         $this->assertSame(ReportStatus::Open, $report->status);
         $this->assertDatabaseCount('payment_events', 2);
         $this->actingAs($pair['student'])->post($url, ['description' => 'Duplicate report'])->assertInvalid('report');
@@ -265,6 +275,7 @@ class CompletionPaymentReportsTest extends TestCase
         $this->actingAs($pair['outsider'])->post(route('reports.reply', $report), ['body' => 'Outsider response'])->assertForbidden();
         $this->actingAs($pair['poster'])->post(route('reports.reply', $report), ['body' => 'Synthetic respondent reply'])->assertRedirect();
         $this->assertDatabaseHas('report_statements', ['report_id' => $report->id, 'user_id' => $pair['poster']->id, 'role' => 'respondent']);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'report.reply']);
         $this->actingAs($pair['outsider'])->get(route('reports.mine'))->assertOk()->assertInertia(fn (Assert $page) => $page->has('reports.data', 0));
     }
 
@@ -279,10 +290,13 @@ class CompletionPaymentReportsTest extends TestCase
         $url = route('admin.reports.decision', $report);
         $this->actingAs($admin)->post($url, ['decision' => 'resolve', 'outcome' => 'supported'])->assertSessionHasErrors('note');
         $this->actingAs($admin)->post($url, ['decision' => 'start_review'])->assertRedirect();
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'report.under_review']);
         $this->assertSame(ReportStatus::UnderReview, $report->fresh()->status);
         $this->actingAs($admin)->post($url, ['decision' => 'resolve', 'outcome' => 'supported', 'note' => 'Synthetic review note'])->assertRedirect();
         $this->assertSame(ReportStatus::Resolved, $report->fresh()->status);
         $this->assertSame(ReportOutcome::Supported, $report->fresh()->outcome);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'report.resolved']);
+        $this->assertStringNotContainsString('Synthetic review note', implode(' ', $pair['student']->notifications()->get()->map(fn ($n) => $n->data['body'])->all()));
         $this->assertSame(2, $report->adminActions()->count());
         $this->actingAs($admin)->post($url, ['decision' => 'dismiss', 'note' => 'No further action'])->assertForbidden();
 

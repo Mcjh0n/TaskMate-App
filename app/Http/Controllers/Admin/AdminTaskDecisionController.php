@@ -8,12 +8,14 @@ use App\Http\Requests\Admin\AdminTaskDecisionRequest;
 use App\Models\Task;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use App\Services\TaskMateNotifications;
+use App\Models\User;
 
 class AdminTaskDecisionController extends Controller
 {
-    public function __invoke(AdminTaskDecisionRequest $request, Task $task): RedirectResponse
+    public function __invoke(AdminTaskDecisionRequest $request, Task $task, TaskMateNotifications $alerts): RedirectResponse
     {
-        DB::transaction(function () use ($request, $task): void {
+        DB::transaction(function () use ($request, $task, $alerts): void {
             $decision = $request->validated('decision');
             $task->status = match ($decision) {
                 'approve' => TaskStatus::Approved,
@@ -36,6 +38,12 @@ class AdminTaskDecisionController extends Controller
                 'note' => $request->validated('note'),
                 'metadata' => ['decision' => $decision, 'risk_level' => $task->risk_level],
             ]);
+            $event = match ($decision) {
+                'approve' => 'task.approved',
+                'reject' => 'task.rejected',
+                'request_changes' => 'task.changes_requested',
+            };
+            $alerts->send(User::query()->findOrFail($task->poster_id), $event, route('tasks.show', $task->id, false), ['task_id' => $task->id], ['task_title' => $task->title], $request->user()->id);
         });
 
         return back()->with('status', 'The task review decision was saved.');

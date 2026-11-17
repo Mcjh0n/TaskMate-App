@@ -8,10 +8,11 @@ use App\Http\Requests\Admin\VerificationDecisionRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use App\Services\TaskMateNotifications;
 
 class VerificationDecisionController extends Controller
 {
-    public function __invoke(VerificationDecisionRequest $request, User $user): RedirectResponse
+    public function __invoke(VerificationDecisionRequest $request, User $user, TaskMateNotifications $alerts): RedirectResponse
     {
         $decision = VerificationStatus::from($request->validated('decision'));
         $note = $decision === VerificationStatus::Verified ? null : $request->validated('note');
@@ -22,7 +23,7 @@ class VerificationDecisionController extends Controller
             VerificationStatus::Pending => throw new \LogicException('Pending is not an administrator decision.'),
         };
 
-        DB::transaction(function () use ($request, $user, $decision, $note, $action): void {
+        DB::transaction(function () use ($request, $user, $decision, $note, $action, $alerts): void {
             $user->verification_status = $decision;
             $user->verification_note = $note;
 
@@ -40,6 +41,13 @@ class VerificationDecisionController extends Controller
                 'action' => $action,
                 'note' => $note,
             ]);
+            $event = match ($decision) {
+                VerificationStatus::Verified => 'account.approved',
+                VerificationStatus::Rejected => 'account.rejected',
+                VerificationStatus::MoreInfoRequested => 'account.more_info_requested',
+                default => null,
+            };
+            if ($event) $alerts->send($user, $event, '/notifications', ['user_id' => $user->id], actorId: $request->user()->id);
         });
 
         return to_route('admin.users.show', $user)->with('status', 'The account verification decision was saved.');

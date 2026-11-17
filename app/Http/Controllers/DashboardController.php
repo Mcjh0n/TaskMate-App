@@ -39,6 +39,14 @@ class DashboardController extends Controller
             'warningSanction' => $sanctions->warning($request->user()) ? ['id' => $sanctions->warning($request->user())->id, 'reason' => $sanctions->warning($request->user())->reason] : null,
             'activeSuspension' => $sanctions->suspended($request->user()) ? ['id' => $sanctions->suspended($request->user())->id, 'reason' => $sanctions->suspended($request->user())->reason, 'endsAt' => $sanctions->suspended($request->user())->ends_at?->toDateTimeString()] : null,
             'sanctionContact' => config('taskmate.moderation.sanction_notice_contact'),
+            'recentAlerts' => $request->user()->notifications()->latest('created_at')->limit(5)->get()->map(fn ($alert) => [
+                'id' => $alert->id,
+                'title' => $alert->data['title'] ?? 'TaskMate activity',
+                'body' => $alert->data['body'] ?? 'There is a new update for you.',
+                'url' => route('notifications.open', $alert->id, false),
+                'readAt' => $alert->read_at?->toDateTimeString(),
+                'createdAt' => $alert->created_at?->toDateTimeString(),
+            ])->values(),
         ]);
     }
 }

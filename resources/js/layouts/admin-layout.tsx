@@ -4,9 +4,11 @@ import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
 import PrototypeBanner from '@/components/prototype-banner';
 import SiteFooter from '@/components/site-footer';
+import { NotificationBell } from '@/components/notification-bell';
 
 export default function AdminLayout({ children }: PropsWithChildren) {
     const { url } = usePage();
+    const pollSeconds = (usePage().props as { notificationPollSeconds?: number }).notificationPollSeconds ?? 10;
     const links = [
         { label: 'Dashboard', href: admin.dashboard().url },
         { label: 'Users', href: admin.users.index().url },
@@ -24,7 +26,8 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                         <Link href={admin.dashboard()} className="text-lg font-semibold">TaskMate Administration</Link>
                         <p className="text-sm text-muted-foreground">Account review</p>
                     </div>
-                    <nav aria-label="Administrator navigation" className="flex gap-2">
+                    <nav aria-label="Administrator navigation" className="flex flex-wrap items-center gap-2">
+                        <NotificationBell pollSeconds={pollSeconds} />
                         {links.map((link) => (
                             <Link
                                 key={link.href}

@@ -70,3 +70,7 @@ Status reflects code and documents at this prototype phase. “Implemented but p
 ## Phase 11 decisions and coverage
 
 The final cancellation and role decisions are implemented in `AgreementWorkflow`, `ApplicationController`, `AgreementPolicy`, `TaskPolicy`, and the task/agreement pages. `AgreementWorkflowTest`, `BrowseApplicationsTest`, `TaskMatePageSmokeTest`, and `PrivacyAuditTest` cover cancellation/reopen, retaining applicants until lock, role-by-record-ID authorization, and the relevant rendered pages. Student posters remain ordinary Students and may also apply to other tasks. The README and `docs/open-decisions.md` define graduate/alumni accounts, ongoing jobs, outside applicants, and faculty/staff applications as out of scope. These boundaries require no additional data model and are not enabled in this prototype.
+
+## Team-added capability
+
+In-app notifications are **Added by team decision, not in the original requirements**. They use Laravel database notifications, `TaskMateAlertCatalog`, workflow-owned after-commit dispatch in `TaskMateNotifications`, `/notifications` routes, and `NotificationBell`. `NotificationsTest`, `PrivacyAuditTest`, and `TaskMatePageSmokeTest` cover safe copy, recipients, ownership, polling, retention pruning, route access, and page rendering. Retention is provisional and unset; polling is configurable and there are no email, push, SMS, WebSocket, conversation, scheduled-reminder, or preference features.

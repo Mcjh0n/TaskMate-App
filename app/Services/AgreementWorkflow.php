@@ -12,12 +12,13 @@ use App\Models\AgreementVersion;
 use App\Models\Application;
 use App\Models\Task;
 use App\Models\User;
+use App\Services\TaskMateNotifications;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class AgreementWorkflow
 {
-    public function __construct(private readonly AgreementContentHasher $hasher, private readonly OffPlatformScanner $scanner) {}
+    public function __construct(private readonly AgreementContentHasher $hasher, private readonly OffPlatformScanner $scanner, private readonly TaskMateNotifications $alerts) {}
 
     public function create(Task $task, User $poster, array $data): Agreement
     {
@@ -42,6 +43,7 @@ class AgreementWorkflow
             $agreement->save();
 
             $this->addVersion($agreement, $poster, $task, $data, null, 1);
+            $this->alerts->send($application->applicant()->firstOrFail(), 'agreement.proposed', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $poster->id);
 
             return $agreement;
         });
@@ -55,7 +57,10 @@ class AgreementWorkflow
             $this->assertCurrentVersion($agreement, (int) $data['version_id']);
             $task = Task::query()->lockForUpdate()->findOrFail($agreement->task_id);
 
-            return $this->addVersion($agreement, $user, $task, $data, $data['comment'] ?? null, (int) $agreement->versions()->max('version_number') + 1);
+            $version = $this->addVersion($agreement, $user, $task, $data, $data['comment'] ?? null, (int) $agreement->versions()->max('version_number') + 1);
+            $otherParty = User::query()->findOrFail($user->id === $agreement->poster_id ? $agreement->student_id : $agreement->poster_id);
+            $this->alerts->send($otherParty, 'agreement.revised', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $user->id);
+            return $version;
         });
     }
 
@@ -84,12 +89,21 @@ class AgreementWorkflow
                     throw ValidationException::withMessages(['agreement' => 'The task is no longer available for agreement.']);
                 }
                 $now = now();
+                $waiting = $task->applications()->with('applicant')->whereKeyNot($agreement->application_id)
+                    ->where('status', ApplicationStatus::Pending->value)->get();
                 $task->applications()
                     ->whereKeyNot($agreement->application_id)
                     ->where('status', ApplicationStatus::Pending->value)
                     ->update(['status' => ApplicationStatus::Declined->value, 'responded_at' => $now, 'updated_at' => $now]);
                 $task->status = TaskStatus::InProgress;
                 $task->save();
+                foreach ($waiting as $application) $this->alerts->send($application->applicant, 'application.declined', route('applications.mine', [], false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $user->id);
+                $parties = User::query()->whereKey([$agreement->poster_id, $agreement->student_id])->get();
+                if ($version->proposed_by !== $user->id) {
+                    $proposer = User::query()->findOrFail($version->proposed_by);
+                    $this->alerts->send($proposer, 'agreement.confirmed', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $user->id);
+                }
+                $this->alerts->send($parties, 'agreement.locked', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $user->id);
             }
         });
     }
@@ -100,6 +114,7 @@ class AgreementWorkflow
             $agreement = Agreement::query()->lockForUpdate()->findOrFail($agreement->id);
             $this->assertNegotiating($agreement);
             $this->assertCurrentVersion($agreement, $versionId);
+            $version = AgreementVersion::query()->findOrFail($versionId);
             $message = new AgreementMessage;
             $message->agreement_id = $agreement->id;
             $message->user_id = $user->id;
@@ -107,6 +122,9 @@ class AgreementWorkflow
             $message->created_at = now();
             $message->save();
             $this->scanner->flag($message, $user, 'body', $body);
+            $proposer = User::query()->findOrFail($version->proposed_by);
+            $task = Task::query()->findOrFail($agreement->task_id);
+            $this->alerts->send($proposer, 'agreement.sent_back', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $user->id);
         });
     }
 
@@ -129,6 +147,10 @@ class AgreementWorkflow
             $application->save();
             $task->status = TaskStatus::Approved;
             $task->save();
+            $applicant = User::query()->findOrFail($application->applicant_id);
+            $this->alerts->send($applicant, 'application.cancelled', route('applications.mine', [], false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $user->id);
+            $otherParty = User::query()->findOrFail($user->id === $agreement->poster_id ? $agreement->student_id : $agreement->poster_id);
+            $this->alerts->send($otherParty, 'agreement.cancelled', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $user->id);
         });
     }
 

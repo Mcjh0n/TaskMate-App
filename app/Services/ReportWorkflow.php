@@ -23,6 +23,8 @@ use Throwable;
 
 class ReportWorkflow
 {
+    public function __construct(private readonly TaskMateNotifications $alerts) {}
+
     /** @param array<int, UploadedFile> $files */
     public function createProblem(User $reporter, User $reportedUser, ?Task $task, ?Agreement $agreement, ReportType $type, string $description, array $files): Report
     {
@@ -55,6 +57,12 @@ class ReportWorkflow
                 $report->status = ReportStatus::Open;
                 $report->save();
                 $this->storeEvidence($report, $reporter, $files, $storedPaths);
+                $ids = array_filter(['report_id' => $report->id, 'task_id' => $task?->id, 'agreement_id' => $agreement?->id], fn ($id) => is_int($id));
+                if (config('taskmate.reports.types.'.$type->value.'.respondent_can_reply', false)) {
+                    $this->alerts->send($reportedUser, 'report.filed', route('reports.show', $report->id, false), $ids, actorId: $reporter->id);
+                }
+                $adminEvent = $report->priority === 'high' ? 'report.priority' : 'report.new';
+                $this->alerts->admins($adminEvent, route('admin.reports.show', $report->id, false), $ids, actorId: $reporter->id);
                 return $report;
             });
         } catch (Throwable $exception) {
@@ -125,6 +133,8 @@ class ReportWorkflow
                 }
 
                 $this->storeEvidence($report, $student, $files, $storedPaths);
+                $this->alerts->send($report->reportedUser()->firstOrFail(), 'report.filed', route('reports.show', $report->id, false), ['report_id' => $report->id, 'task_id' => $report->task_id, 'agreement_id' => $agreement->id], actorId: $student->id);
+                $this->alerts->admins('report.priority', route('admin.reports.show', $report->id, false), ['report_id' => $report->id, 'task_id' => $report->task_id, 'agreement_id' => $agreement->id], actorId: $student->id);
 
                 return $report;
             });
@@ -154,6 +164,9 @@ class ReportWorkflow
                 $statement->created_at = now();
                 $statement->save();
                 $this->storeEvidence($report, $poster, $files, $storedPaths);
+                if ($statement->role === 'respondent') {
+                    $this->alerts->send($report->reporter()->firstOrFail(), 'report.reply', route('reports.show', $report->id, false), ['report_id' => $report->id, 'task_id' => $report->task_id], actorId: $poster->id);
+                }
                 return $statement;
             });
         } catch (Throwable $exception) {

@@ -21,6 +21,9 @@ Every item below is unresolved or provisional. Current behavior is not universit
 | Hosting, backups, keys, and operational security | README and draft privacy document; no production platform selected | Select supported environment and complete security review |
 | Research protocol and acceptance thresholds | `docs/testing/*` templates; all counts/thresholds/schedule TBD | Approve protocol and collect research responses outside TaskMate |
 | TaskMate team use of starter-kit Teams | Team schema and routes retained, UI hidden | Decide separately whether to remove the unused scaffolding after data review |
+| In-app notification retention | `config/taskmate.php` `notifications.retention_days` is `null` (keep all alerts); no schedule runs automatically | Set an approved retention period and invoke `taskmate:prune-notifications` through an approved operational process |
+| Future email or WebSocket delivery | Current final decision is in-app alerts with visible-tab polling every 10 seconds; no email, push, SMS, WebSockets, or notification preferences | Revisit only through a later team decision; review privacy, delivery, availability, packages, and operational costs before expanding channels |
+| Notification copy and polling | `app/Notifications/TaskMateAlertCatalog.php`; `config/taskmate.php` `notifications` (10 seconds, 20 per page, 120 summary requests per minute) | Review event copy and poll limits; keep wording privacy-safe and allow multiple visible tabs |
 
 ## Out of scope for this version
 

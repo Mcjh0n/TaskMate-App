@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Services\TaskMateNotifications;
 
 class VerificationDetailsController extends Controller
 {
@@ -37,13 +38,13 @@ class VerificationDetailsController extends Controller
         ]);
     }
 
-    public function update(UpdateVerificationDetailsRequest $request): RedirectResponse
+    public function update(UpdateVerificationDetailsRequest $request, TaskMateNotifications $alerts): RedirectResponse
     {
         /** @var User $user */
         $user = $request->user();
         $details = $request->validated();
 
-        DB::transaction(function () use ($user, $details): void {
+        DB::transaction(function () use ($user, $details, $alerts): void {
             $user->fill($details);
             $user->verification_status = VerificationStatus::Pending;
             $user->verification_note = null;
@@ -59,6 +60,7 @@ class VerificationDetailsController extends Controller
                     'fields' => array_keys($details),
                 ],
             ]);
+            $alerts->admins('account.resubmitted', route('admin.users.index', [], false), ['user_id' => $user->id], actorId: $user->id);
         });
 
         return to_route('dashboard')->with('status', 'Your information was submitted for review.');

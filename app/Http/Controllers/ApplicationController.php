@@ -17,10 +17,11 @@ use Illuminate\Validation\ValidationException;
 use App\Services\RatingWorkflow;
 use App\Services\RatingSummary;
 use App\Services\OffPlatformScanner;
+use App\Services\TaskMateNotifications;
 
 class ApplicationController extends Controller
 {
-    public function store(StoreApplicationRequest $request, Task $task, OffPlatformScanner $scanner): RedirectResponse
+    public function store(StoreApplicationRequest $request, Task $task, OffPlatformScanner $scanner, TaskMateNotifications $alerts): RedirectResponse
     {
         Gate::authorize('create', [Application::class, $task]);
 
@@ -32,6 +33,7 @@ class ApplicationController extends Controller
         $application->status = ApplicationStatus::Pending;
         $application->save();
         $scanner->flag($application, $request->user(), 'message', $application->message);
+        $alerts->send($task->poster()->firstOrFail(), 'application.new', route('tasks.show', $task->id, false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $request->user()->id);
 
         return back()->with('status', 'Your application was submitted.');
     }
@@ -71,20 +73,22 @@ class ApplicationController extends Controller
         ]);
     }
 
-    public function withdraw(Request $request, Application $application): RedirectResponse
+    public function withdraw(Request $request, Application $application, TaskMateNotifications $alerts): RedirectResponse
     {
         Gate::authorize('withdraw', $application);
         $application->status = ApplicationStatus::Withdrawn;
         $application->responded_at = now();
         $application->save();
+        $application->loadMissing('task.poster');
+        $alerts->send($application->task->poster, 'application.withdrawn', route('tasks.show', $application->task_id, false), ['task_id' => $application->task_id, 'application_id' => $application->id], ['task_title' => $application->task->title], $request->user()->id);
 
         return back()->with('status', 'Your application was withdrawn.');
     }
 
-    public function accept(Request $request, Task $task, Application $application): RedirectResponse
+    public function accept(Request $request, Task $task, Application $application, TaskMateNotifications $alerts): RedirectResponse
     {
         abort_unless($application->task_id === $task->id, 404);
-        DB::transaction(function () use ($request, $task, $application): void {
+        DB::transaction(function () use ($request, $task, $application, $alerts): void {
             $task = Task::query()->lockForUpdate()->findOrFail($task->id);
             $application->refresh();
             Gate::authorize('respond', $application);
@@ -98,22 +102,24 @@ class ApplicationController extends Controller
             $application->save();
             $task->status = TaskStatus::Assigned;
             $task->save();
+            $alerts->send($application->applicant()->firstOrFail(), 'application.accepted', route('applications.mine', [], false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $request->user()->id);
 
         });
 
         return back()->with('status', 'The applicant was accepted.');
     }
 
-    public function decline(Request $request, Task $task, Application $application): RedirectResponse
+    public function decline(Request $request, Task $task, Application $application, TaskMateNotifications $alerts): RedirectResponse
     {
         abort_unless($application->task_id === $task->id, 404);
-        DB::transaction(function () use ($request, $task, $application): void {
+        DB::transaction(function () use ($request, $task, $application, $alerts): void {
             $task = Task::query()->lockForUpdate()->findOrFail($task->id);
             $application->refresh();
             Gate::authorize('respond', $application);
             $application->status = ApplicationStatus::Declined;
             $application->responded_at = now();
             $application->save();
+            $alerts->send($application->applicant()->firstOrFail(), 'application.declined', route('applications.mine', [], false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $request->user()->id);
         });
 
         return back()->with('status', 'The application was declined.');

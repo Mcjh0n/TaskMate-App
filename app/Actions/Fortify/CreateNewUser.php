@@ -14,12 +14,13 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
+use App\Services\TaskMateNotifications;
 
 class CreateNewUser implements CreatesNewUsers
 {
     use PasswordValidationRules, ProfileValidationRules;
 
-    public function __construct(private CreateTeam $createTeam)
+    public function __construct(private CreateTeam $createTeam, private TaskMateNotifications $alerts)
     {
         //
     }
@@ -74,6 +75,8 @@ class CreateNewUser implements CreatesNewUsers
             $user->position = $input['position'] ?? null;
             $user->supporting_info = $input['supporting_info'] ?? null;
             $user->save();
+
+            $this->alerts->admins('account.awaiting_review', route('admin.users.index', [], false), ['user_id' => $user->id], actorId: $user->id);
 
             $this->createTeam->handle($user, $user->name."'s Team", isPersonal: true);
 

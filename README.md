@@ -56,6 +56,7 @@ php artisan taskmate:make-admin someone@example.test
 php artisan taskmate:demo-seed --force
 php artisan taskmate:reset-demo --force
 php artisan taskmate:purge-demo-data --force
+php artisan taskmate:prune-notifications
 php artisan test
 npm run build
 composer audit
@@ -67,6 +68,8 @@ The demo seed, reset, and purge commands are local-only and require `--force`. T
 ## Configuration
 
 Edit `config/taskmate.php` for institutional email domains, role posting rules, task categories/guidelines, risk questions and thresholds, browse/applications, agreement terms, report types/evidence limits, moderation placeholders, off-platform sample patterns, sanctions, ratings, prototype mode, and rate limits. Many rules are explicitly provisional; see [open decisions](docs/open-decisions.md). Do not enable automated approval or use real data until the university approves the relevant policy.
+
+In-app alerts use the `notifications` config section. They poll while a signed-in tab is visible; email, push, and SMS are not used. `taskmate:prune-notifications` deletes alerts older than `notifications.retention_days`; it does nothing while that value is `null`, and no scheduler is configured.
 
 ## Project guide
 

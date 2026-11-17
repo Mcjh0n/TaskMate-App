@@ -18,6 +18,7 @@ use Inertia\Response;
 use App\Services\RatingSummary;
 use App\Services\OffPlatformScanner;
 use App\Services\SanctionService;
+use App\Services\TaskMateNotifications;
 
 class TaskController extends Controller
 {
@@ -163,18 +164,22 @@ class TaskController extends Controller
         return redirect()->route('tasks.show', $task)->with('status', $moderation->posterMessage($assessment));
     }
 
-    public function cancel(Request $request, Task $task): RedirectResponse
+    public function cancel(Request $request, Task $task, TaskMateNotifications $alerts): RedirectResponse
     {
         Gate::authorize('cancel', $task);
-        DB::transaction(function () use ($task): void {
+        DB::transaction(function () use ($task, $alerts, $request): void {
             $lockedTask = Task::query()->lockForUpdate()->findOrFail($task->id);
             $now = now();
+            $pending = $lockedTask->applications()->with('applicant')->where('status', ApplicationStatus::Pending->value)->get();
+            $accepted = $lockedTask->applications()->with('applicant')->where('status', ApplicationStatus::Accepted->value)->get();
             $lockedTask->applications()->where('status', ApplicationStatus::Pending->value)
                 ->update(['status' => ApplicationStatus::Declined->value, 'responded_at' => $now, 'updated_at' => $now]);
             $lockedTask->applications()->where('status', ApplicationStatus::Accepted->value)
                 ->update(['status' => ApplicationStatus::Cancelled->value, 'responded_at' => $now, 'updated_at' => $now]);
             $lockedTask->status = TaskStatus::Cancelled;
             $lockedTask->save();
+            foreach ($pending as $application) $alerts->send($application->applicant, 'application.declined', route('applications.mine', [], false), ['task_id' => $lockedTask->id, 'application_id' => $application->id], ['task_title' => $lockedTask->title], $request->user()->id);
+            foreach ($accepted as $application) $alerts->send($application->applicant, 'application.cancelled', route('applications.mine', [], false), ['task_id' => $lockedTask->id, 'application_id' => $application->id], ['task_title' => $lockedTask->title], $request->user()->id);
         });
 
         return redirect()->route('tasks.mine')->with('status', 'Your task was cancelled.');

@@ -31,6 +31,10 @@ class PhaseNineSafetyTest extends TestCase
     public function test_content_flag_is_deduplicated_and_does_not_block_task_save(): void
     {
         $author = User::factory()->verified()->facultyStaff()->create();
+        $admin = User::factory()->verified()->facultyStaff()->create();
+        $admin->forceFill(['is_admin' => true])->save();
+        $otherAdmin = User::factory()->verified()->facultyStaff()->create();
+        $otherAdmin->forceFill(['is_admin' => true])->save();
         $task = Task::factory()->for($author, 'poster')->create(['title' => 'Message me on Telegram', 'status' => TaskStatus::PendingReview]);
         $scanner = app(OffPlatformScanner::class);
         $scanner->flag($task, $author, 'title', $task->title);
@@ -38,6 +42,9 @@ class PhaseNineSafetyTest extends TestCase
 
         $this->assertSame(1, ContentFlag::query()->where('flaggable_type', $task->getMorphClass())->where('flaggable_id', $task->id)->count());
         $this->assertSame(TaskStatus::PendingReview, $task->fresh()->status);
+        $this->assertSame('flag.new', $admin->notifications()->firstOrFail()->data['event']);
+        $this->assertSame(1, $otherAdmin->notifications()->count());
+        $this->assertSame(0, $author->notifications()->count());
     }
 
     public function test_suspension_is_computed_from_current_time_and_lift_state(): void
@@ -76,6 +83,8 @@ class PhaseNineSafetyTest extends TestCase
         $report = Report::query()->firstOrFail();
         $this->assertSame('high', $report->priority);
         $this->assertSame($poster->id, $report->reported_user_id);
+        $this->assertSame(0, $poster->notifications()->count(), 'A non-replyable report must not alert the reported user.');
+        $this->assertSame('report.priority', $admin->notifications()->firstOrFail()->data['event']);
 
         $this->actingAs($admin)->post(route('admin.reports.decision', $report), [
             'decision' => 'escalate',

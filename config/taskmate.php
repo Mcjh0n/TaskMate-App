@@ -22,6 +22,15 @@ return [
     'students_can_post' => true,
     'require_verification' => true,
 
+    // PROVISIONAL: in-app alerts are not yet part of a finalized notification-retention policy.
+    'notifications' => [
+        'poll_seconds' => 10,
+        'per_page' => 20,
+        'retention_days' => null,
+        // Supports several visible tabs polling every 10 seconds without limiting normal use.
+        'throttle_per_minute' => 120,
+    ],
+
     // PROVISIONAL: the team and adviser must confirm the approved categories.
     'categories' => [
         'tutoring_and_academic_support' => 'Tutoring and academic support',

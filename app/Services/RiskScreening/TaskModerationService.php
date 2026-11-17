@@ -5,10 +5,11 @@ namespace App\Services\RiskScreening;
 use App\Enums\TaskStatus;
 use App\Models\Task;
 use Illuminate\Support\Facades\DB;
+use App\Services\TaskMateNotifications;
 
 class TaskModerationService
 {
-    public function __construct(private readonly RiskScreeningService $screening) {}
+    public function __construct(private readonly RiskScreeningService $screening, private readonly TaskMateNotifications $alerts) {}
 
     public function screenAndApply(Task $task): RiskAssessment
     {
@@ -47,6 +48,15 @@ class TaskModerationService
             $screening->hard_triggers = $assessment->hardTriggers;
             $screening->outcome = $assessment->outcome;
             $screening->save();
+
+            if ($assessment->outcome === 'auto_approved') {
+                $this->alerts->send($task->poster, 'task.approved', route('tasks.show', $task->id, false), ['task_id' => $task->id], ['task_title' => $task->title]);
+            } elseif ($assessment->outcome === 'blocked') {
+                $this->alerts->send($task->poster, 'task.blocked', route('tasks.show', $task->id, false), ['task_id' => $task->id], ['task_title' => $task->title]);
+            } else {
+                $event = $assessment->level->value === 'high' ? 'task.priority_review' : 'task.awaiting_review';
+                $this->alerts->admins($event, route('admin.tasks.show', $task->id, false), ['task_id' => $task->id], ['task_title' => $task->title], $task->poster_id);
+            }
 
             return $assessment;
         });
