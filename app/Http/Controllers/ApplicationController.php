@@ -18,22 +18,26 @@ use App\Services\RatingWorkflow;
 use App\Services\RatingSummary;
 use App\Services\OffPlatformScanner;
 use App\Services\TaskMateNotifications;
+use App\Services\ConversationWorkflow;
 
 class ApplicationController extends Controller
 {
-    public function store(StoreApplicationRequest $request, Task $task, OffPlatformScanner $scanner, TaskMateNotifications $alerts): RedirectResponse
+    public function store(StoreApplicationRequest $request, Task $task, OffPlatformScanner $scanner, TaskMateNotifications $alerts, ConversationWorkflow $conversations): RedirectResponse
     {
         Gate::authorize('create', [Application::class, $task]);
 
-        $application = new Application;
-        $application->task_id = $task->id;
-        $application->applicant_id = $request->user()->id;
-        $application->message = $request->validated('message');
-        $application->proposed_amount = $request->validated('proposed_amount');
-        $application->status = ApplicationStatus::Pending;
-        $application->save();
-        $scanner->flag($application, $request->user(), 'message', $application->message);
-        $alerts->send($task->poster()->firstOrFail(), 'application.new', route('tasks.show', $task->id, false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $request->user()->id);
+        DB::transaction(function () use ($request, $task, $scanner, $alerts, $conversations): void {
+            $application = new Application;
+            $application->task_id = $task->id;
+            $application->applicant_id = $request->user()->id;
+            $application->message = $request->validated('message');
+            $application->proposed_amount = $request->validated('proposed_amount');
+            $application->status = ApplicationStatus::Pending;
+            $application->save();
+            $conversations->createForApplication($application);
+            $scanner->flag($application, $request->user(), 'message', $application->message);
+            $alerts->send($task->poster()->firstOrFail(), 'application.new', route('tasks.show', $task->id, false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $request->user()->id);
+        });
 
         return back()->with('status', 'Your application was submitted.');
     }
@@ -41,7 +45,7 @@ class ApplicationController extends Controller
     public function mine(Request $request): Response
     {
         $applications = $request->user()->applications()
-            ->with(['task.poster:id,name,user_type,organization_name', 'agreement'])
+            ->with(['task.poster:id,name,user_type,organization_name', 'agreement', 'conversation'])
             ->latest()
             ->paginate(12)
             ->through(fn (Application $application) => [
@@ -65,6 +69,8 @@ class ApplicationController extends Controller
                 'paymentStatusLabel' => $application->agreement?->paymentStatus()->label(),
                 'appliedAt' => $application->created_at?->toDateTimeString(),
                 'needsRating' => $application->task->status === TaskStatus::Completed && $application->agreement?->ratings()->where('rater_id', $request->user()->id)->doesntExist(),
+                'conversationId' => $application->conversation?->id,
+                'messageBlockedReason' => $application->conversation?->sendingBlockedReason($request->user()),
             ]);
 
         return Inertia::render('applications/index', [

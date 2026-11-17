@@ -109,6 +109,16 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->hasMany(Application::class, 'applicant_id');
     }
 
+    public function postedConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'poster_id');
+    }
+
+    public function applicantConversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'applicant_id');
+    }
+
     public function postedAgreements(): HasMany
     {
         return $this->hasMany(Agreement::class, 'poster_id');

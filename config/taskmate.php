@@ -31,6 +31,14 @@ return [
         'throttle_per_minute' => 120,
     ],
 
+    // PROVISIONAL: conversation retention is undecided; messages remain private and append-only.
+    'messages' => [
+        'max_length' => 1000,
+        'rate_limit_per_minute' => 10,
+        'report_context_messages' => 5,
+        'retention_days' => null,
+    ],
+
     // PROVISIONAL: the team and adviser must confirm the approved categories.
     'categories' => [
         'tutoring_and_academic_support' => 'Tutoring and academic support',

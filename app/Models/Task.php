@@ -89,6 +89,11 @@ class Task extends Model
         return $this->hasMany(Application::class);
     }
 
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
     public function agreement(): HasOne
     {
         return $this->hasOne(Agreement::class)->latestOfMany();

@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 
-type Alert = { id: string; event: string; title: string; body: string; url: string; createdAt: string | null; readAt: string | null };
-type Summary = { unreadCount: number; latest: Alert[] };
+type Alert = { id: string; event: string; title: string; body: string; url: string; createdAt: string | null; readAt: string | null; count?: number };
+type Summary = { unreadCount: number; unreadMessages: number; latest: Alert[] };
 
-export function NotificationBell({ pollSeconds = 10 }: { pollSeconds?: number }) {
-    const [summary, setSummary] = useState<Summary>({ unreadCount: 0, latest: [] });
+export function NotificationBell({ pollSeconds = 10, showMessages = true }: { pollSeconds?: number; showMessages?: boolean }) {
+    const [summary, setSummary] = useState<Summary>({ unreadCount: 0, unreadMessages: 0, latest: [] });
+    const authUser = (usePage().props as { auth?: { user?: { is_admin?: boolean; verification_status?: string } | null } }).auth?.user;
     const [toast, setToast] = useState<string | null>(null);
     const firstResponse = useRef(true);
-    const knownIds = useRef(new Set<string>());
+    const knownAlerts = useRef(new Map<string, string>());
     const backoff = useRef(0);
 
     useEffect(() => {
@@ -34,15 +35,15 @@ export function NotificationBell({ pollSeconds = 10 }: { pollSeconds?: number })
                 if (response.redirected || response.status === 401) { stopped = true; return; }
                 if (!response.ok) throw new Error(`Notification check failed (${response.status}).`);
                 const next = await response.json() as Summary;
-                const nextIds = new Set(next.latest.map((alert) => alert.id));
+                const nextAlerts = new Map(next.latest.map((alert) => [alert.id, `${alert.createdAt ?? ''}|${alert.count ?? 1}`]));
                 if (!firstResponse.current) {
-                    const arrival = next.latest.find((alert) => !knownIds.current.has(alert.id));
+                    const arrival = next.latest.find((alert) => knownAlerts.current.get(alert.id) !== nextAlerts.get(alert.id));
                     if (arrival) {
                         setToast(arrival.title);
                         window.setTimeout(() => setToast(null), 5000);
                     }
                 }
-                knownIds.current = nextIds;
+                knownAlerts.current = nextAlerts;
                 firstResponse.current = false;
                 setSummary(next);
                 backoff.current = 0;
@@ -75,6 +76,7 @@ export function NotificationBell({ pollSeconds = 10 }: { pollSeconds?: number })
     }, [pollSeconds]);
 
     return <div className="relative flex items-center gap-2">
+        {showMessages && authUser && !authUser.is_admin && authUser.verification_status === 'verified' && <Link href="/messages" className="rounded-md px-3 py-2 text-sm underline-offset-4 hover:underline">Messages{summary.unreadMessages > 0 ? ` (${summary.unreadMessages})` : ''}<span className="sr-only">, {summary.unreadMessages} unread conversations</span></Link>}
         <details className="relative">
             <summary aria-label={`Notifications, ${summary.unreadCount} unread`} className="flex size-10 cursor-pointer list-none items-center justify-center rounded-md hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <Bell className="size-5" aria-hidden="true" />

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\Task;
 use App\Models\Application;
+use App\Services\ConversationWorkflow;
 use App\Enums\TaskStatus;
 use App\Enums\ApplicationStatus;
 use Illuminate\Database\Seeder;
@@ -113,6 +114,7 @@ class LocalTaskMateSeeder extends Seeder
                 $application->proposed_amount = 1000 + ($index * 100);
                 $application->status = ApplicationStatus::Pending;
                 $application->save();
+                if (! $application->conversation()->exists()) app(ConversationWorkflow::class)->createForApplication($application);
             }
         }
     }

@@ -11,6 +11,8 @@ use App\Models\Agreement;
 use App\Models\AgreementVersion;
 use App\Models\Application;
 use App\Models\ContentFlag;
+use App\Models\Conversation;
+use App\Models\ConversationMessage;
 use App\Models\Report;
 use App\Models\Rating;
 use App\Models\Task;
@@ -32,6 +34,18 @@ class TaskMatePageSmokeTest extends TestCase
 
         $task = Task::factory()->for($poster, 'poster')->assigned()->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         $application = Application::factory()->for($task)->for($student, 'applicant')->accepted()->create();
+        $conversation = new Conversation;
+        $conversation->application_id = $application->id;
+        $conversation->task_id = $task->id;
+        $conversation->poster_id = $poster->id;
+        $conversation->applicant_id = $student->id;
+        $conversation->save();
+        $message = new ConversationMessage;
+        $message->conversation_id = $conversation->id;
+        $message->sender_id = $poster->id;
+        $message->body = 'Synthetic smoke-test private message.';
+        $message->created_at = now();
+        $message->save();
         $agreement = Agreement::factory()->for($task)->for($application)->for($poster, 'poster')->for($student, 'student')->create([
             'status' => AgreementStatus::Negotiating,
         ]);
@@ -66,6 +80,13 @@ class TaskMatePageSmokeTest extends TestCase
         $flag->matched = ['Skip the agreement'];
         $flag->field = 'description';
         $flag->save();
+        $messageFlag = new ContentFlag;
+        $messageFlag->flaggable()->associate($message);
+        $messageFlag->source_user_id = $poster->id;
+        $messageFlag->category = 'bypass_agreement';
+        $messageFlag->matched = ['Skip the agreement'];
+        $messageFlag->field = 'body';
+        $messageFlag->save();
         $draft = Task::factory()->for($poster, 'poster')->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         $reopenedTask = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         $cancelledWorker = User::factory()->verified()->create();
@@ -84,6 +105,9 @@ class TaskMatePageSmokeTest extends TestCase
             'home' => route('home'),
             'notifications.index' => route('notifications.index'),
             'notifications.summary' => route('notifications.summary'),
+            'messages.index' => route('messages.index'),
+            'messages.show' => route('messages.show', $conversation),
+            'messages.updates' => route('messages.updates', $conversation),
             'static.how-it-works' => route('static.how-it-works'),
             'static.task-guidelines' => route('static.task-guidelines'),
             'static.safety' => route('static.safety'),
@@ -99,6 +123,7 @@ class TaskMatePageSmokeTest extends TestCase
             'admin.agreements.show' => route('admin.agreements.show', $agreement),
             'admin.flags.index' => route('admin.flags.index'),
             'admin.flags.show' => route('admin.flags.show', $flag),
+            'admin.flags.message' => route('admin.flags.show', $messageFlag),
             'admin.reports.index' => route('admin.reports.index'),
             'admin.reports.show' => route('admin.reports.show', $report),
             'admin.ratings.index' => route('admin.ratings.index'),

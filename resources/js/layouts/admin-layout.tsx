@@ -27,7 +27,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                         <p className="text-sm text-muted-foreground">Account review</p>
                     </div>
                     <nav aria-label="Administrator navigation" className="flex flex-wrap items-center gap-2">
-                        <NotificationBell pollSeconds={pollSeconds} />
+                        <NotificationBell pollSeconds={pollSeconds} showMessages={false} />
                         {links.map((link) => (
                             <Link
                                 key={link.href}

@@ -9,6 +9,7 @@ use App\Models\Task;
 use App\Models\Application;
 use App\Models\AgreementMessage;
 use App\Models\AgreementVersion;
+use App\Models\ConversationMessage;
 
 class OffPlatformScanner
 {
@@ -56,6 +57,7 @@ class OffPlatformScanner
                     $subject instanceof Application => $subject->task_id,
                     $subject instanceof AgreementVersion => $subject->agreement()->value('task_id'),
                     $subject instanceof AgreementMessage => $subject->agreement()->value('task_id'),
+                    $subject instanceof ConversationMessage => $subject->conversation()->value('task_id'),
                     default => 0,
                 };
                 if ($related['task_id'] === 0) unset($related['task_id']);

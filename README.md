@@ -67,7 +67,9 @@ The demo seed, reset, and purge commands are local-only and require `--force`. T
 
 ## Configuration
 
-Edit `config/taskmate.php` for institutional email domains, role posting rules, task categories/guidelines, risk questions and thresholds, browse/applications, agreement terms, report types/evidence limits, moderation placeholders, off-platform sample patterns, sanctions, ratings, prototype mode, and rate limits. Many rules are explicitly provisional; see [open decisions](docs/open-decisions.md). Do not enable automated approval or use real data until the university approves the relevant policy.
+Edit `config/taskmate.php` for institutional email domains, role posting rules, task categories/guidelines, risk questions and thresholds, browse/applications, agreement terms, report types/evidence limits, moderation placeholders, off-platform sample patterns, sanctions, ratings, notifications, messages, prototype mode, and rate limits. Many rules are explicitly provisional; see [open decisions](docs/open-decisions.md). Do not enable automated approval or use real data until the university approves the relevant policy.
+
+One private, text-only conversation is created for each application. Only the task poster and applicant can read it. Administrators see only a reported message snapshot or one message flagged by the scanner. Messages are permanent; retention is undecided (`messages.retention_days` defaults to `null`). See [open decisions](docs/open-decisions.md) before using real data.
 
 In-app alerts use the `notifications` config section. They poll while a signed-in tab is visible; email, push, and SMS are not used. `taskmate:prune-notifications` deletes alerts older than `notifications.retention_days`; it does nothing while that value is `null`, and no scheduler is configured.
 

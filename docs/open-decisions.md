@@ -11,7 +11,7 @@ Every item below is unresolved or provisional. Current behavior is not universit
 | Risk questions, point rules, thresholds, escalation and auto-approval | `risk_questions`, `risk_rules`, `high_risk_action`, `auto_approval_enabled` (off) | Edit the configuration; retain screening history and re-review rules before enabling automation |
 | Workplace validation | `in_person_requires_admin_review` (true); actual criteria undecided | Define criteria before changing automatic review behavior |
 | Task and application status rules | `app/Enums/TaskStatus.php`, `app/Enums/ApplicationStatus.php` | Confirm state transitions and adjust policies/workflows/tests |
-| In-app messaging | Agreement messages only; no general chat | Decide whether messaging is needed and define moderation and retention |
+| In-app messaging | `config/taskmate.php` `messages`; one private thread per application, text only, permanent messages, and no attachments | Confirm retention, harassment handling, and whether contact or payment details may be shared inside chat. Messages remain participant-only except a reported snapshot or a single scanner-flagged message. |
 | Rating visibility, dimensions, window, moderation, appeals | `config/taskmate.php` `ratings` section (after_both, 30 days, min count 3) | Change visibility and fields; approve moderation/appeals before operation |
 | Reports: types, respondent replies, priority, rate limits, evidence, response, escalation | `config/taskmate.php` `reports` and `moderation` sections | Approve types, evidence standards, rate limits, handling, contact, and response targets |
 | Designated administrative office / escalation | `moderation.sanction_notice_contact` placeholder; office label unset | Supply approved office name, contact path, and response target |
@@ -24,6 +24,9 @@ Every item below is unresolved or provisional. Current behavior is not universit
 | In-app notification retention | `config/taskmate.php` `notifications.retention_days` is `null` (keep all alerts); no schedule runs automatically | Set an approved retention period and invoke `taskmate:prune-notifications` through an approved operational process |
 | Future email or WebSocket delivery | Current final decision is in-app alerts with visible-tab polling every 10 seconds; no email, push, SMS, WebSockets, or notification preferences | Revisit only through a later team decision; review privacy, delivery, availability, packages, and operational costs before expanding channels |
 | Notification copy and polling | `app/Notifications/TaskMateAlertCatalog.php`; `config/taskmate.php` `notifications` (10 seconds, 20 per page, 120 summary requests per minute) | Review event copy and poll limits; keep wording privacy-safe and allow multiple visible tabs |
+| Conversation retention | `config/taskmate.php` `messages.retention_days` is `null`; conversations and messages are append-only and currently kept | Approve a retention period and any deletion/anonymization process before adding a purge mechanism |
+| Harassment handling in conversations | Message reports use the Phase 9 report types and only share the reported message plus configured context | Approve response expectations and safeguarding procedures; do not expose full private threads to administrators |
+| Contact and payment details in chat | No message filtering blocks contact or payment details; links remain plain text; off-platform rules flag only configured bypass requests | Decide whether contact/payment details may be shared in chat and whether warnings or additional review are needed; do not conflate direct payment arrangements with bypass requests |
 
 ## Out of scope for this version
 

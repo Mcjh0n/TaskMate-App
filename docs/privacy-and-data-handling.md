@@ -14,7 +14,11 @@
 | applications | `task_id`, `applicant_id`, `message`, `proposed_amount`, `responded_at` | Applying and poster review. |
 | agreements | `task_id`, `application_id`, `poster_id`, `student_id`, `current_version_id`, `cancelled_by`, `cancellation_reason` | Agreement participants and cancellation record. |
 | agreement_versions | `agreement_id`, `proposed_by`, `deliverables`, `terms`, `workplace_name`, `workplace_address`, `payment_arrangement`, `comment`, `content_hash` | Immutable agreement terms/history. Free text should not include unnecessary personal details. |
-| agreement_confirmations / agreement_messages | `agreement_version_id`, `agreement_id`, `user_id`, `body` | Party confirmation and agreement discussion. |
+| agreement_confirmations / agreement_messages | `agreement_version_id`, `agreement_id`, `user_id`, `body` | Party confirmation and agreement discussion. Agreement send-back notes are visible to the two agreement participants and are not copied into unrelated conversation views. |
+| conversations | `application_id`, `task_id`, `poster_id`, `applicant_id`, `closed_by` | Identifies the two participants and close state; readable only by those participants. |
+| conversation_messages | `conversation_id`, `sender_id`, `body` | Permanent, text-only task discussion. Only the poster and applicant can read the thread. Admins see a single message only when a participant reports it (with a frozen context snapshot) or the scanner flags that message. |
+| conversation_reads / conversation_events | `conversation_id`, `user_id`, `last_read_message_id`, `event` | Private per-user unread state and append-only close/reopen history; read markers are not shown as receipts to the other participant. |
+| report_message_snapshots | `report_id`, `message_id`, `sender_id`, `sender_display_name`, `body`, `sent_at` | Frozen report evidence containing only the reported message and configured nearby context. Administrators can read these snapshots on the related report. |
 | task_completions / payment_events | `agreement_id`, `completed_by`, `actor_id`, `delivered_note`, `completion_note`, `note`, `method`, `amount`, `paid_on` | Completion and payment-status record only. Notes/method references should avoid unnecessary personal data. |
 | reports | `reporter_id`, `reported_user_id`, `task_id`, `agreement_id`, `reviewed_by`, `escalated_by`, `description`, `admin_note`, `escalation_note`, `resolution_message` | Reporting and review. Internal notes are admin-only; reporter identity is hidden when replies are disabled. |
 | report_statements / report_evidence | `report_id`, `user_id`, `uploaded_by`, `role`, `body`, `original_name`, `stored_path`, `mime`, `size_bytes` | Replies and evidence handling. Evidence is private and downloaded only through an authorized route. |
@@ -22,7 +26,7 @@
 | admin_actions | `admin_id`, `subject_type`, `subject_id`, `note`, `metadata` | Append-only administrative audit record. |
 | user_sanctions | `user_id`, `reason`, `internal_note`, `issued_by`, `report_id`, `flag_id`, `acknowledged_at`, `lifted_by`, `lift_note` | User-visible platform action and admin-only internal notes. |
 | content_flags | `flaggable_type`, `flaggable_id`, `source_user_id`, `matched`, `reviewed_by`, `review_note` | Admin-only marker for content that may ask users to bypass platform steps. |
-| notifications | `notifiable_type`, `notifiable_id`, `data`, `read_at` | Per-user in-app activity alerts and read state. Payload is restricted to a fixed event key, catalog title/body, local target URL, and related record IDs; no admin notes, identity fields, risk details, rating text, evidence, or conversation content. Retention is configurable and currently unset. |
+| notifications | `notifiable_type`, `notifiable_id`, `data`, `read_at` | Per-user in-app activity alerts and read state. Payload is restricted to a fixed event key, catalog title/body, local target URL, and related record IDs. Message alerts contain the task title and a count, never message text. Retention is configurable and currently unset. |
 | passkeys / team_members / team_invitations | Passkey `user_id` and public credential metadata; team `user_id`, invitation `email`, `invited_by` | Authentication support and retained unused starter-kit Teams feature. Team UI is hidden and TaskMate does not depend on it. |
 
 ## Collection boundaries
@@ -34,6 +38,7 @@ Recommended removal/review before real use: decide whether `users.id_number` is 
 ## DRAFT retention, deletion, and access placeholders
 
 - Retention periods: **TBD by team and university** for accounts, task records, agreements, reports, ratings, evidence, and audit records.
+- Conversation retention: **TBD by team and university**. `config/taskmate.php` `messages.retention_days` currently defaults to `null`; there is no automatic deletion or conversation purge command.
 - Deletion/anonymization procedure: **TBD by team and university**. No user-facing account deletion workflow is approved. Demo purge commands are for local synthetic data only.
 - Evidence storage: private local `evidence` disk; production storage and backup protections **TBD**.
 - Raw identity access: owner and administrators through account settings and the administrator user detail page only. Admin access must be audited.

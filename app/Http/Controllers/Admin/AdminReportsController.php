@@ -58,8 +58,8 @@ class AdminReportsController extends Controller
     {
         $report->load([
             'reporter:id,name,user_type,verification_status', 'reporter.sanctions', 'reportedUser:id,name,user_type,verification_status', 'reportedUser.sanctions',
-            'task.poster:id,name,user_type,verification_status', 'task.screenings', 'task.applications.applicant:id,name,user_type,verification_status', 'task.contentFlags', 'task:id,title,status,poster_id,category,description,required_activities,deliverables,skill_requirements,complexity,budget,work_mode,workplace_name,workplace_address,physical_demand,academic_involvement,hazard_exposure,hazard_description,private_meeting_required,workplace_setting', 'agreement.currentVersion', 'agreement.versions.proposer:id,name', 'agreement.versions.confirmations.user:id,name', 'agreement.messages.user:id,name', 'agreement.paymentEvents.actor:id,name',
-            'agreement.completion', 'statements.user:id,name', 'evidence',
+            'task.poster:id,name,user_type,verification_status', 'task.screenings', 'task.applications.applicant:id,name,user_type,verification_status', 'task.contentFlags', 'task:id,title,status,poster_id,category,description,required_activities,deliverables,skill_requirements,complexity,budget,work_mode,workplace_name,workplace_address,physical_demand,academic_involvement,hazard_exposure,hazard_description,private_meeting_required,workplace_setting', 'agreement.currentVersion', 'agreement.versions.proposer:id,name', 'agreement.versions.confirmations.user:id,name', 'agreement.paymentEvents.actor:id,name',
+            'agreement.completion', 'statements.user:id,name', 'evidence', 'messageSnapshots',
         ]);
         $agreement = $report->agreement;
         $version = $agreement?->currentVersion;
@@ -102,7 +102,12 @@ class AdminReportsController extends Controller
                 ])->values() ?? [],
                 'statements' => $report->statements->map(fn ($statement) => ['id' => $statement->id, 'name' => $statement->user->name, 'role' => $statement->role, 'body' => $statement->body, 'createdAt' => $statement->created_at?->toDateTimeString()])->values(),
                 'versions' => $agreement?->versions->map(fn ($item) => ['version' => $item->version_number, 'proposer' => $item->proposer->name, 'deliverables' => $item->deliverables, 'terms' => $item->terms, 'finalAmount' => $item->final_amount, 'startDate' => $item->start_date?->toDateString(), 'dueDate' => $item->due_date?->toDateString(), 'workMode' => $item->work_mode, 'workplaceName' => $item->workplace_name, 'workplaceAddress' => $item->workplace_address, 'paymentArrangement' => $item->payment_arrangement, 'comment' => $item->comment, 'hash' => $item->content_hash, 'confirmations' => $item->confirmations->map(fn ($confirmation) => ['name' => $confirmation->user->name, 'at' => $confirmation->confirmed_at?->toDateTimeString()])->values()])->values() ?? [],
-                'agreementMessages' => $agreement?->messages->map(fn ($message) => ['name' => $message->user->name, 'body' => $message->body, 'createdAt' => $message->created_at?->toDateTimeString()])->values() ?? [],
+                'messageSnapshots' => $report->messageSnapshots->map(fn ($snapshot) => [
+                    'sender' => $snapshot->sender_display_name,
+                    'body' => $snapshot->body,
+                    'sentAt' => $snapshot->sent_at?->toDateTimeString(),
+                    'isReportedMessage' => $snapshot->is_reported_message,
+                ])->values(),
                 'evidence' => $report->evidence->map(fn ($evidence) => ['id' => $evidence->id, 'name' => $evidence->original_name, 'mime' => $evidence->mime, 'sizeBytes' => $evidence->size_bytes, 'downloadUrl' => route('reports.evidence', [$report, $evidence])])->values(),
             ],
             'canReview' => request()->user()->can('review', $report),

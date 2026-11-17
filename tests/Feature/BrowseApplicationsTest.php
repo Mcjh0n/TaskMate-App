@@ -158,6 +158,7 @@ class BrowseApplicationsTest extends TestCase
         $this->actingAs($student)->post(route('applications.store', $task), $this->applicationData())->assertRedirect();
         $application = Application::firstOrFail();
         $this->assertSame(ApplicationStatus::Pending, $application->status);
+        $this->assertDatabaseHas('conversations', ['application_id' => $application->id, 'task_id' => $task->id, 'poster_id' => $poster->id, 'applicant_id' => $student->id]);
         $this->assertSame('1800.00', $application->proposed_amount);
         $this->post(route('applications.store', $task), $this->applicationData())->assertForbidden();
 

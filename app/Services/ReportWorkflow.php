@@ -14,6 +14,8 @@ use App\Models\PaymentEvent;
 use App\Models\Report;
 use App\Models\ReportEvidence;
 use App\Models\ReportStatement;
+use App\Models\ConversationMessage;
+use App\Models\ReportMessageSnapshot;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +28,7 @@ class ReportWorkflow
     public function __construct(private readonly TaskMateNotifications $alerts) {}
 
     /** @param array<int, UploadedFile> $files */
-    public function createProblem(User $reporter, User $reportedUser, ?Task $task, ?Agreement $agreement, ReportType $type, string $description, array $files): Report
+    public function createProblem(User $reporter, User $reportedUser, ?Task $task, ?Agreement $agreement, ReportType $type, string $description, array $files, ?ConversationMessage $reportedMessage = null): Report
     {
         if ($type === ReportType::NonPayment || $reporter->id === $reportedUser->id || $reportedUser->isAdmin()) {
             throw ValidationException::withMessages(['report' => 'This report cannot be submitted.']);
@@ -36,7 +38,7 @@ class ReportWorkflow
         }
         $storedPaths = [];
         try {
-            return DB::transaction(function () use ($reporter, $reportedUser, $task, $agreement, $type, $description, $files, &$storedPaths): Report {
+            return DB::transaction(function () use ($reporter, $reportedUser, $task, $agreement, $type, $description, $files, $reportedMessage, &$storedPaths): Report {
                 User::query()->lockForUpdate()->findOrFail($reporter->id);
                 $limit = (int) config('taskmate.reports.rate_limit_per_day', 5);
                 if ($reporter->filedReports()->whereDate('created_at', today())->count() >= $limit) {
@@ -55,8 +57,10 @@ class ReportWorkflow
                 $report->priority = config('taskmate.reports.types.'.$type->value.'.priority', 'normal');
                 $report->description = $description;
                 $report->status = ReportStatus::Open;
+                if ($reportedMessage) $report->subject()->associate($reportedMessage);
                 $report->save();
                 $this->storeEvidence($report, $reporter, $files, $storedPaths);
+                if ($reportedMessage) $this->snapshotMessageContext($report, $reportedMessage);
                 $ids = array_filter(['report_id' => $report->id, 'task_id' => $task?->id, 'agreement_id' => $agreement?->id], fn ($id) => is_int($id));
                 if (config('taskmate.reports.types.'.$type->value.'.respondent_can_reply', false)) {
                     $this->alerts->send($reportedUser, 'report.filed', route('reports.show', $report->id, false), $ids, actorId: $reporter->id);
@@ -68,6 +72,28 @@ class ReportWorkflow
         } catch (Throwable $exception) {
             foreach ($storedPaths as $path) Storage::disk('evidence')->delete($path);
             throw $exception;
+        }
+    }
+
+    private function snapshotMessageContext(Report $report, ConversationMessage $reportedMessage): void
+    {
+        $contextCount = max(0, (int) config('taskmate.messages.report_context_messages', 5));
+        $before = ConversationMessage::query()->where('conversation_id', $reportedMessage->conversation_id)
+            ->where('id', '<', $reportedMessage->id)->orderByDesc('id')->limit($contextCount)->get()->reverse();
+        $after = ConversationMessage::query()->where('conversation_id', $reportedMessage->conversation_id)
+            ->where('id', '>', $reportedMessage->id)->orderBy('id')->limit($contextCount)->get();
+        foreach ($before->concat([$reportedMessage])->concat($after) as $message) {
+            $sender = User::query()->findOrFail($message->sender_id);
+            $snapshot = new ReportMessageSnapshot;
+            $snapshot->report_id = $report->id;
+            $snapshot->message_id = $message->id;
+            $snapshot->sender_id = $sender->id;
+            $snapshot->sender_display_name = $sender->isOrganization() ? (string) $sender->organization_name : $sender->name;
+            $snapshot->body = $message->body;
+            $snapshot->sent_at = $message->created_at;
+            $snapshot->is_reported_message = $message->id === $reportedMessage->id;
+            $snapshot->created_at = now();
+            $snapshot->save();
         }
     }
 

@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Validation\Rule;
+use App\Services\ConversationWorkflow;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,11 +28,12 @@ class NotificationController extends Controller
         ]);
     }
 
-    public function summary(Request $request): JsonResponse
+    public function summary(Request $request, ConversationWorkflow $conversations): JsonResponse
     {
         $user = $request->user();
         return response()->json([
             'unreadCount' => $user->unreadNotifications()->count(),
+            'unreadMessages' => $conversations->unreadCount($user),
             'latest' => $user->notifications()->latest('created_at')->limit(5)->get()->map(fn (DatabaseNotification $notification) => $this->item($notification))->values(),
         ]);
     }
@@ -61,6 +63,7 @@ class NotificationController extends Controller
             'event' => $data['event'] ?? 'activity',
             'title' => $data['title'] ?? 'TaskMate activity',
             'body' => $data['body'] ?? 'There is a new update for you.',
+            'count' => max(1, (int) ($data['count'] ?? 1)),
             'url' => route('notifications.open', $notification->id, false),
             'createdAt' => $notification->created_at?->toDateTimeString(),
             'readAt' => $notification->read_at?->toDateTimeString(),

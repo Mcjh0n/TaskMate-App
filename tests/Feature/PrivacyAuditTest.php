@@ -84,7 +84,7 @@ class PrivacyAuditTest extends TestCase
 
     public function test_insert_only_models_keep_update_and_delete_guards(): void
     {
-        foreach (['AgreementVersion', 'AgreementConfirmation', 'AgreementMessage', 'PaymentEvent', 'ReportStatement', 'TaskScreening', 'AdminAction', 'RatingScore'] as $name) {
+        foreach (['AgreementVersion', 'AgreementConfirmation', 'AgreementMessage', 'PaymentEvent', 'ReportStatement', 'TaskScreening', 'AdminAction', 'RatingScore', 'ConversationMessage', 'ConversationEvent', 'ReportMessageSnapshot'] as $name) {
             $source = file_get_contents(app_path('Models/'.$name.'.php'));
             $this->assertStringContainsString('static::updating', $source, $name.' must reject app-level updates.');
             $this->assertStringContainsString('static::deleting', $source, $name.' must reject app-level deletes.');
@@ -137,6 +137,7 @@ class PrivacyAuditTest extends TestCase
             ['/my-reports', 'reports/index'],
             ['/my-sanctions', 'sanctions/index'],
             ['/notifications', 'notifications/index'],
+            ['/messages', 'messages/index'],
             ['/settings/profile', 'settings/profile'],
         ];
         foreach ($checks as [$url, $component]) {
@@ -151,6 +152,28 @@ class PrivacyAuditTest extends TestCase
                 ->missing('adminNote')
                 ->missing('internalNote'));
         }
+    }
+
+    public function test_conversation_props_are_private_and_contain_no_other_identity_fields(): void
+    {
+        $poster = User::factory()->verified()->facultyStaff()->create(['email' => 'poster.private@example.test', 'id_number' => 'FAKE-POSTER-ID']);
+        $student = User::factory()->verified()->create(['email' => 'student.private@example.test', 'id_number' => 'FAKE-STUDENT-ID']);
+        $task = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $application = \App\Models\Application::factory()->for($task)->for($student, 'applicant')->create();
+        $conversation = new \App\Models\Conversation;
+        $conversation->application_id = $application->id; $conversation->task_id = $task->id; $conversation->poster_id = $poster->id; $conversation->applicant_id = $student->id; $conversation->save();
+        $message = new \App\Models\ConversationMessage;
+        $message->conversation_id = $conversation->id; $message->sender_id = $poster->id; $message->body = 'Private synthetic message.'; $message->created_at = now(); $message->save();
+
+        $this->actingAs($student)->get(route('messages.show', $conversation))->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('messages/show')
+            ->where('messages.0.body', 'Private synthetic message.')
+            ->missing('auth.user.email')
+            ->missing('auth.user.id_number')
+            ->missing('conversation.otherPerson.email')
+            ->missing('conversation.otherPerson.id_number')
+            ->missing('messages.0.email')
+            ->missing('messages.0.id_number'));
     }
 
     public function test_forbidden_error_uses_taskmate_error_page(): void

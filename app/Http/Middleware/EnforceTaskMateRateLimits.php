@@ -12,8 +12,8 @@ class EnforceTaskMateRateLimits
     public function handle(Request $request, Closure $next): Response
     {
         $routeName = $request->route()?->getName();
-        if ($routeName === 'notifications.summary') {
-            $key = 'notifications-summary|'.($request->user()?->id ?? $request->ip());
+        if (in_array($routeName, ['notifications.summary', 'messages.updates'], true)) {
+            $key = $routeName.'|'.($request->user()?->id ?? $request->ip());
             $limit = max(1, (int) config('taskmate.notifications.throttle_per_minute', 120));
             if (RateLimiter::tooManyAttempts($key, $limit)) {
                 return response()->json(['message' => 'Please wait before checking alerts again.'], 429)

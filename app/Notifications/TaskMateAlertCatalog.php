@@ -50,6 +50,7 @@ class TaskMateAlertCatalog
             'sanction.suspension' => ['Account suspended', 'Your account was suspended. Review your account actions.'],
             'sanction.lifted' => ['Account action lifted', 'An account action was lifted. You can review your account actions.'],
             'flag.new' => ['New content flag', 'A new content flag is awaiting administrator review.'],
+            'conversation.message' => ['New message about {task_title}', 'Open TaskMate to read the message.'],
         ];
 
         abort_unless(isset($catalog[$event]), 500, 'Unknown TaskMate notification event.');
@@ -57,6 +58,7 @@ class TaskMateAlertCatalog
         foreach ($values as $key => $value) {
             $replacement = match ($key) {
                 'outcome' => in_array($value, ['supported', 'not_supported', 'inconclusive'], true) ? str_replace('_', ' ', $value) : 'completed',
+                'task_title' => mb_substr(preg_replace('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', '[contact removed]', preg_replace('/[\x00-\x1F\x7F]/u', ' ', strip_tags((string) $value)) ?? '') ?? '', 0, 120),
                 default => '',
             };
             $title = str_replace('{'.$key.'}', $replacement, $title);
@@ -76,7 +78,7 @@ class TaskMateAlertCatalog
             'agreement.proposed', 'agreement.revised', 'agreement.sent_back', 'agreement.confirmed', 'agreement.locked', 'agreement.cancelled', 'agreement.admin_cancelled',
             'completion.delivered', 'completion.recorded', 'payment.marked', 'payment.received', 'payment.not_received',
             'rating.waiting', 'rating.visible', 'report.under_review', 'report.resolved', 'report.dismissed', 'report.reply', 'report.filed', 'report.new', 'report.priority',
-            'sanction.warning', 'sanction.suspension', 'sanction.lifted', 'flag.new',
+            'sanction.warning', 'sanction.suspension', 'sanction.lifted', 'flag.new', 'conversation.message',
         ];
         return collect($events)->mapWithKeys(fn (string $event) => [$event => self::get($event, ['outcome' => 'supported'])])->all();
     }

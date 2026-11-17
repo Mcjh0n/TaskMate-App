@@ -57,6 +57,7 @@ class BrowseController extends Controller
         abort_if($task->deadline !== null && $task->deadline->toDateString() < today()->toDateString(), 404);
         $task->load('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at');
         $application = $task->applications()->where('applicant_id', $request->user()->id)->first();
+        $conversation = $application ? $application->conversation()->first() : null;
 
         return Inertia::render('browse/show', [
             'task' => $this->details($task),
@@ -66,6 +67,7 @@ class BrowseController extends Controller
                 'statusLabel' => $application->status->label(),
                 'appliedAt' => $application->created_at?->toDateTimeString(),
             ] : null,
+            'conversation' => $conversation ? ['id' => $conversation->id, 'sendBlockedReason' => $conversation->sendingBlockedReason($request->user())] : null,
             'canApply' => $application === null && $task->status === TaskStatus::Approved
                 && ($task->deadline === null || $task->deadline->toDateString() >= today()->toDateString())
                 && $task->poster_id !== $request->user()->id,
@@ -80,6 +82,7 @@ class BrowseController extends Controller
     {
         abort_unless($application->applicant_id === $request->user()->id, 404);
         $task = $application->task()->with('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at')->firstOrFail();
+        $conversation = $application->conversation()->first();
         abort_if($task->status === TaskStatus::Removed, 404);
 
         return Inertia::render('browse/show', [
@@ -90,6 +93,7 @@ class BrowseController extends Controller
                 'statusLabel' => $application->status->label(),
                 'appliedAt' => $application->created_at?->toDateTimeString(),
             ],
+            'conversation' => $conversation ? ['id' => $conversation->id, 'sendBlockedReason' => $conversation->sendingBlockedReason($request->user())] : null,
             'limitedView' => $task->status !== TaskStatus::Approved,
             'currentTaskStatus' => $task->status->label(),
             'messageMaxLength' => (int) config('taskmate.applications.message_max_length', 1000),

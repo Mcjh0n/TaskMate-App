@@ -15,7 +15,7 @@ import { ProblemReportForm } from '@/components/problem-report-form';
 type Applicant = {
     id: number;
     applicant: { id: number; name: string; type: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
-    message: string; proposedAmount: string | null; status: string; statusLabel: string; appliedAt: string | null;
+    message: string; proposedAmount: string | null; status: string; statusLabel: string; appliedAt: string | null; conversationId: number | null; messageBlockedReason: string | null;
 };
 type Task = {
     id: number; title: string; category: string; budget: string; workMode: string; status: string; description: string;
@@ -73,7 +73,7 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, canRes
                         {problemReport?.flaggedApplicants.includes(application.id) && <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.</div>}
                         {problemReport?.applicantActions.find((item) => item.applicationId === application.id) && <ProblemReportForm action={problemReport.applicantActions.find((item) => item.applicationId === application.id)!.action} types={problemReport.types} reportLabel="Report this applicant" />}
                         <p className="text-sm">Suggested amount: {application.proposedAmount ? `₱${formatAmount(application.proposedAmount)}` : 'No suggestion'} · Applied {application.appliedAt ? formatDate(application.appliedAt) : '—'}</p>
-                        <div className="flex items-center gap-2"><ApplicationStatusBadge status={application.status} label={application.statusLabel} />{canRespondApplications && application.status === 'pending' && task.status === 'approved' && <><Form {...taskApplications.accept.form({ task: task.id, application: application.id })}><Button size="sm" type="submit">Accept</Button></Form><Form {...taskApplications.decline.form({ task: task.id, application: application.id })}><Button size="sm" variant="outline" type="submit">Decline</Button></Form></>}</div>
+                        <div className="flex flex-wrap items-center gap-2"><ApplicationStatusBadge status={application.status} label={application.statusLabel} />{application.conversationId && <Button size="sm" variant="outline" asChild><Link href={`/messages/${application.conversationId}`}>{application.messageBlockedReason ? 'View conversation' : 'Message applicant'}</Link></Button>}{canRespondApplications && application.status === 'pending' && task.status === 'approved' && <><Form {...taskApplications.accept.form({ task: task.id, application: application.id })}><Button size="sm" type="submit">Accept</Button></Form><Form {...taskApplications.decline.form({ task: task.id, application: application.id })}><Button size="sm" variant="outline" type="submit">Decline</Button></Form></>}</div>{application.messageBlockedReason && <p className="text-xs text-muted-foreground">{application.messageBlockedReason}</p>}
                     </article>)}
                 </section>}
                 {problemReport?.taskAction && <ProblemReportForm action={problemReport.taskAction} types={problemReport.types} />}

@@ -16,6 +16,7 @@ use App\Enums\ReportType;
 use App\Enums\ReportStatus;
 use App\Enums\ReportOutcome;
 use App\Services\OffPlatformScanner;
+use App\Services\ConversationWorkflow;
 use App\Models\Agreement;
 use App\Models\AgreementVersion;
 use App\Models\AgreementConfirmation;
@@ -118,6 +119,7 @@ class DemoScenarioSeeder extends Seeder
                 $application->task()->associate($task); $application->applicant()->associate($student);
                 $application->message = 'Synthetic application for local demo only.';
                 $application->status = ApplicationStatus::Accepted; $application->responded_at = now(); $application->save();
+                if (! $application->conversation()->exists()) app(ConversationWorkflow::class)->createForApplication($application);
                 if (! Agreement::where('task_id', $task->id)->exists()) {
                     $agreement = new Agreement(); $agreement->task()->associate($task); $agreement->application()->associate($application);
                     $agreement->poster()->associate($faculty); $agreement->student()->associate($student);
@@ -180,6 +182,7 @@ class DemoScenarioSeeder extends Seeder
             $application->task()->associate($task); $application->applicant()->associate($student);
             $application->message = 'Synthetic accepted application.';
             $application->status = ApplicationStatus::Accepted; $application->responded_at = now(); $application->save();
+            if (! $application->conversation()->exists()) app(ConversationWorkflow::class)->createForApplication($application);
             $agreement = Agreement::where('task_id', $task->id)->first();
             if (! $agreement) $agreement = new Agreement();
             $agreement->task()->associate($task); $agreement->application()->associate($application);

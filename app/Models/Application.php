@@ -43,5 +43,10 @@ class Application extends Model
         return $this->hasOne(Agreement::class);
     }
 
+    public function conversation(): HasOne
+    {
+        return $this->hasOne(Conversation::class);
+    }
+
     public function contentFlags(): MorphMany { return $this->morphMany(ContentFlag::class, 'flaggable'); }
 }

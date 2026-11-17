@@ -22,9 +22,9 @@ type Task = {
 };
 type Poster = { displayName: string; accountType: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; memberSince: string | null; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
 type Application = { status: string; statusLabel: string; appliedAt: string | null };
-type Props = { task: Task; poster: Poster; application: Application | null; canApply?: boolean; limitedView?: boolean; currentTaskStatus?: string; status?: string | null; messageMaxLength: number; problemReport?: { action: string; types: { value: string; label: string }[] }; offPlatformWarning?: boolean };
+type Props = { task: Task; poster: Poster; application: Application | null; conversation?: { id: number; sendBlockedReason: string | null } | null; canApply?: boolean; limitedView?: boolean; currentTaskStatus?: string; status?: string | null; messageMaxLength: number; problemReport?: { action: string; types: { value: string; label: string }[] }; offPlatformWarning?: boolean };
 
-export default function BrowseTaskDetail({ task, poster, application, canApply = false, limitedView = false, currentTaskStatus, status, messageMaxLength, problemReport, offPlatformWarning }: Props) {
+export default function BrowseTaskDetail({ task, poster, application, conversation, canApply = false, limitedView = false, currentTaskStatus, status, messageMaxLength, problemReport, offPlatformWarning }: Props) {
     return (
         <>
             <Head title={task.title} />
@@ -70,6 +70,8 @@ export default function BrowseTaskDetail({ task, poster, application, canApply =
                         <h2 className="font-semibold">Your application</h2>
                         <ApplicationStatusBadge status={application.status} label={application.statusLabel} />
                         {application.status === 'accepted' && <p className="text-sm">You were accepted. The next step is to confirm the agreement with the poster.</p>}
+                        {conversation && <Button variant="outline" asChild><Link href={`/messages/${conversation.id}`}>{conversation.sendBlockedReason ? 'View conversation' : 'Message poster'}</Link></Button>}
+                        {conversation?.sendBlockedReason && <p className="text-sm text-muted-foreground">{conversation.sendBlockedReason}</p>}
                     </section>
                 ) : canApply && (
                     <section className="space-y-4 rounded-xl border p-5">

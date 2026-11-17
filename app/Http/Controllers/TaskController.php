@@ -78,7 +78,7 @@ class TaskController extends Controller
         $canAct = ! app(SanctionService::class)->suspended($request->user());
 
         $applicants = in_array($task->status, [TaskStatus::Approved, TaskStatus::Assigned], true)
-            ? $task->applications()->with('applicant:id,name,user_type,verification_status,affiliation')->latest()->get()->map(fn ($application) => [
+            ? $task->applications()->with(['applicant:id,name,user_type,verification_status,affiliation', 'conversation'])->latest()->get()->map(fn ($application) => [
                 'id' => $application->id,
                 'applicant' => [
                     'id' => $application->applicant->id,
@@ -94,6 +94,8 @@ class TaskController extends Controller
                 'status' => $application->status->value,
                 'statusLabel' => $application->status->label(),
                 'appliedAt' => $application->created_at?->toDateTimeString(),
+                'conversationId' => $application->conversation?->id,
+                'messageBlockedReason' => $application->conversation?->sendingBlockedReason($request->user()),
             ])->values()
             : collect();
 

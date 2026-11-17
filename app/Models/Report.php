@@ -32,6 +32,7 @@ class Report extends Model
     public function reviewer(): BelongsTo { return $this->belongsTo(User::class, 'reviewed_by'); }
     public function statements(): HasMany { return $this->hasMany(ReportStatement::class)->orderBy('id'); }
     public function evidence(): HasMany { return $this->hasMany(ReportEvidence::class)->orderBy('id'); }
+    public function messageSnapshots(): HasMany { return $this->hasMany(ReportMessageSnapshot::class)->orderBy('id'); }
     public function adminActions(): MorphMany { return $this->morphMany(AdminAction::class, 'subject'); }
     public function subject(): MorphTo { return $this->morphTo(); }
     public function sanctions(): HasMany { return $this->hasMany(UserSanction::class); }

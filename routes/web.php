@@ -28,6 +28,8 @@ use App\Http\Middleware\EnsureTeamMembership;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PublicInformationController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\ConversationMessageReportController;
 
 Route::inertia('/', 'welcome')->name('home');
 Route::get('/how-it-works', PublicInformationController::class)->defaults('page', 'how-it-works')->name('static.how-it-works');
@@ -47,6 +49,16 @@ Route::middleware(['auth', 'account.active'])->group(function () {
 
     Route::get('verification/details', [VerificationDetailsController::class, 'edit'])->name('verification.details.edit');
     Route::put('verification/details', [VerificationDetailsController::class, 'update'])->name('verification.details.update');
+});
+
+Route::middleware(['auth', 'account.verified', 'account.active'])->group(function () {
+    Route::get('/messages', [ConversationController::class, 'index'])->name('messages.index');
+    Route::get('/messages/{conversation}', [ConversationController::class, 'show'])->name('messages.show');
+    Route::get('/messages/{conversation}/updates', [ConversationController::class, 'updates'])->name('messages.updates');
+    Route::post('/messages/{conversation}/send', [ConversationController::class, 'send'])->name('messages.send');
+    Route::post('/messages/{conversation}/close', [ConversationController::class, 'close'])->name('messages.close');
+    Route::post('/messages/{conversation}/reopen', [ConversationController::class, 'reopen'])->name('messages.reopen');
+    Route::post('/messages/{conversation}/messages/{message}/report', ConversationMessageReportController::class)->name('messages.report');
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {

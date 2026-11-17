@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\Conversation;
 use App\Notifications\TaskMateAlert;
 use App\Notifications\TaskMateAlertCatalog;
 use Illuminate\Support\Facades\DB;
@@ -40,6 +41,39 @@ class TaskMateNotifications
     public function admins(string $event, string $url, array $relatedIds = [], array $values = [], ?int $actorId = null): void
     {
         $this->send(User::query()->where('is_admin', true)->get(), $event, $url, $relatedIds, $values, $actorId);
+    }
+
+    public function conversationMessage(User $recipient, Conversation $conversation, string $taskTitle, int $actorId): void
+    {
+        if ($recipient->id === $actorId) return;
+        $copy = TaskMateAlertCatalog::get('conversation.message', ['task_title' => $taskTitle]);
+        $payload = [
+            'event' => 'conversation.message',
+            ...$copy,
+            'url' => $this->safeUrl(route('messages.show', $conversation->id, false)),
+            'related_ids' => ['task_id' => $conversation->task_id, 'application_id' => $conversation->application_id],
+            'conversation_id' => $conversation->id,
+            'count' => 1,
+        ];
+        $recipientId = $recipient->id;
+        DB::afterCommit(function () use ($recipientId, $payload): void {
+            $user = User::query()->find($recipientId);
+            if (! $user) return;
+            $existing = $user->unreadNotifications()
+                ->where('data->event', 'conversation.message')
+                ->where('data->conversation_id', $payload['conversation_id'])
+                ->first();
+            if ($existing) {
+                $data = $existing->data;
+                $data['count'] = ((int) ($data['count'] ?? 1)) + 1;
+                $existing->data = $data;
+                $existing->created_at = now();
+                $existing->save();
+                return;
+            }
+            if (! $user->isVerified()) $payload['url'] = route('notifications.index', [], false);
+            $user->notify(new TaskMateAlert($payload));
+        });
     }
 
     private function safeUrl(string $url): string
