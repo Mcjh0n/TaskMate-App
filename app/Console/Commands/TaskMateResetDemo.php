@@ -13,8 +13,7 @@ class TaskMateResetDemo extends Command
     {
         if (! app()->environment('local')) { $this->error('Demo data can only be reset in the local environment.'); return self::FAILURE; }
         if (! $this->option('force')) { $this->error('Pass --force to reset synthetic demo data.'); return self::FAILURE; }
-        $this->call('taskmate:purge-demo-data', ['--force' => true]);
-        $this->call('taskmate:demo-seed', ['--force' => true]);
-        return self::SUCCESS;
+        if ($this->call('taskmate:purge-demo-data', ['--force' => true]) !== self::SUCCESS) return self::FAILURE;
+        return $this->call('taskmate:demo-seed', ['--force' => true]);
     }
 }

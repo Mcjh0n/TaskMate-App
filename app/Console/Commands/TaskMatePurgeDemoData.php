@@ -15,15 +15,42 @@ class TaskMatePurgeDemoData extends Command
     {
         if (! app()->environment('local')) { $this->error('Demo data can only be purged in the local environment.'); return self::FAILURE; }
         if (! $this->option('force')) { $this->error('Pass --force to purge synthetic demo data.'); return self::FAILURE; }
-        $userIds = DB::table('users')->where('email', 'like', '%@example.test')->pluck('id')->all();
+        $syntheticEmails = [
+            'admin@example.test', 'student1@example.test', 'student2@example.test', 'student.pending@example.test',
+            'faculty@example.test', 'organization@example.test', 'organization.pending@example.test', 'student.rejected@example.test',
+        ];
+        $userIds = DB::table('users')->whereIn('email', $syntheticEmails)->pluck('id')->all();
         if ($userIds === []) { $this->info('No synthetic demo accounts were found.'); return self::SUCCESS; }
 
-        $taskIds = $this->ids('tasks', 'poster_id', $userIds);
-        $applicationIds = $this->ids('applications', 'applicant_id', $userIds, fn ($q) => $q->orWhereIn('task_id', $taskIds));
-        $agreementIds = $this->ids('agreements', 'poster_id', $userIds, fn ($q) => $q->orWhereIn('student_id', $userIds)->orWhereIn('task_id', $taskIds)->orWhereIn('application_id', $applicationIds));
-        $reportIds = $this->ids('reports', 'reporter_id', $userIds, fn ($q) => $q->orWhereIn('reported_user_id', $userIds)->orWhereIn('task_id', $taskIds)->orWhereIn('agreement_id', $agreementIds));
-        $ratingIds = $this->ids('ratings', 'rater_id', $userIds, fn ($q) => $q->orWhereIn('ratee_id', $userIds)->orWhereIn('task_id', $taskIds)->orWhereIn('agreement_id', $agreementIds));
-        $flagIds = $this->ids('content_flags', 'source_user_id', $userIds, fn ($q) => $q->orWhereIn('flaggable_id', $taskIds));
+        // Titles from the previous demo seeder are included for a safe one-time cleanup on existing local databases.
+        $legacyScenarioTitles = [
+            'Scenario: Pending review', 'Scenario: Changes requested', 'Scenario: Approved', 'Scenario: Rejected',
+            'Scenario: System-blocked', 'Scenario: Assigned', 'Scenario: In progress', 'Scenario: Completed',
+            'Scenario: Removed', 'Scenario: Cancelled', 'Scenario: High-risk escalated',
+            'Scenario: Please message me on Telegram', 'Scenario: Payment unpaid', 'Scenario: Payment marked-paid',
+            'Scenario: Payment received', 'Scenario: Payment not-received',
+        ];
+        $taskIds = Schema::hasTable('tasks') ? DB::table('tasks')->whereIn('poster_id', $userIds)
+            ->where(fn ($query) => $query->where('title', 'like', 'Synthetic approved demo task %')->orWhere('title', 'like', 'Synthetic scenario: %')->orWhereIn('title', $legacyScenarioTitles))
+            ->where(fn ($query) => $query->where('description', 'like', 'Synthetic demonstration task for local testing only.%')
+                ->orWhere('description', 'Synthetic scenario record for local testing only.')
+                ->orWhere('description', 'Synthetic payment-status scenario.'))
+            ->pluck('id')->all() : [];
+        $applicationIds = Schema::hasTable('applications') ? DB::table('applications')->whereIn('task_id', $taskIds)
+            ->where(fn ($query) => $query->where('message', 'like', 'Synthetic application%'))
+            ->pluck('id')->all() : [];
+        $agreementIds = Schema::hasTable('agreements') ? DB::table('agreements')->whereIn('application_id', $applicationIds)->pluck('id')->all() : [];
+        $conversationIds = Schema::hasTable('conversations') ? DB::table('conversations')->whereIn('application_id', $applicationIds)->pluck('id')->all() : [];
+        $messageIds = Schema::hasTable('conversation_messages') ? DB::table('conversation_messages')->whereIn('conversation_id', $conversationIds)->pluck('id')->all() : [];
+        $reportIds = Schema::hasTable('reports') ? DB::table('reports')->where('description', 'like', 'Synthetic % report scenario.')
+            ->orWhereIn('agreement_id', $agreementIds)->pluck('id')->all() : [];
+        $ratingIds = Schema::hasTable('ratings') ? DB::table('ratings')->whereIn('agreement_id', $agreementIds)->pluck('id')->all() : [];
+        $hasFlagSubjects = $taskIds !== [] || $applicationIds !== [] || $messageIds !== [];
+        $flagIds = Schema::hasTable('content_flags') && $hasFlagSubjects ? DB::table('content_flags')->where(function ($query) use ($taskIds, $applicationIds, $messageIds): void {
+            if ($taskIds !== []) $query->orWhere(fn ($related) => $related->where('flaggable_type', 'App\\Models\\Task')->whereIn('flaggable_id', $taskIds));
+            if ($applicationIds !== []) $query->orWhere(fn ($related) => $related->where('flaggable_type', 'App\\Models\\Application')->whereIn('flaggable_id', $applicationIds));
+            if ($messageIds !== []) $query->orWhere(fn ($related) => $related->where('flaggable_type', 'App\\Models\\ConversationMessage')->whereIn('flaggable_id', $messageIds));
+        })->pluck('id')->all() : [];
 
         DB::transaction(function () use ($userIds, $taskIds, $applicationIds, $agreementIds, $reportIds, $ratingIds, $flagIds): void {
             foreach (DB::table('report_evidence')->whereIn('report_id', $reportIds)->pluck('stored_path') as $path) {
@@ -38,20 +65,23 @@ class TaskMatePurgeDemoData extends Command
             $this->delete('task_completions', 'agreement_id', $agreementIds);
             $this->delete('report_evidence', 'report_id', $reportIds);
             $this->delete('report_statements', 'report_id', $reportIds);
-            $this->delete('user_sanctions', 'user_id', $userIds);
-            $this->delete('user_sanctions', 'report_id', $reportIds);
-            $this->delete('user_sanctions', 'flag_id', $flagIds);
-            $this->delete('user_sanctions', 'issued_by', $userIds);
-            $this->delete('user_sanctions', 'lifted_by', $userIds);
+            if (Schema::hasTable('user_sanctions')) DB::table('user_sanctions')->whereIn('user_id', $userIds)
+                ->where('reason', 'like', 'Synthetic % scenario.')->delete();
             $this->delete('content_flags', 'id', $flagIds);
             $this->delete('task_screenings', 'task_id', $taskIds);
             if (Schema::hasTable('admin_actions')) {
-                $subjectIds = array_merge($userIds, $taskIds, $reportIds, $ratingIds, $flagIds, $applicationIds, $agreementIds);
-                DB::table('admin_actions')->whereIn('admin_id', $userIds)->orWhere(fn ($query) => $query
-                    ->whereIn('subject_type', ['App\\Models\\User', 'App\\Models\\Task', 'App\\Models\\Report', 'App\\Models\\Rating', 'App\\Models\\ContentFlag', 'App\\Models\\Application', 'App\\Models\\Agreement'])
-                    ->whereIn('subject_id', $subjectIds))->delete();
+                foreach ([
+                    'App\\Models\\Task' => $taskIds, 'App\\Models\\Report' => $reportIds,
+                    'App\\Models\\Rating' => $ratingIds, 'App\\Models\\ContentFlag' => $flagIds,
+                    'App\\Models\\Application' => $applicationIds, 'App\\Models\\Agreement' => $agreementIds,
+                ] as $subjectType => $subjectIds) {
+                    if ($subjectIds !== []) DB::table('admin_actions')->where('subject_type', $subjectType)->whereIn('subject_id', $subjectIds)->delete();
+                }
             }
-            $this->delete('admin_actions', 'admin_id', $userIds);
+            if (Schema::hasTable('notifications')) {
+                DB::table('notifications')->where('notifiable_type', 'App\\Models\\User')->whereIn('notifiable_id', $userIds)->delete();
+                foreach ($taskIds as $taskId) DB::table('notifications')->where('data->related_ids->task_id', $taskId)->delete();
+            }
             $this->delete('reports', 'id', $reportIds);
             $this->delete('agreements', 'id', $agreementIds);
             $this->delete('applications', 'id', $applicationIds);

@@ -14,8 +14,12 @@ class LocalTaskMateSeederTest extends TestCase
     public function test_local_seed_data_uses_synthetic_examples_and_expected_statuses(): void
     {
         $this->seed(LocalTaskMateSeeder::class);
+        $this->seed(LocalTaskMateSeeder::class);
 
         $this->assertDatabaseCount('users', 7);
+        $this->assertDatabaseCount('tasks', 12);
+        $this->assertDatabaseCount('applications', 3);
+        $this->assertDatabaseCount('conversations', 3);
         $this->assertDatabaseHas('users', [
             'email' => 'admin@example.test',
             'is_admin' => true,

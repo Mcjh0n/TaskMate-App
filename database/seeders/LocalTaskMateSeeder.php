@@ -25,28 +25,16 @@ class LocalTaskMateSeeder extends Seeder
         ];
 
         foreach ($accounts as [$name, $email, $type, $affiliation, $idNumber, $organizationName, $position, $supportingInfo, $isAdmin, $status]) {
-            $user = User::query()->where('email', $email)->first();
-
-            if (! $user) {
-                $user = User::factory()->create([
-                    'name' => $name,
-                    'email' => $email,
-                    'user_type' => $type,
-                    'affiliation' => $affiliation,
-                    'id_number' => $idNumber,
-                    'organization_name' => $organizationName,
-                    'position' => $position,
-                    'supporting_info' => $supportingInfo,
-                ]);
-            } else {
-                $user->name = $name;
-                $user->user_type = $type;
-                $user->affiliation = $affiliation;
-                $user->id_number = $idNumber;
-                $user->organization_name = $organizationName;
-                $user->position = $position;
-                $user->supporting_info = $supportingInfo;
-            }
+            $user = User::query()->firstOrNew(['email' => $email]);
+            $user->name = $name;
+            $user->user_type = $type;
+            $user->affiliation = $affiliation;
+            $user->id_number = $idNumber;
+            $user->organization_name = $organizationName;
+            $user->position = $position;
+            $user->supporting_info = $supportingInfo;
+            if (! $user->exists) $user->password = \Illuminate\Support\Facades\Hash::make('password');
+            $user->email_verified_at ??= now();
 
             $user->is_admin = $isAdmin;
             $user->verification_status = $status;
@@ -64,7 +52,9 @@ class LocalTaskMateSeeder extends Seeder
             $mode = $modes[($index - 1) % count($modes)];
             $poster = $index % 3 === 0 ? $organization : $faculty;
             $title = 'Synthetic approved demo task '.$index;
-            $task = Task::query()->where('title', $title)->first() ?? new Task();
+            $task = $poster->tasks()->where('title', $title)->first();
+            if ($task && ! str_starts_with($task->description, 'Synthetic demonstration task for local testing only.')) continue;
+            $task ??= $poster->tasks()->make(['title' => $title]);
             $task->poster()->associate($poster);
             $task->title = $title;
             $task->category = $categories[($index - 1) % count($categories)];
@@ -95,19 +85,11 @@ class LocalTaskMateSeeder extends Seeder
             $task->reviewed_at = now();
             $task->review_note = null;
             $task->save();
-            $task->status = TaskStatus::Approved;
-            $task->decision_source = 'admin';
-            $task->risk_level = 'low';
-            $task->risk_score = 0;
-            $task->screened_at = now();
-            $task->reviewed_by = User::query()->where('email', 'admin@example.test')->value('id');
-            $task->reviewed_at = now();
-            $task->review_note = null;
-            $task->save();
 
             if ($index <= 3) {
                 $applicant = $index === 3 ? $studentTwo : $studentOne;
-                $application = Application::query()->where('task_id', $task->id)->where('applicant_id', $applicant->id)->first() ?? new Application();
+                $application = $task->applications()->firstOrNew(['applicant_id' => $applicant->id]);
+                if ($application->exists && ! str_starts_with($application->message, 'Synthetic application message ')) continue;
                 $application->task()->associate($task);
                 $application->applicant()->associate($applicant);
                 $application->message = 'Synthetic application message '.$index.' for local testing only.';

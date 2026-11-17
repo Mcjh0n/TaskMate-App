@@ -43,20 +43,22 @@ class DemoScenarioSeeder extends Seeder
         $student = User::where('email', 'student1@example.test')->firstOrFail();
 
         foreach ([
-            ['Scenario: Pending review', TaskStatus::PendingReview],
-            ['Scenario: Changes requested', TaskStatus::ChangesRequested],
-            ['Scenario: Approved', TaskStatus::Approved],
-            ['Scenario: Rejected', TaskStatus::Rejected],
-            ['Scenario: System-blocked', TaskStatus::Rejected],
-            ['Scenario: Assigned', TaskStatus::Assigned],
-            ['Scenario: In progress', TaskStatus::InProgress],
-            ['Scenario: Completed', TaskStatus::Completed],
-            ['Scenario: Removed', TaskStatus::Removed],
-            ['Scenario: Cancelled', TaskStatus::Cancelled],
-            ['Scenario: High-risk escalated', TaskStatus::PendingReview],
-            ['Scenario: Please message me on Telegram', TaskStatus::Approved],
+            ['Synthetic scenario: Pending review', TaskStatus::PendingReview],
+            ['Synthetic scenario: Changes requested', TaskStatus::ChangesRequested],
+            ['Synthetic scenario: Approved', TaskStatus::Approved],
+            ['Synthetic scenario: Rejected', TaskStatus::Rejected],
+            ['Synthetic scenario: System-blocked', TaskStatus::Rejected],
+            ['Synthetic scenario: Assigned', TaskStatus::Assigned],
+            ['Synthetic scenario: In progress', TaskStatus::InProgress],
+            ['Synthetic scenario: Completed', TaskStatus::Completed],
+            ['Synthetic scenario: Removed', TaskStatus::Removed],
+            ['Synthetic scenario: Cancelled', TaskStatus::Cancelled],
+            ['Synthetic scenario: High-risk escalated', TaskStatus::PendingReview],
+            ['Synthetic scenario: Please message me on Telegram', TaskStatus::Approved],
         ] as [$title, $status]) {
-            $task = Task::query()->where('title', $title)->first() ?? new Task();
+            $task = $faculty->tasks()->where('title', $title)->first();
+            if ($task && ! str_starts_with($task->description, 'Synthetic scenario record for local testing only.')) continue;
+            $task ??= $faculty->tasks()->make(['title' => $title]);
             $task->poster()->associate($faculty);
             $task->title = $title;
             $task->category = array_key_first(config('taskmate.categories'));
@@ -78,9 +80,9 @@ class DemoScenarioSeeder extends Seeder
             $task->workplace_setting = null;
             $task->status = $status;
             $task->guidelines_confirmed_at = now();
-            $task->risk_level = $title === 'Scenario: High-risk escalated' ? 'high' : 'low';
-            $task->risk_score = $title === 'Scenario: High-risk escalated' ? 8 : 0;
-            $task->decision_source = $title === 'Scenario: High-risk escalated' ? null : 'admin';
+            $task->risk_level = $title === 'Synthetic scenario: High-risk escalated' ? 'high' : 'low';
+            $task->risk_score = $title === 'Synthetic scenario: High-risk escalated' ? 8 : 0;
+            $task->decision_source = $title === 'Synthetic scenario: High-risk escalated' ? null : 'admin';
             $task->screened_at = now();
             $task->reviewed_by = in_array($status, [TaskStatus::Approved, TaskStatus::Rejected, TaskStatus::ChangesRequested], true) ? $admin->id : null;
             $task->reviewed_at = in_array($status, [TaskStatus::Approved, TaskStatus::Rejected, TaskStatus::ChangesRequested], true) ? now() : null;
@@ -88,40 +90,42 @@ class DemoScenarioSeeder extends Seeder
             $task->status = $status;
             if ($status === TaskStatus::ChangesRequested) $task->review_note = 'Synthetic note requesting clearer details.';
             if ($status === TaskStatus::Rejected) $task->review_note = 'Synthetic rejected task scenario.';
-            if ($title === 'Scenario: High-risk escalated') {
+            if ($title === 'Synthetic scenario: High-risk escalated') {
                 $task->risk_level = 'high'; $task->risk_score = 8; $task->decision_source = null;
             }
-            if ($title === 'Scenario: System-blocked') {
+            if ($title === 'Synthetic scenario: System-blocked') {
                 $task->risk_level = 'high'; $task->risk_score = 9; $task->decision_source = 'system';
                 $task->review_note = 'This synthetic task was blocked for the local demo scenario.'; $task->reviewed_by = null;
             }
             if (in_array($status, [TaskStatus::Approved, TaskStatus::Rejected, TaskStatus::ChangesRequested], true)) {
                 $task->reviewed_by = $admin->id; $task->reviewed_at = now();
             }
-            if ($title === 'Scenario: System-blocked') $task->reviewed_by = null;
+            if ($title === 'Synthetic scenario: System-blocked') $task->reviewed_by = null;
             if ($status === TaskStatus::Removed) {
                 $task->removed_by = $admin->id; $task->removed_at = now(); $task->removal_reason = 'Synthetic removal scenario.';
             }
             $task->save();
 
-            if (in_array($title, ['Scenario: High-risk escalated', 'Scenario: System-blocked'], true) && ! $task->screenings()->exists()) {
+            if (in_array($title, ['Synthetic scenario: High-risk escalated', 'Synthetic scenario: System-blocked'], true) && ! $task->screenings()->exists()) {
                 $screening = new TaskScreening(); $screening->task()->associate($task);
-                $screening->risk_level = 'high'; $screening->risk_score = $title === 'Scenario: System-blocked' ? 9 : 8;
+                $screening->risk_level = 'high'; $screening->risk_score = $title === 'Synthetic scenario: System-blocked' ? 9 : 8;
                 $screening->factors = [['factor' => 'Synthetic scenario', 'points' => 8, 'reason' => 'Demo data only.']];
-                $screening->keyword_hits = []; $screening->hard_triggers = []; $screening->outcome = $title === 'Scenario: System-blocked' ? 'blocked' : 'escalated'; $screening->save();
+                $screening->keyword_hits = []; $screening->hard_triggers = []; $screening->outcome = $title === 'Synthetic scenario: System-blocked' ? 'blocked' : 'escalated'; $screening->save();
             }
-            if ($title === 'Scenario: Please message me on Telegram') {
+            if ($title === 'Synthetic scenario: Please message me on Telegram') {
                 app(OffPlatformScanner::class)->flag($task, $faculty, 'description', 'Please message me on Telegram');
             }
 
             if ($status === TaskStatus::Assigned) {
-                $application = Application::where('task_id', $task->id)->where('applicant_id', $student->id)->first() ?? new Application();
+                $application = $task->applications()->firstOrNew(['applicant_id' => $student->id]);
+                if ($application->exists && ! str_starts_with($application->message, 'Synthetic application for local demo only.')) continue;
                 $application->task()->associate($task); $application->applicant()->associate($student);
                 $application->message = 'Synthetic application for local demo only.';
                 $application->status = ApplicationStatus::Accepted; $application->responded_at = now(); $application->save();
                 if (! $application->conversation()->exists()) app(ConversationWorkflow::class)->createForApplication($application);
-                if (! Agreement::where('task_id', $task->id)->exists()) {
-                    $agreement = new Agreement(); $agreement->task()->associate($task); $agreement->application()->associate($application);
+                $agreement = $task->agreements()->firstOrNew(['application_id' => $application->id]);
+                if (! $agreement->exists) {
+                    $agreement->task()->associate($task); $agreement->application()->associate($application);
                     $agreement->poster()->associate($faculty); $agreement->student()->associate($student);
                     $agreement->status = AgreementStatus::Negotiating; $agreement->save();
                 }
@@ -152,14 +156,15 @@ class DemoScenarioSeeder extends Seeder
             $sanction->issuer()->associate($admin); $sanction->save();
         }
 
-        $reportTask = Task::where('title', 'Scenario: Completed')->firstOrFail();
+        $reportTask = Task::query()->where('title', 'Synthetic scenario: Completed')->firstOrFail();
         foreach ([
             ['open', ReportStatus::Open, null],
             ['under-review', ReportStatus::UnderReview, null],
             ['escalated', ReportStatus::UnderReview, null],
             ['resolved', ReportStatus::Resolved, ReportOutcome::Inconclusive],
         ] as [$label, $status, $outcome]) {
-            if (Report::where('description', 'Synthetic '.$label.' report scenario.')->exists()) continue;
+            $existing = Report::query()->where('description', 'Synthetic '.$label.' report scenario.')->first();
+            if ($existing) continue;
             $report = new Report(); $report->reporter()->associate($student); $report->reportedUser()->associate($faculty);
             $report->task()->associate($reportTask); $report->type = ReportType::Other; $report->description = 'Synthetic '.$label.' report scenario.';
             $report->status = $status; $report->outcome = $outcome; $report->priority = $label === 'escalated' ? 'high' : 'normal';
@@ -169,8 +174,11 @@ class DemoScenarioSeeder extends Seeder
         }
 
         foreach (['unpaid', 'marked-paid', 'received', 'not-received'] as $paymentCase) {
-            $task = Task::query()->where('title', 'Scenario: Payment '.$paymentCase)->first() ?? new Task();
-            $task->poster()->associate($faculty); $task->title = 'Scenario: Payment '.$paymentCase;
+            $taskTitle = 'Synthetic scenario: Payment '.$paymentCase;
+            $task = $faculty->tasks()->where('title', $taskTitle)->first();
+            if ($task && ! str_starts_with($task->description, 'Synthetic payment-status scenario.')) continue;
+            $task ??= $faculty->tasks()->make(['title' => $taskTitle]);
+            $task->poster()->associate($faculty); $task->title = $taskTitle;
             $task->category = array_key_first(config('taskmate.categories')); $task->description = 'Synthetic payment-status scenario.';
             $task->required_activities = 'Synthetic activity.'; $task->deliverables = 'Synthetic deliverable.';
             $task->estimated_duration_hours = 1; $task->complexity = 'low'; $task->budget = 500; $task->work_mode = 'remote';
@@ -178,16 +186,19 @@ class DemoScenarioSeeder extends Seeder
             $task->physical_demand = 'none'; $task->academic_involvement = 'none';
             $task->hazard_exposure = false; $task->private_meeting_required = false; $task->workplace_setting = null;
             $task->status = TaskStatus::InProgress; $task->save();
-            $application = Application::where('task_id', $task->id)->where('applicant_id', $student->id)->first() ?? new Application();
+            $application = $task->applications()->firstOrNew(['applicant_id' => $student->id]);
+            if ($application->exists && ! str_starts_with($application->message, 'Synthetic accepted application.')) continue;
             $application->task()->associate($task); $application->applicant()->associate($student);
             $application->message = 'Synthetic accepted application.';
             $application->status = ApplicationStatus::Accepted; $application->responded_at = now(); $application->save();
             if (! $application->conversation()->exists()) app(ConversationWorkflow::class)->createForApplication($application);
-            $agreement = Agreement::where('task_id', $task->id)->first();
-            if (! $agreement) $agreement = new Agreement();
-            $agreement->task()->associate($task); $agreement->application()->associate($application);
-            $agreement->poster()->associate($faculty); $agreement->student()->associate($student);
-            if (! $agreement->exists) { $agreement->status = AgreementStatus::Agreed; $agreement->locked_at = now(); $agreement->save(); }
+            $agreement = $task->agreements()->firstOrNew(['application_id' => $application->id]);
+            if ($agreement->exists && ! $agreement->versions()->where('comment', 'Synthetic demo proposal.')->exists()) continue;
+            if (! $agreement->exists) {
+                $agreement->task()->associate($task); $agreement->application()->associate($application);
+                $agreement->poster()->associate($faculty); $agreement->student()->associate($student);
+                $agreement->status = AgreementStatus::Agreed; $agreement->locked_at = now(); $agreement->save();
+            }
             if (! $agreement->current_version_id) {
                 $version = new AgreementVersion(); $version->agreement()->associate($agreement); $version->version_number = 1;
                 $version->proposed_by = $faculty->id; $version->deliverables = 'Synthetic agreed deliverable.';
@@ -199,17 +210,17 @@ class DemoScenarioSeeder extends Seeder
                 $agreement->current_version_id = $version->id; $agreement->status = AgreementStatus::Agreed; $agreement->locked_at = now(); $agreement->save();
                 foreach ([$faculty, $student] as $party) { $confirmation = new AgreementConfirmation(); $confirmation->agreement_version_id = $version->id; $confirmation->user_id = $party->id; $confirmation->confirmed_at = now(); $confirmation->save(); }
             }
-            if ($paymentCase === 'marked-paid' || $paymentCase === 'received' || $paymentCase === 'not-received') {
+            if (($paymentCase === 'marked-paid' || $paymentCase === 'received' || $paymentCase === 'not-received') && ! $agreement->paymentEvents()->where('event', PaymentEventType::MarkedPaid)->exists()) {
                 $event = new PaymentEvent(); $event->agreement_id = $agreement->id; $event->actor_id = $faculty->id;
                 $event->event = PaymentEventType::MarkedPaid; $event->amount = 500; $event->paid_on = today(); $event->method = 'Synthetic demo'; $event->note = 'Synthetic local data.'; $event->created_at = now(); $event->save();
             }
-            if ($paymentCase === 'received' || $paymentCase === 'not-received') {
+            if (($paymentCase === 'received' || $paymentCase === 'not-received') && ! $agreement->paymentEvents()->whereIn('event', [PaymentEventType::ConfirmedReceived->value, PaymentEventType::ReportedNotReceived->value])->exists()) {
                 $event = new PaymentEvent(); $event->agreement_id = $agreement->id; $event->actor_id = $student->id;
                 $event->event = $paymentCase === 'received' ? PaymentEventType::ConfirmedReceived : PaymentEventType::ReportedNotReceived;
                 $event->amount = $paymentCase === 'received' ? 500 : null; $event->note = 'Synthetic local payment response.'; $event->created_at = now(); $event->save();
             }
             if ($paymentCase === 'received') {
-                $completion = new TaskCompletion(); $completion->agreement_id = $agreement->id; $completion->completed_at = now();
+                $completion = $agreement->completion()->firstOrNew(); $completion->completed_at = now();
                 $completion->completed_by = $faculty->id; $completion->completion_note = 'Synthetic completion record.'; $completion->save();
                 $task->status = TaskStatus::Completed; $task->save();
                 if (! Rating::where('agreement_id', $agreement->id)->exists()) {
@@ -219,7 +230,7 @@ class DemoScenarioSeeder extends Seeder
                     foreach (array_keys(config('taskmate.ratings.dimensions.poster_to_student')) as $dimension) $rating->scores()->create(['dimension' => $dimension, 'score' => 5]);
                 }
             } elseif ($paymentCase === 'unpaid') {
-                $completion = new TaskCompletion(); $completion->agreement_id = $agreement->id; $completion->completed_at = now();
+                $completion = $agreement->completion()->firstOrNew(); $completion->completed_at = now();
                 $completion->completed_by = $faculty->id; $completion->completion_note = 'Synthetic completed task without a rating.'; $completion->save();
                 $task->status = TaskStatus::Completed; $task->save();
             }

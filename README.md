@@ -63,7 +63,7 @@ composer audit
 npm audit
 ```
 
-The demo seed, reset, and purge commands are local-only and require `--force`. The purge command targets seeded `@example.test` accounts and their dependent records. The separate `scripts/sus-score.php` reads anonymous CSV only and has no database connection.
+The local and demo seeders can be run repeatedly: synthetic users use a fixed `@example.test` email list, synthetic tasks use the `Synthetic approved demo task` or `Synthetic scenario:` title prefixes, and related demo records use stable relationships and keys. The demo seed, reset, and purge commands are local-only and require `--force`. Purging targets those known synthetic accounts and marked demo tasks; it does not select unrelated users or tasks by ID. The separate `scripts/sus-score.php` reads anonymous CSV only and has no database connection.
 
 ## Configuration
 
