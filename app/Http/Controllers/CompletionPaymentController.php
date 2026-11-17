@@ -33,7 +33,7 @@ class CompletionPaymentController extends Controller
         $mismatch = (float) $event->amount !== (float) $agreement->currentVersion->final_amount;
         return back()->with('status', $mismatch
             ? 'Payment was recorded. The amount differs from the agreed amount; both parties can see the difference.'
-            : 'Payment was recorded. The student can now confirm whether it was received.');
+            : 'Payment was recorded. The worker can now confirm whether it was received.');
     }
 
     public function confirmReceived(ConfirmReceivedRequest $request, Agreement $agreement, PaymentWorkflow $workflow): RedirectResponse

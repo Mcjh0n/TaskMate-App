@@ -200,7 +200,7 @@ class BrowseApplicationsTest extends TestCase
         $this->post(route('applications.withdraw', $application))->assertForbidden();
     }
 
-    public function test_poster_can_accept_only_once_declines_other_applications_and_cannot_read_applicant_private_fields(): void
+    public function test_poster_accept_keeps_other_applications_pending_until_lock_and_cannot_read_applicant_private_fields(): void
     {
         $poster = $this->poster();
         $student = $this->student();
@@ -218,11 +218,29 @@ class BrowseApplicationsTest extends TestCase
             ->missing('applicants.0.applicant.idNumber'));
         $this->post(route('tasks.applications.accept', [$task, $first]))->assertRedirect();
         $this->assertSame(ApplicationStatus::Accepted, $first->fresh()->status);
-        $this->assertSame(ApplicationStatus::Declined, $second->fresh()->status);
-        $this->assertNotNull($second->fresh()->responded_at);
+        $this->assertSame(ApplicationStatus::Pending, $second->fresh()->status);
+        $this->assertNull($second->fresh()->responded_at);
         $this->assertSame(TaskStatus::Assigned, $task->fresh()->status);
+        $this->actingAs($other)->get(route('applications.mine'))->assertInertia(fn ($page) => $page
+            ->where('applications.data.0.otherApplicantAccepted', true));
         $this->post(route('tasks.applications.accept', [$task, $second]))->assertForbidden();
+        $this->assertSame(ApplicationStatus::Pending, $second->fresh()->status);
         $this->get(route('tasks.edit', $task))->assertForbidden();
+    }
+
+    public function test_student_poster_cannot_apply_to_own_task_but_can_apply_to_another_task(): void
+    {
+        $studentPoster = $this->student();
+        $ownTask = $this->task($studentPoster, ['title' => 'Synthetic task by student poster']);
+
+        $this->actingAs($studentPoster)->get(route('browse.show', $ownTask))->assertInertia(fn ($page) => $page
+            ->where('canApply', false));
+        $this->post(route('applications.store', $ownTask), $this->applicationData())->assertForbidden();
+
+        $otherPoster = $this->poster();
+        $otherTask = $this->task($otherPoster, ['title' => 'Synthetic task for student applicant']);
+        $this->post(route('applications.store', $otherTask), $this->applicationData())->assertRedirect();
+        $this->assertDatabaseHas('applications', ['task_id' => $otherTask->id, 'applicant_id' => $studentPoster->id, 'status' => ApplicationStatus::Pending->value]);
     }
 
     public function test_poster_decline_is_restricted_and_task_cancel_updates_application_statuses(): void

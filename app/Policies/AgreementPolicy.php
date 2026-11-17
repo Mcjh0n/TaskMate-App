@@ -18,7 +18,7 @@ class AgreementPolicy
         return $task->poster_id === $user->id
             && $task->status === TaskStatus::Assigned
             && $task->applications()->where('status', ApplicationStatus::Accepted->value)->count() === 1
-            && ! $task->agreement()->exists();
+            && ! $task->hasActiveAgreement();
     }
 
     public function view(User $user, Agreement $agreement): bool

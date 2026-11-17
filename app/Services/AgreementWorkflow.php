@@ -24,7 +24,7 @@ class AgreementWorkflow
         return DB::transaction(function () use ($task, $poster, $data): Agreement {
             $task = Task::query()->lockForUpdate()->findOrFail($task->id);
             $accepted = $task->applications()->where('status', ApplicationStatus::Accepted->value)->lockForUpdate()->get();
-            if ($task->status !== TaskStatus::Assigned || $accepted->count() !== 1 || $task->agreement()->exists()) {
+            if ($task->status !== TaskStatus::Assigned || $accepted->count() !== 1 || $task->hasActiveAgreement()) {
                 throw ValidationException::withMessages(['agreement' => 'This task is not ready for an agreement.']);
             }
             if (in_array($task->work_mode, ['onsite', 'hybrid'], true)
@@ -83,6 +83,11 @@ class AgreementWorkflow
                 if ($task->status !== TaskStatus::Assigned) {
                     throw ValidationException::withMessages(['agreement' => 'The task is no longer available for agreement.']);
                 }
+                $now = now();
+                $task->applications()
+                    ->whereKeyNot($agreement->application_id)
+                    ->where('status', ApplicationStatus::Pending->value)
+                    ->update(['status' => ApplicationStatus::Declined->value, 'responded_at' => $now, 'updated_at' => $now]);
                 $task->status = TaskStatus::InProgress;
                 $task->save();
             }
@@ -122,7 +127,7 @@ class AgreementWorkflow
             $application->status = ApplicationStatus::Cancelled;
             $application->responded_at = now();
             $application->save();
-            $task->status = TaskStatus::Cancelled;
+            $task->status = TaskStatus::Approved;
             $task->save();
         });
     }

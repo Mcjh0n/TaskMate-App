@@ -54,6 +54,8 @@ class ApplicationController extends Controller
                 'statusLabel' => $application->status->label(),
                 'taskStatus' => $application->task->status->label(),
                 'taskApproved' => $application->task->status === TaskStatus::Approved,
+                'otherApplicantAccepted' => $application->status === ApplicationStatus::Pending
+                    && $application->task->applications()->where('status', ApplicationStatus::Accepted->value)->exists(),
                 'agreementId' => $application->agreement?->id,
                 'agreementStatus' => $application->agreement?->status->value,
                 'agreementStatusLabel' => $application->agreement?->status->label(),
@@ -61,7 +63,6 @@ class ApplicationController extends Controller
                 'paymentStatusLabel' => $application->agreement?->paymentStatus()->label(),
                 'appliedAt' => $application->created_at?->toDateTimeString(),
                 'needsRating' => $application->task->status === TaskStatus::Completed && $application->agreement?->ratings()->where('rater_id', $request->user()->id)->doesntExist(),
-                'agreementId' => $application->agreement?->id,
             ]);
 
         return Inertia::render('applications/index', [
@@ -98,10 +99,6 @@ class ApplicationController extends Controller
             $task->status = TaskStatus::Assigned;
             $task->save();
 
-            $task->applications()
-                ->whereKeyNot($application->id)
-                ->where('status', ApplicationStatus::Pending->value)
-                ->update(['status' => ApplicationStatus::Declined->value, 'responded_at' => now(), 'updated_at' => now()]);
         });
 
         return back()->with('status', 'The applicant was accepted.');

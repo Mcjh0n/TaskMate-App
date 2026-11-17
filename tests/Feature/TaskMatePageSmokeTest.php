@@ -67,6 +67,18 @@ class TaskMatePageSmokeTest extends TestCase
         $flag->field = 'description';
         $flag->save();
         $draft = Task::factory()->for($poster, 'poster')->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $reopenedTask = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $cancelledWorker = User::factory()->verified()->create();
+        $cancelledApplication = Application::factory()->for($reopenedTask)->for($cancelledWorker, 'applicant')->create([
+            'status' => ApplicationStatus::Cancelled,
+            'responded_at' => now(),
+        ]);
+        $cancelledAgreement = Agreement::factory()->for($reopenedTask)->for($cancelledApplication)->for($poster, 'poster')->for($cancelledWorker, 'student')->create([
+            'status' => AgreementStatus::Cancelled,
+            'cancelled_at' => now(),
+            'cancelled_by' => $poster->id,
+            'cancellation_reason' => 'Synthetic smoke-test cancellation.',
+        ]);
 
         $urls = [
             'home' => route('home'),
@@ -90,6 +102,7 @@ class TaskMatePageSmokeTest extends TestCase
             'admin.ratings.index' => route('admin.ratings.index'),
             'admin.ratings.show' => route('admin.ratings.show', $rating),
             'agreements.show' => route('agreements.show', $agreement),
+            'agreements.show.cancelled' => route('agreements.show', $cancelledAgreement),
             'agreements.rate' => route('agreements.rate', $agreement),
             'browse.index' => route('browse.index'),
             'browse.show' => route('browse.show', Task::factory()->approved()->create(['poster_id' => $poster->id, 'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null])),
@@ -101,6 +114,7 @@ class TaskMatePageSmokeTest extends TestCase
             'tasks.mine' => route('tasks.mine'),
             'tasks.create' => route('tasks.create'),
             'tasks.show' => route('tasks.show', $task),
+            'tasks.show.reopened' => route('tasks.show', $reopenedTask),
             'tasks.edit' => route('tasks.edit', $draft),
             'agreements.create' => route('agreements.create', $task),
             'users.show' => route('users.show', $poster),

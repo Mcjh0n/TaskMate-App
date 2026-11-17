@@ -17,6 +17,7 @@ use Inertia\Inertia;
 use Inertia\Response;
 use App\Services\RatingSummary;
 use App\Services\OffPlatformScanner;
+use App\Services\SanctionService;
 
 class TaskController extends Controller
 {
@@ -48,6 +49,7 @@ class TaskController extends Controller
 
     public function mine(Request $request): Response
     {
+        $canAct = ! app(SanctionService::class)->suspended($request->user());
         $tasks = $request->user()->tasks()
             ->with('agreement')
             ->latest()
@@ -55,7 +57,8 @@ class TaskController extends Controller
             ->through(fn (Task $task) => [
                 ...$this->summary($task),
                 'applicantsCount' => $task->applications()->count(),
-                'canCancel' => $request->user()->can('cancel', $task),
+                'canCancel' => $canAct && $request->user()->can('cancel', $task),
+                'canEdit' => $canAct && $request->user()->can('update', $task),
                 'paymentStatus' => $task->agreement?->paymentStatus()->value,
                 'paymentStatusLabel' => $task->agreement?->paymentStatus()->label(),
                 'agreementId' => $task->agreement?->id,
@@ -71,6 +74,7 @@ class TaskController extends Controller
     public function show(Request $request, Task $task, RatingSummary $ratingSummaries): Response
     {
         Gate::authorize('view', $task);
+        $canAct = ! app(SanctionService::class)->suspended($request->user());
 
         $applicants = in_array($task->status, [TaskStatus::Approved, TaskStatus::Assigned], true)
             ? $task->applications()->with('applicant:id,name,user_type,verification_status,affiliation')->latest()->get()->map(fn ($application) => [
@@ -95,8 +99,9 @@ class TaskController extends Controller
         return Inertia::render('tasks/show', [
             'task' => $this->details($task),
             'statusLabel' => $task->status->label(),
-            'canEdit' => $request->user()->can('update', $task),
-            'canCancel' => $request->user()->can('cancel', $task),
+            'canEdit' => $canAct && $request->user()->can('update', $task),
+            'canCancel' => $canAct && $request->user()->can('cancel', $task),
+            'canRespondApplications' => $canAct && $task->poster_id === $request->user()->id,
             'status' => $request->session()->get('status'),
             'applicants' => $applicants,
             'agreement' => $task->agreement ? [
@@ -107,13 +112,13 @@ class TaskController extends Controller
                 'paymentStatusLabel' => $task->agreement->paymentStatus()->label(),
                 'needsRating' => $task->status === TaskStatus::Completed && $task->agreement->ratings()->where('rater_id', $request->user()->id)->doesntExist(),
             ] : null,
-            'canProposeAgreement' => $task->poster_id === $request->user()->id
+            'canProposeAgreement' => $canAct && $task->poster_id === $request->user()->id
                 && $task->status === TaskStatus::Assigned
                 && $task->applications()->where('status', ApplicationStatus::Accepted->value)->count() === 1
-                && ! $task->agreement()->exists(),
+                && ! $task->hasActiveAgreement(),
             'problemReport' => [
-                'taskAction' => route('tasks.problem-reports.store', $task),
-                'types' => collect(config('taskmate.reports.types', []))->except($task->agreement()->exists() ? ['non_payment'] : ['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values(),
+                'taskAction' => $task->poster_id === $request->user()->id ? null : route('tasks.problem-reports.store', $task),
+                'types' => collect(config('taskmate.reports.types', []))->except(['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values(),
                 'applicantActions' => $applicants->map(fn ($application) => ['applicationId' => $application['id'], 'action' => route('applications.problem-reports.store', [$task, $application['id']])])->values(),
                 'flaggedApplicants' => $task->applications()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->pluck('id')->all(),
                 'offPlatformWarning' => $task->contentFlags()->where('source_user_id', '!=', $request->user()->id)->where('status', 'open')->exists(),

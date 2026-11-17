@@ -66,3 +66,7 @@ Status reflects code and documents at this prototype phase. “Implemented but p
 | NFR-11 | Documented only | `docs/testing/usability-test-plan.md` | `PrivacyAuditTest` / applicable feature tests |
 | NFR-12 | Documented only | `docs/testing/safety-scenarios.md` | `PrivacyAuditTest` / applicable feature tests |
 | NFR-13 | Documented only | `docs/testing/matching-relevance-feedback.md` | `PrivacyAuditTest` / applicable feature tests |
+
+## Phase 11 decisions and coverage
+
+The final cancellation and role decisions are implemented in `AgreementWorkflow`, `ApplicationController`, `AgreementPolicy`, `TaskPolicy`, and the task/agreement pages. `AgreementWorkflowTest`, `BrowseApplicationsTest`, `TaskMatePageSmokeTest`, and `PrivacyAuditTest` cover cancellation/reopen, retaining applicants until lock, role-by-record-ID authorization, and the relevant rendered pages. Student posters remain ordinary Students and may also apply to other tasks. The README and `docs/open-decisions.md` define graduate/alumni accounts, ongoing jobs, outside applicants, and faculty/staff applications as out of scope. These boundaries require no additional data model and are not enabled in this prototype.

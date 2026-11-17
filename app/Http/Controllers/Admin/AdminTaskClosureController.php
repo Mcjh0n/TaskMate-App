@@ -19,7 +19,9 @@ class AdminTaskClosureController extends Controller
     {
         DB::transaction(function () use ($request, $task): void {
             $task = Task::query()->lockForUpdate()->findOrFail($task->id);
-            $agreement = Agreement::query()->lockForUpdate()->where('task_id', $task->id)->firstOrFail();
+            $agreement = Agreement::query()->where('task_id', $task->id)
+                ->where('status', AgreementStatus::Agreed->value)
+                ->latest('id')->lockForUpdate()->firstOrFail();
             abort_unless($task->status === TaskStatus::InProgress && $agreement->status === AgreementStatus::Agreed, 403);
             $note = $request->validated('note');
             $agreement->status = AgreementStatus::Cancelled;

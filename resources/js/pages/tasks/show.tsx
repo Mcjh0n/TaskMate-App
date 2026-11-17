@@ -25,9 +25,9 @@ type Task = {
     privateMeetingRequired: boolean; deadline: string | null; reviewNote: string | null; removalReason?: string | null; createdAt: string | null;
     hasActiveApplications: boolean; applicantsCount: number;
 };
-type Props = { task: Task; statusLabel: string; canEdit: boolean; canCancel: boolean; status?: string | null; applicants: Applicant[]; agreement: { id: number; status: string; statusLabel: string; paymentStatus: string; paymentStatusLabel: string } | null; canProposeAgreement: boolean; problemReport?: { taskAction: string; types: { value: string; label: string }[]; applicantActions: { applicationId: number; action: string }[]; flaggedApplicants: number[]; offPlatformWarning: boolean } };
+type Props = { task: Task; statusLabel: string; canEdit: boolean; canCancel: boolean; canRespondApplications: boolean; status?: string | null; applicants: Applicant[]; agreement: { id: number; status: string; statusLabel: string; paymentStatus: string; paymentStatusLabel: string } | null; canProposeAgreement: boolean; problemReport?: { taskAction: string | null; types: { value: string; label: string }[]; applicantActions: { applicationId: number; action: string }[]; flaggedApplicants: number[]; offPlatformWarning: boolean } };
 
-export default function ShowTask({ task, statusLabel, canEdit, canCancel, status, applicants, agreement, canProposeAgreement, problemReport }: Props) {
+export default function ShowTask({ task, statusLabel, canEdit, canCancel, canRespondApplications, status, applicants, agreement, canProposeAgreement, problemReport }: Props) {
     return (
         <>
             <Head title={task.title} />
@@ -73,10 +73,10 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, status
                         {problemReport?.flaggedApplicants.includes(application.id) && <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.</div>}
                         {problemReport?.applicantActions.find((item) => item.applicationId === application.id) && <ProblemReportForm action={problemReport.applicantActions.find((item) => item.applicationId === application.id)!.action} types={problemReport.types} reportLabel="Report this applicant" />}
                         <p className="text-sm">Suggested amount: {application.proposedAmount ? `₱${formatAmount(application.proposedAmount)}` : 'No suggestion'} · Applied {application.appliedAt ? formatDate(application.appliedAt) : '—'}</p>
-                        <div className="flex items-center gap-2"><ApplicationStatusBadge status={application.status} label={application.statusLabel} />{application.status === 'pending' && task.status === 'approved' && <><Form {...taskApplications.accept.form({ task: task.id, application: application.id })}><Button size="sm" type="submit">Accept</Button></Form><Form {...taskApplications.decline.form({ task: task.id, application: application.id })}><Button size="sm" variant="outline" type="submit">Decline</Button></Form></>}</div>
+                        <div className="flex items-center gap-2"><ApplicationStatusBadge status={application.status} label={application.statusLabel} />{canRespondApplications && application.status === 'pending' && task.status === 'approved' && <><Form {...taskApplications.accept.form({ task: task.id, application: application.id })}><Button size="sm" type="submit">Accept</Button></Form><Form {...taskApplications.decline.form({ task: task.id, application: application.id })}><Button size="sm" variant="outline" type="submit">Decline</Button></Form></>}</div>
                     </article>)}
                 </section>}
-                {problemReport && <ProblemReportForm action={problemReport.taskAction} types={problemReport.types} />}
+                {problemReport?.taskAction && <ProblemReportForm action={problemReport.taskAction} types={problemReport.types} />}
                 {problemReport?.offPlatformWarning && <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.</div>}
                 {task.hasActiveApplications && task.status !== 'assigned' && <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">This task has active applicants. Cancel it and post a new task to change its details.</p>}
                 {task.status === 'assigned' && <p className="rounded-lg border p-4 text-sm">This task has been assigned and cannot be edited.</p>}

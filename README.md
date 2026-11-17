@@ -2,6 +2,10 @@
 
 TaskMate is a prototype campus task marketplace for the Central Mindanao University community. It helps students review task details before applying and helps eligible posters record reviewed tasks and agreements.
 
+## Account types
+
+Students may browse and apply, and may post tasks while `students_can_post` is enabled. Master's and doctoral students use the ordinary Student account type. Faculty/staff may post tasks. Approved office or organization representatives may post tasks. Only students may apply; faculty/staff and organizations cannot apply.
+
 **Prototype: use synthetic accounts and sample data only. Do not enter real identity or contact details.** TaskMate records agreements and payment status only. Payments move directly between users; TaskMate does not hold, process, recover, or guarantee payment. Verification, screening, and ratings do not guarantee safety.
 
 ## Requirements

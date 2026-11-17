@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TaskStatus;
+use App\Enums\AgreementStatus;
 use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -90,7 +91,17 @@ class Task extends Model
 
     public function agreement(): HasOne
     {
-        return $this->hasOne(Agreement::class);
+        return $this->hasOne(Agreement::class)->latestOfMany();
+    }
+
+    public function agreements(): HasMany
+    {
+        return $this->hasMany(Agreement::class);
+    }
+
+    public function hasActiveAgreement(): bool
+    {
+        return $this->agreements()->whereIn('status', [AgreementStatus::Negotiating->value, AgreementStatus::Agreed->value])->exists();
     }
 
     public function completion(): \Illuminate\Database\Eloquent\Relations\HasOneThrough

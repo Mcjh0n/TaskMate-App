@@ -18,6 +18,7 @@ use App\Enums\ReportStatus;
 use App\Services\ReportWorkflow;
 use App\Services\AgreementWorkflow;
 use App\Services\RatingVisibility;
+use App\Services\SanctionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -35,7 +36,7 @@ class AgreementController extends Controller
 
         return Inertia::render('agreements/create', [
             'task' => $this->taskSummary($task),
-            'studentName' => $accepted->applicant->name,
+            'workerName' => $accepted->applicant->name,
             'defaults' => [
                 'deliverables' => $task->deliverables,
                 'finalAmount' => $accepted->proposed_amount ?? $task->budget,
@@ -76,8 +77,9 @@ class AgreementController extends Controller
         return Inertia::render('agreements/show', [
             ...$this->present($agreement, $request->user()),
             'viewerId' => $request->user()->id,
+            'actionsAllowed' => ! app(SanctionService::class)->suspended($request->user()),
             'termsMaxLength' => config('taskmate.agreement.terms_max_length', 3000),
-            'notice' => 'This agreement records what the poster and student agreed. It is not a legal contract. TaskMate does not process, hold, or guarantee payment. Payment is made directly between the two of you.',
+            'notice' => 'This agreement records what the poster and worker agreed. It is not a legal contract. TaskMate does not process, hold, or guarantee payment. Payment is made directly between the two of you.',
             'status' => $request->session()->get('status'),
             'problemReport' => ['action' => route('agreements.problem-reports.store', $agreement), 'types' => collect(config('taskmate.reports.types', []))->except('non_payment')->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()],
             'offPlatformWarning' => $agreement->versions()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->exists()
@@ -110,7 +112,13 @@ class AgreementController extends Controller
     public function cancel(CancelAgreementRequest $request, Agreement $agreement, AgreementWorkflow $workflow): RedirectResponse
     {
         $workflow->cancel($agreement, $request->user(), $request->validated('reason'));
-        return back()->with('status', 'The agreement and task were cancelled.');
+        if ($request->user()->id === $agreement->poster_id) {
+            return redirect()->route('tasks.show', $agreement->task_id)
+                ->with('status', 'The agreement was cancelled. The task is open again so you can choose another applicant.');
+        }
+
+        return redirect()->route('applications.mine')
+            ->with('status', 'The agreement was cancelled. Your application is closed, and the task is open again for other applicants.');
     }
 
     public function adminShow(Agreement $agreement): Response
@@ -125,7 +133,7 @@ class AgreementController extends Controller
 
         return Inertia::render('admin/agreements/show', [
             ...$this->present($agreement),
-            'notice' => 'This agreement records what the poster and student agreed. It is not a legal contract. TaskMate does not process, hold, or guarantee payment. Payment is made directly between the two of you.',
+            'notice' => 'This agreement records what the poster and worker agreed. It is not a legal contract. TaskMate does not process, hold, or guarantee payment. Payment is made directly between the two of you.',
         ]);
     }
 
@@ -222,7 +230,7 @@ class AgreementController extends Controller
             && (float) $latest->amount === $agreedAmount;
         $userId = $viewer?->id;
         $isPoster = $userId !== null && $userId === $agreement->poster_id;
-        $isStudent = $userId !== null && $userId === $agreement->student_id;
+        $isWorker = $userId !== null && $userId === $agreement->student_id;
         $activeReport = $agreement->reports->first(fn ($report) => in_array($report->status, [ReportStatus::Open, ReportStatus::UnderReview], true));
 
         return [
@@ -241,8 +249,8 @@ class AgreementController extends Controller
                 'event' => $event->event->value,
                 'eventLabel' => match ($event->event) {
                     PaymentEventType::MarkedPaid => 'Poster marked payment as paid',
-                    PaymentEventType::ConfirmedReceived => 'Student confirmed receipt',
-                    PaymentEventType::ReportedNotReceived => 'Student reported not receiving payment',
+                    PaymentEventType::ConfirmedReceived => 'Worker confirmed receipt',
+                    PaymentEventType::ReportedNotReceived => 'Worker reported not receiving payment',
                 },
                 'actorName' => $event->actor->name,
                 'amount' => $event->amount,
@@ -253,11 +261,11 @@ class AgreementController extends Controller
                 'createdAt' => $event->created_at?->toDateTimeString(),
             ])->values(),
             'activeReportId' => $activeReport?->id,
-            'canMarkDelivered' => $isStudent && $agreement->status === AgreementStatus::Agreed && $agreement->task->status === TaskStatus::InProgress && ! $completion?->delivered_at,
+            'canMarkDelivered' => $isWorker && $agreement->status === AgreementStatus::Agreed && $agreement->task->status === TaskStatus::InProgress && ! $completion?->delivered_at,
             'canRecordCompletion' => $isPoster && $agreement->status === AgreementStatus::Agreed && $agreement->task->status === TaskStatus::InProgress,
             'canMarkPaid' => $isPoster && $agreement->status === AgreementStatus::Agreed && in_array($agreement->task->status, [TaskStatus::InProgress, TaskStatus::Completed], true) && ! $settled,
-            'canRespondPayment' => $isStudent && $agreement->status === AgreementStatus::Agreed && $latest?->event === PaymentEventType::MarkedPaid && ! $settled,
-            'canReportNonPayment' => $isStudent && $agreement->status === AgreementStatus::Agreed && ! $activeReport && app(ReportWorkflow::class)->canReportNonPayment($agreement),
+            'canRespondPayment' => $isWorker && $agreement->status === AgreementStatus::Agreed && $latest?->event === PaymentEventType::MarkedPaid && ! $settled,
+            'canReportNonPayment' => $isWorker && $agreement->status === AgreementStatus::Agreed && ! $activeReport && app(ReportWorkflow::class)->canReportNonPayment($agreement),
             'paymentMethods' => collect(config('taskmate.payment_status.methods', []))->map(fn (string $label, string $value) => compact('value', 'label'))->values(),
         ];
     }

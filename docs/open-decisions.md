@@ -21,3 +21,14 @@ Every item below is unresolved or provisional. Current behavior is not universit
 | Hosting, backups, keys, and operational security | README and draft privacy document; no production platform selected | Select supported environment and complete security review |
 | Research protocol and acceptance thresholds | `docs/testing/*` templates; all counts/thresholds/schedule TBD | Approve protocol and collect research responses outside TaskMate |
 | TaskMate team use of starter-kit Teams | Team schema and routes retained, UI hidden | Decide separately whether to remove the unused scaffolding after data review |
+
+## Out of scope for this version
+
+- Ongoing jobs are not supported. Tasks are individual, time-bounded work records; a different model and workflow would be needed for recurring employment.
+- Graduate/alumni accounts are not supported as a separate account type. Master's and doctoral students use the ordinary Student account type.
+- Outside applicants are not supported. Applicants must be verified CMU students.
+- Faculty/staff applying to tasks is not supported. Faculty/staff can post only.
+
+## Future work
+
+The team may revisit ongoing jobs, graduate/alumni accounts, outside applicants, and faculty/staff applications in a later version. Those changes would require approved eligibility rules, registration/verification changes, and task/application workflow updates; no implementation is included now.

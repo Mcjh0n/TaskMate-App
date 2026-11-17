@@ -32,6 +32,9 @@ TaskMate records agreements and payment status only. Money moves directly betwee
 - Starter-kit Teams database structures and routes remain for compatibility, but TaskMate navigation and Teams settings links are hidden. Do not add new TaskMate features that depend on Teams.
 - All research, SUS, safety, and functional evaluation documents are templates until the team approves a protocol. Never add fabricated participant data or results.
 - Every newly registered web route must be reviewed and added explicitly to `tests/Fixtures/web-route-access.php`; `PrivacyAuditTest` fails when a route is missing or its middleware changes.
+- A task can have multiple agreement records over time after a negotiating agreement is cancelled. `Task::agreement()` resolves to the latest record; use agreement `poster_id`/`student_id` and task `poster_id` as the authoritative participant roles. Do not infer task or agreement permissions from account type.
+- Cancelling a negotiating agreement cancels its accepted application and reopens the task as approved. Other pending applications remain active until a later agreement locks; locking declines the remaining pending applications.
+- Master's and doctoral students use the Student account type. Ongoing jobs, separate graduate/alumni accounts, outside applicants, and faculty/staff applications are out of scope for this version.
 
 # STACK AND ENVIRONMENT
 
