@@ -52,7 +52,7 @@ export function UserMenuContent({ user }: Props) {
                         onClick={cleanup}
                     >
                         <Settings className="mr-2" />
-                        Settings
+                        Profile settings
                     </Link>
                 </DropdownMenuItem>
             </DropdownMenuGroup>

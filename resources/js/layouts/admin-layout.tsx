@@ -1,14 +1,21 @@
 import type { PropsWithChildren } from 'react';
 import { Link, usePage } from '@inertiajs/react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 import admin from '@/routes/admin';
 import PrototypeBanner from '@/components/prototype-banner';
 import SiteFooter from '@/components/site-footer';
 import { NotificationBell } from '@/components/notification-bell';
+import { UserMenuContent } from '@/components/user-menu-content';
+import { useInitials } from '@/hooks/use-initials';
 
 export default function AdminLayout({ children }: PropsWithChildren) {
-    const { url } = usePage();
-    const pollSeconds = (usePage().props as { notificationPollSeconds?: number }).notificationPollSeconds ?? 10;
+    const { url, props } = usePage();
+    const auth = props.auth;
+    const pollSeconds = (props as { notificationPollSeconds?: number }).notificationPollSeconds ?? 10;
+    const initials = useInitials();
     const links = [
         { label: 'Dashboard', href: admin.dashboard().url },
         { label: 'Users', href: admin.users.index().url },
@@ -40,6 +47,7 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                                 {link.label}
                             </Link>
                         ))}
+                        {auth.user && <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="Open account menu"><Avatar><AvatarFallback>{initials(auth.user.name)}</AvatarFallback></Avatar></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="w-56"><UserMenuContent user={auth.user} /></DropdownMenuContent></DropdownMenu>}
                     </nav>
                 </div>
             </header>
