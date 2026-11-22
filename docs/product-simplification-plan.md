@@ -142,3 +142,11 @@ Recommended starting position: allow students to browse while pending if the tea
 - Search, category, work mode, and sort remain visible in the primary browse controls. Complexity and budget range are grouped under a collapsible “More filters” section; active advanced filters reopen the section.
 - Task cards now include a short work description and make the budget, work mode, deadline, and stated workplace easier to scan. The task detail page presents budget, work mode, deadline, and worksite before the longer work and condition details.
 - Browse access, query validation, filtering, sorting, task visibility, and privacy rules were retained. No schema or route changes were needed.
+
+## Phase 3 outcome
+
+- The posting form now focuses on the task title, category, clear description, budget, work mode, any required worksite details, optional deadline, and the platform rules confirmation.
+- Activities, deliverables, estimated hours, skills, complexity, and structured safety answers are available under an optional details section. Validation errors in that section automatically open it again.
+- Existing task records were preserved. A new migration allows the optional values to remain empty; task detail pages show when safety answers were not provided rather than implying a negative answer.
+- Screening gives missing safety answers no assumed “safe” value and keeps tasks with incomplete structured safety information in the review queue even if automatic approval is enabled.
+- Manual comparison in the browser remains for the team; automated feature tests cover minimal posting, optional data, validation, screening, and safe rendering of missing details.

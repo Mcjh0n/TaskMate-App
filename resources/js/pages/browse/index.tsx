@@ -13,8 +13,8 @@ type Listing = {
     category: string;
     budget: string;
     workMode: string;
-    estimatedDurationHours: string;
-    complexity: string;
+    estimatedDurationHours: string | null;
+    complexity: string | null;
     deadline: string | null;
     workplaceName: string | null;
     workplaceAddress: string | null;
@@ -107,7 +107,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
 
                                 <div className="rounded-lg bg-muted/40 p-3">
                                     <p className="text-xl font-semibold">₱{formatAmount(task.budget)}</p>
-                                    <p className="mt-1 text-sm">{task.workMode} · about {task.estimatedDurationHours} hours</p>
+                                    <p className="mt-1 text-sm">{task.workMode}{task.estimatedDurationHours ? ` · about ${task.estimatedDurationHours} hours` : ''}{task.complexity ? ` · ${task.complexity} complexity` : ''}</p>
                                     {task.deadline && <p className="mt-1 text-sm">Deadline: {formatDate(task.deadline)}</p>}
                                     {(task.workplaceName || task.workplaceAddress) && <p className="mt-1 text-sm">Workplace: {[task.workplaceName, task.workplaceAddress].filter(Boolean).join(' · ')}</p>}
                                 </div>

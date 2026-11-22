@@ -19,10 +19,10 @@ type Applicant = {
 };
 type Task = {
     id: number; title: string; category: string; budget: string; workMode: string; status: string; description: string;
-    requiredActivities: string; deliverables: string; estimatedDurationHours: string; skillRequirements: string | null;
-    complexity: string; workplaceName: string | null; workplaceAddress: string | null; workplaceSetting: string | null;
-    physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean; hazardDescription: string | null;
-    privateMeetingRequired: boolean; deadline: string | null; reviewNote: string | null; removalReason?: string | null; createdAt: string | null;
+    requiredActivities: string | null; deliverables: string | null; estimatedDurationHours: string | null; skillRequirements: string | null;
+    complexity: string | null; workplaceName: string | null; workplaceAddress: string | null; workplaceSetting: string | null;
+    physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean | null; hazardDescription: string | null;
+    privateMeetingRequired: boolean | null; deadline: string | null; reviewNote: string | null; removalReason?: string | null; createdAt: string | null;
     hasActiveApplications: boolean; applicantsCount: number;
 };
 type Props = { task: Task; statusLabel: string; canEdit: boolean; canCancel: boolean; canRespondApplications: boolean; status?: string | null; applicants: Applicant[]; agreement: { id: number; status: string; statusLabel: string; paymentStatus: string; paymentStatusLabel: string } | null; canProposeAgreement: boolean; problemReport?: { taskAction: string | null; types: { value: string; label: string }[]; applicantActions: { applicationId: number; action: string }[]; flaggedApplicants: number[]; offPlatformWarning: boolean } };
@@ -40,20 +40,23 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, canRes
                 <section className="space-y-4 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Task details</h2>
                     <p className="whitespace-pre-wrap">{task.description}</p>
-                    <div><h3 className="font-medium">Required activities</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.requiredActivities}</p></div>
-                    <div><h3 className="font-medium">Deliverables</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>
-                    <p className="text-sm">Estimated duration: {task.estimatedDurationHours} hours</p>
+                    {task.requiredActivities && <div><h3 className="font-medium">Main activities</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.requiredActivities}</p></div>}
+                    {task.deliverables && <div><h3 className="font-medium">Expected result or deliverables</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>}
+                    {task.estimatedDurationHours && <p className="text-sm">Estimated duration: {task.estimatedDurationHours} hours</p>}
                     {task.skillRequirements && <p className="text-sm">Skills: {task.skillRequirements}</p>}
-                    <p className="text-sm">Complexity: {task.complexity}</p>
-                    <p className="text-sm">Physical demand: {task.physicalDemand}</p>
-                    <p className="text-sm">Academic involvement: {task.academicInvolvement}</p>
-                    <p className="text-sm">Hazard exposure: {task.hazardExposure ? `Yes — ${task.hazardDescription}` : 'No'}</p>
-                    <p className="text-sm">Private or isolated one-on-one meeting required: {task.privateMeetingRequired ? 'Yes' : 'No'}</p>
+                    {task.complexity && <p className="text-sm">Complexity: {task.complexity}</p>}
+                </section>
+                <section className="space-y-2 rounded-xl border p-5">
+                    <h2 className="text-lg font-semibold">Work conditions</h2>
+                    {task.workMode.toLowerCase() !== 'remote' && <p className="text-sm">Workplace setting: {task.workplaceSetting?.replaceAll('_', ' ') ?? 'Not provided'}</p>}
+                    <p className="text-sm">Physical demand: {task.physicalDemand ?? 'Not provided'}</p>
+                    <p className="text-sm">Academic involvement: {task.academicInvolvement ?? 'Not provided'}</p>
+                    <p className="text-sm">Hazards involved: {task.hazardExposure === null ? 'Not provided' : task.hazardExposure ? `Yes — ${task.hazardDescription}` : 'No'}</p>
+                    <p className="text-sm">Private or isolated one-on-one meeting required: {task.privateMeetingRequired === null ? 'Not provided' : task.privateMeetingRequired ? 'Yes' : 'No'}</p>
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Work details</h2><p>{task.workMode}</p>
                     {task.workplaceName && <p>{task.workplaceName}</p>}{task.workplaceAddress && <p>{task.workplaceAddress}</p>}
-                    {task.workplaceSetting && <p>{task.workplaceSetting.replaceAll('_', ' ')}</p>}
                     <p className="text-sm text-muted-foreground">In-person work details are shown to students before they apply. Workplace information should describe a place of work, not a home address.</p>
                     {task.deadline && <p>Deadline: {formatDate(task.deadline)}</p>}
                 </section>

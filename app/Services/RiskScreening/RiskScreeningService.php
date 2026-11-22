@@ -17,8 +17,17 @@ class RiskScreeningService
         $this->addFactor($factors, 'category_base', 'Task category', $points['category_base'][$task->category] ?? $points['category_base']['default'] ?? 0, "Category: {$categoryLabel}.");
         $this->addChoiceFactor($factors, 'physical_demand', 'Physical demand', $task->physical_demand, 'taskmate.risk_questions.physical_demand', $points['physical_demand'] ?? []);
         $this->addChoiceFactor($factors, 'academic_involvement', 'Academic involvement', $task->academic_involvement, 'taskmate.risk_questions.academic_involvement', $points['academic_involvement'] ?? []);
-        $this->addFactor($factors, 'hazard_exposure', 'Hazard exposure', $points['hazard_exposure'][$task->hazard_exposure ? 'yes' : 'no'] ?? 0, $task->hazard_exposure ? 'The task reports a hazard exposure.' : 'The task reports no hazard exposure.');
-        $this->addFactor($factors, 'private_meeting_required', 'Private meeting', $points['private_meeting_required'][$task->private_meeting_required ? 'yes' : 'no'] ?? 0, $task->private_meeting_required ? 'A one-on-one meeting in a private or isolated place is required.' : 'A private or isolated one-on-one meeting is not required.');
+        $hazardPoints = $task->hazard_exposure === null ? 0 : ($points['hazard_exposure'][$task->hazard_exposure ? 'yes' : 'no'] ?? 0);
+        $hazardReason = $task->hazard_exposure === null
+            ? 'No answer was provided for hazard exposure.'
+            : ($task->hazard_exposure ? 'The task reports a hazard exposure.' : 'The task reports no hazard exposure.');
+        $this->addFactor($factors, 'hazard_exposure', 'Hazard exposure', $hazardPoints, $hazardReason);
+
+        $meetingPoints = $task->private_meeting_required === null ? 0 : ($points['private_meeting_required'][$task->private_meeting_required ? 'yes' : 'no'] ?? 0);
+        $meetingReason = $task->private_meeting_required === null
+            ? 'No answer was provided about private or isolated meetings.'
+            : ($task->private_meeting_required ? 'A one-on-one meeting in a private or isolated place is required.' : 'A private or isolated one-on-one meeting is not required.');
+        $this->addFactor($factors, 'private_meeting_required', 'Private meeting', $meetingPoints, $meetingReason);
 
         if ($task->work_mode === 'remote') {
             $this->addFactor($factors, 'workplace_setting', 'Workplace setting', 0, 'This task is remote, so no workplace setting applies.');
@@ -60,6 +69,11 @@ class RiskScreeningService
 
     private function addChoiceFactor(array &$factors, string $key, string $label, ?string $value, string $optionsConfig, array $pointMap): void
     {
+        if ($value === null || $value === '') {
+            $this->addFactor($factors, $key, $label, 0, 'No answer was provided.');
+            return;
+        }
+
         $optionLabel = config($optionsConfig.'.'.$value, $value ?? 'Not provided');
         $this->addFactor($factors, $key, $label, $pointMap[$value] ?? 0, "Selected answer: {$optionLabel}.");
     }
@@ -144,10 +158,17 @@ class RiskScreeningService
         }
 
         $poster = $task->relationLoaded('poster') ? $task->getRelation('poster') : null;
+        $safetyDetailsComplete = filled($task->physical_demand)
+            && filled($task->academic_involvement)
+            && $task->hazard_exposure !== null
+            && (! $task->hazard_exposure || filled($task->hazard_description))
+            && $task->private_meeting_required !== null
+            && ($task->work_mode === 'remote' || filled($task->workplace_setting));
         $autoApprovalEligible = (bool) config('taskmate.auto_approval_enabled', false)
             && $poster?->isVerified()
             && $task->guidelines_confirmed_at !== null
             && $keywordHits === []
+            && $safetyDetailsComplete
             && ($task->work_mode === 'remote'
                 || (! config('taskmate.in_person_requires_admin_review', true)
                     && filled($task->workplace_name)

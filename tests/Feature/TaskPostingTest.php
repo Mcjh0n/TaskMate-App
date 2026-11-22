@@ -76,11 +76,33 @@ class TaskPostingTest extends TestCase
     {
         $poster = $this->verifiedPoster();
         $this->actingAs($poster)->post(route('tasks.store'), [])->assertSessionHasErrors([
-            'title', 'category', 'description', 'required_activities', 'deliverables',
-            'estimated_duration_hours', 'complexity', 'budget', 'work_mode', 'guidelines_confirmed',
-            'physical_demand', 'academic_involvement', 'hazard_exposure', 'private_meeting_required',
+            'title', 'category', 'description', 'budget', 'work_mode', 'guidelines_confirmed',
         ]);
         $this->assertDatabaseCount('tasks', 0);
+    }
+
+    public function test_minimal_task_submission_skips_optional_details_without_claiming_safety_answers(): void
+    {
+        $poster = $this->verifiedPoster();
+        $this->actingAs($poster)->post(route('tasks.store'), [
+            'title' => 'Synthetic campus event help',
+            'category' => 'event_support',
+            'description' => 'Help prepare the event space and leave the area ready for attendees.',
+            'budget' => 1200,
+            'work_mode' => 'remote',
+            'guidelines_confirmed' => '1',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $task = $poster->tasks()->latest('id')->firstOrFail();
+        $this->assertSame(TaskStatus::PendingReview, $task->status);
+        $this->assertNull($task->required_activities);
+        $this->assertNull($task->deliverables);
+        $this->assertNull($task->estimated_duration_hours);
+        $this->assertNull($task->complexity);
+        $this->assertNull($task->hazard_exposure);
+        $this->assertNull($task->private_meeting_required);
+        $screening = $task->screenings()->firstOrFail();
+        $this->assertSame('No answer was provided for hazard exposure.', collect($screening->factors)->firstWhere('key', 'hazard_exposure')['reason']);
     }
 
     public function test_invalid_choices_limits_past_deadline_and_missing_workplace_are_rejected(): void
@@ -96,6 +118,8 @@ class TaskPostingTest extends TestCase
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_hours' => 501]))->assertSessionHasErrors('estimated_duration_hours');
         $this->post(route('tasks.store'), $this->taskData(['deadline' => now()->subDay()->toDateString()]))->assertSessionHasErrors('deadline');
         $this->post(route('tasks.store'), $this->taskData(['guidelines_confirmed' => '0']))->assertSessionHasErrors('guidelines_confirmed');
+        $this->post(route('tasks.store'), $this->taskData(['complexity' => 'invented']))->assertSessionHasErrors('complexity');
+        $this->post(route('tasks.store'), $this->taskData(['physical_demand' => 'invented']))->assertSessionHasErrors('physical_demand');
     }
 
     public function test_remote_task_discards_workplace_details_and_untrusted_status_fields(): void
@@ -129,6 +153,34 @@ class TaskPostingTest extends TestCase
         $this->actingAs($owner)->post(route('tasks.cancel', $task))->assertRedirect(route('tasks.mine'));
         $this->assertSame(TaskStatus::Cancelled, $task->fresh()->status);
         $this->actingAs($owner)->get(route('tasks.edit', $task))->assertForbidden();
+    }
+
+    public function test_task_detail_renders_cleanly_when_optional_details_were_not_provided(): void
+    {
+        $poster = $this->verifiedPoster();
+        $task = Task::factory()->create([
+            'poster_id' => $poster->id,
+            'required_activities' => null,
+            'deliverables' => null,
+            'estimated_duration_hours' => null,
+            'complexity' => null,
+            'physical_demand' => null,
+            'academic_involvement' => null,
+            'hazard_exposure' => null,
+            'hazard_description' => null,
+            'private_meeting_required' => null,
+            'workplace_setting' => null,
+        ]);
+
+        $this->actingAs($poster)->get(route('tasks.show', $task))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('tasks/show')
+                ->where('task.requiredActivities', null)
+                ->where('task.deliverables', null)
+                ->where('task.estimatedDurationHours', null)
+                ->where('task.hazardExposure', null)
+                ->where('task.privateMeetingRequired', null));
     }
 
     public function test_editing_approved_task_resubmits_and_clears_review_note(): void
@@ -180,7 +232,8 @@ class TaskPostingTest extends TestCase
             'hazard_description' => '',
         ]))->assertSessionHasErrors('hazard_description');
         $this->post(route('tasks.store'), $this->taskData(['workplace_setting' => '']))
-            ->assertSessionHasErrors('workplace_setting');
+            ->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertNull(Task::latest('id')->firstOrFail()->workplace_setting);
 
         $this->post(route('tasks.store'), $this->taskData([
             'work_mode' => 'remote',

@@ -243,6 +243,29 @@ class RiskScreeningTest extends TestCase
         $this->assertSame('task.blocked', $poster->notifications()->latest()->firstOrFail()->data['event']);
     }
 
+    public function test_missing_optional_safety_answers_are_clear_in_screening_and_prevent_auto_approval(): void
+    {
+        config(['taskmate.auto_approval_enabled' => true]);
+        $poster = $this->verifiedPoster();
+        $task = Task::factory()->create([
+            'poster_id' => $poster->id,
+            'work_mode' => 'remote',
+            'physical_demand' => null,
+            'academic_involvement' => null,
+            'hazard_exposure' => null,
+            'private_meeting_required' => null,
+        ]);
+
+        $assessment = app(TaskModerationService::class)->screenAndApply($task);
+
+        $this->assertSame('needs_review', $assessment->outcome);
+        $this->assertSame(TaskStatus::PendingReview, $task->fresh()->status);
+        $factors = collect($assessment->factors)->keyBy('key');
+        $this->assertSame('No answer was provided for hazard exposure.', $factors['hazard_exposure']['reason']);
+        $this->assertSame('No answer was provided about private or isolated meetings.', $factors['private_meeting_required']['reason']);
+        $this->assertSame('No answer was provided.', $factors['physical_demand']['reason']);
+    }
+
     public function test_re_screening_after_approved_and_changes_requested_edits_appends_history(): void
     {
         config(['taskmate.auto_approval_enabled' => false, 'taskmate.prohibited_keywords' => [], 'taskmate.risk_keywords' => []]);

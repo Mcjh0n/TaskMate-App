@@ -15,10 +15,10 @@ import { ProblemReportForm } from '@/components/problem-report-form';
 
 type Task = {
     id: number; title: string; category: string; description: string; requiredActivities: string; deliverables: string;
-    estimatedDurationHours: string; skillRequirements: string | null; complexity: string; budget: string; workMode: string;
+    estimatedDurationHours: string | null; skillRequirements: string | null; complexity: string | null; budget: string; workMode: string;
     workplaceName: string | null; workplaceAddress: string | null; workplaceSetting: string | null; deadline: string | null;
-    physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean; hazardDescription: string | null;
-    privateMeetingRequired: boolean;
+    physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean | null; hazardDescription: string | null;
+    privateMeetingRequired: boolean | null;
 };
 type Poster = { displayName: string; accountType: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; memberSince: string | null; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
 type Application = { status: string; statusLabel: string; appliedAt: string | null };
@@ -48,16 +48,16 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
                     <div><h3 className="font-medium">Required activities</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.requiredActivities}</p></div>
                     <div><h3 className="font-medium">Deliverables</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>
                     {task.skillRequirements && <p><strong>Skills:</strong> {task.skillRequirements}</p>}
-                    <p><strong>Estimated duration:</strong> {task.estimatedDurationHours} hours</p>
-                    <p><strong>Complexity:</strong> {task.complexity}</p>
+                    {task.estimatedDurationHours && <p><strong>Estimated duration:</strong> {task.estimatedDurationHours} hours</p>}
+                    {task.complexity && <p><strong>Complexity:</strong> {task.complexity}</p>}
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Work conditions</h2>
-                    {task.workplaceSetting && <p><strong>Workplace setting:</strong> {task.workplaceSetting.replaceAll('_', ' ')}</p>}
-                    <p><strong>Physical demand:</strong> {task.physicalDemand}</p>
-                    <p><strong>Academic involvement:</strong> {task.academicInvolvement}</p>
-                    <p><strong>Hazards involved:</strong> {task.hazardExposure ? `Yes — ${task.hazardDescription}` : 'No'}</p>
-                    <p><strong>Private or isolated one-on-one meeting required:</strong> {task.privateMeetingRequired ? 'Yes' : 'No'}</p>
+                    {task.workMode.toLowerCase() !== 'remote' && <p><strong>Workplace setting:</strong> {task.workplaceSetting?.replaceAll('_', ' ') ?? 'Not provided'}</p>}
+                    <p><strong>Physical demand:</strong> {task.physicalDemand ?? 'Not provided'}</p>
+                    <p><strong>Academic involvement:</strong> {task.academicInvolvement ?? 'Not provided'}</p>
+                    <p><strong>Hazards involved:</strong> {task.hazardExposure === null ? 'Not provided' : task.hazardExposure ? `Yes — ${task.hazardDescription}` : 'No'}</p>
+                    <p><strong>Private or isolated one-on-one meeting required:</strong> {task.privateMeetingRequired === null ? 'Not provided' : task.privateMeetingRequired ? 'Yes' : 'No'}</p>
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">About the poster</h2>
