@@ -13,8 +13,6 @@ type Listing = {
     category: string;
     budget: string;
     workMode: string;
-    estimatedDurationHours: string | null;
-    complexity: string | null;
     deadline: string | null;
     workplaceName: string | null;
     workplaceAddress: string | null;
@@ -25,13 +23,13 @@ type Listing = {
 };
 type Props = {
     tasks: { data: Listing[]; links: { url: string | null; label: string; active: boolean }[] };
-    filters: { search?: string; category?: string; work_mode?: string; complexity?: string; min_budget?: string; max_budget?: string; sort?: string };
-    options: { categories: Option[]; workModes: Option[]; complexities: Option[]; sorts: Option[] };
+    filters: { search?: string; category?: string; work_mode?: string; min_budget?: string; max_budget?: string; sort?: string };
+    options: { categories: Option[]; workModes: Option[]; sorts: Option[] };
 };
 
 export default function BrowseTasks({ tasks, filters, options }: Props) {
-    const advancedFiltersActive = Boolean(filters.complexity || filters.min_budget || filters.max_budget);
-    const [values, setValues] = useState({ search: filters.search ?? '', category: filters.category ?? '', work_mode: filters.work_mode ?? '', complexity: filters.complexity ?? '', min_budget: filters.min_budget ?? '', max_budget: filters.max_budget ?? '', sort: filters.sort ?? 'newest' });
+    const advancedFiltersActive = Boolean(filters.min_budget || filters.max_budget);
+    const [values, setValues] = useState({ search: filters.search ?? '', category: filters.category ?? '', work_mode: filters.work_mode ?? '', min_budget: filters.min_budget ?? '', max_budget: filters.max_budget ?? '', sort: filters.sort ?? 'newest' });
     const [moreFiltersOpen, setMoreFiltersOpen] = useState(advancedFiltersActive);
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
@@ -70,10 +68,6 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                     <details open={moreFiltersOpen} onToggle={(event) => setMoreFiltersOpen(event.currentTarget.open)} className="rounded-lg border px-4 py-3">
                         <summary className="cursor-pointer text-sm font-medium">More filters{advancedFiltersActive ? ' · filters active' : ''}</summary>
                         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            <label className="grid gap-1.5 text-sm font-medium" htmlFor="filter-complexity">
-                                Complexity
-                                <select id="filter-complexity" name="complexity" value={values.complexity} onChange={(event) => setValues({ ...values, complexity: event.target.value })} className="h-10 rounded-md border bg-background px-3 font-normal"><option value="">Any complexity</option>{options.complexities.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
-                            </label>
                             <label className="grid gap-1.5 text-sm font-medium" htmlFor="min-budget">
                                 Minimum budget (PHP)
                                 <input id="min-budget" name="min_budget" type="number" min="0" max="1000000" step="0.01" value={values.min_budget} onChange={(event) => setValues({ ...values, min_budget: event.target.value })} className="h-10 rounded-md border bg-background px-3 font-normal" />
@@ -107,7 +101,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
 
                                 <div className="rounded-lg bg-muted/40 p-3">
                                     <p className="text-xl font-semibold">₱{formatAmount(task.budget)}</p>
-                                    <p className="mt-1 text-sm">{task.workMode}{task.estimatedDurationHours ? ` · about ${task.estimatedDurationHours} hours` : ''}{task.complexity ? ` · ${task.complexity} complexity` : ''}</p>
+                                    <p className="mt-1 text-sm">{task.workMode}</p>
                                     {task.deadline && <p className="mt-1 text-sm">Deadline: {formatDate(task.deadline)}</p>}
                                     {(task.workplaceName || task.workplaceAddress) && <p className="mt-1 text-sm">Workplace: {[task.workplaceName, task.workplaceAddress].filter(Boolean).join(' · ')}</p>}
                                 </div>

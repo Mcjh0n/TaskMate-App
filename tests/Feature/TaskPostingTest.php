@@ -105,6 +105,41 @@ class TaskPostingTest extends TestCase
         $this->assertSame('No answer was provided for hazard exposure.', collect($screening->factors)->firstWhere('key', 'hazard_exposure')['reason']);
     }
 
+    public function test_simplified_edit_keeps_optional_details_already_saved_on_the_task(): void
+    {
+        $poster = $this->verifiedPoster();
+        $task = Task::factory()->create([
+            'poster_id' => $poster->id,
+            'required_activities' => 'Previously saved activity details.',
+            'deliverables' => 'Previously saved deliverables.',
+            'estimated_duration_hours' => 3,
+            'skill_requirements' => 'Previously saved skills.',
+            'complexity' => 'medium',
+            'hazard_exposure' => true,
+            'hazard_description' => 'Previously saved hazard information.',
+        ]);
+
+        $this->actingAs($poster)->put(route('tasks.update', $task), [
+            'title' => 'A simpler task edit',
+            'category' => 'event_support',
+            'description' => 'A clear description with the essential task information.',
+            'budget' => 1500,
+            'work_mode' => 'onsite',
+            'workplace_name' => 'Synthetic Student Center',
+            'workplace_address' => 'Synthetic campus room 101',
+            'guidelines_confirmed' => '1',
+        ])->assertRedirect()->assertSessionHasNoErrors();
+
+        $task->refresh();
+        $this->assertSame('Previously saved activity details.', $task->required_activities);
+        $this->assertSame('Previously saved deliverables.', $task->deliverables);
+        $this->assertSame('3.0', $task->estimated_duration_hours);
+        $this->assertSame('Previously saved skills.', $task->skill_requirements);
+        $this->assertSame('medium', $task->complexity);
+        $this->assertTrue($task->hazard_exposure);
+        $this->assertSame('Previously saved hazard information.', $task->hazard_description);
+    }
+
     public function test_invalid_choices_limits_past_deadline_and_missing_workplace_are_rejected(): void
     {
         $poster = $this->verifiedPoster();

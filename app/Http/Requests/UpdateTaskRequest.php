@@ -15,7 +15,7 @@ class UpdateTaskRequest extends FormRequest
         if ($this->input('work_mode') === 'remote') {
             $this->merge(['workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         }
-        if (! $this->boolean('hazard_exposure')) {
+        if ($this->exists('hazard_exposure') && ! $this->boolean('hazard_exposure')) {
             $this->merge(['hazard_description' => null]);
         }
     }

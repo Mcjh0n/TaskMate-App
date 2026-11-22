@@ -15,7 +15,7 @@ import { ProblemReportForm } from '@/components/problem-report-form';
 
 type Task = {
     id: number; title: string; category: string; description: string; requiredActivities: string | null; deliverables: string | null;
-    estimatedDurationHours: string | null; skillRequirements: string | null; complexity: string | null; budget: string; workMode: string;
+    estimatedDurationHours: string | null; skillRequirements: string | null; budget: string; workMode: string;
     workplaceName: string | null; workplaceAddress: string | null; workplaceSetting: string | null; deadline: string | null;
     physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean | null; hazardDescription: string | null;
     privateMeetingRequired: boolean | null;
@@ -49,7 +49,6 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
                     {task.deliverables && <div><h3 className="font-medium">Expected result</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>}
                     {task.skillRequirements && <p><strong>Skills:</strong> {task.skillRequirements}</p>}
                     {task.estimatedDurationHours && <p><strong>Estimated duration:</strong> {task.estimatedDurationHours} hours</p>}
-                    {task.complexity && <p><strong>Complexity:</strong> {task.complexity}</p>}
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Work conditions</h2>

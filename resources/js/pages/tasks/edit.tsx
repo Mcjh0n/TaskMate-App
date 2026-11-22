@@ -11,7 +11,7 @@ type TaskData = {
     privateMeetingRequired: boolean | null; workplaceSetting: string | null;
 };
 type Props = {
-    options: { categories: Option[]; workModes: Option[]; complexities: Option[]; guidelines: string[]; riskQuestions: { physical_demand: Option[]; academic_involvement: Option[]; workplace_setting: Option[] } };
+    options: { categories: Option[]; workModes: Option[]; guidelines: string[] };
     task: TaskData;
     resetWarning: boolean;
 };

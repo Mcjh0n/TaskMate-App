@@ -45,7 +45,6 @@ class BrowseController extends Controller
             'options' => [
                 'categories' => $this->options(config('taskmate.categories', [])),
                 'workModes' => $this->options(config('taskmate.work_modes', [])),
-                'complexities' => $this->options(config('taskmate.complexity_levels', [])),
                 'sorts' => $this->options(config('taskmate.browse.sort_options', [])),
             ],
         ]);
@@ -110,8 +109,6 @@ class BrowseController extends Controller
             'category' => config('taskmate.categories.'.$task->category, $task->category),
             'budget' => $task->budget,
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
-            'estimatedDurationHours' => $task->estimated_duration_hours,
-            'complexity' => config('taskmate.complexity_levels.'.$task->complexity, $task->complexity),
             'deadline' => $task->deadline?->toDateString(),
             'workplaceName' => $task->workplace_name,
             'workplaceAddress' => $task->workplace_address,
@@ -133,7 +130,6 @@ class BrowseController extends Controller
             'deliverables' => $task->deliverables,
             'estimatedDurationHours' => $task->estimated_duration_hours,
             'skillRequirements' => $task->skill_requirements,
-            'complexity' => config('taskmate.complexity_levels.'.$task->complexity, $task->complexity),
             'budget' => $task->budget,
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
             'workplaceName' => $task->workplace_name,

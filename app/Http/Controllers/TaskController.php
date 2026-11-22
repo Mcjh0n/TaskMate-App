@@ -192,11 +192,7 @@ class TaskController extends Controller
         return [
             'categories' => $this->optionsFor(config('taskmate.categories', [])),
             'workModes' => $this->optionsFor(config('taskmate.work_modes', [])),
-            'complexities' => $this->optionsFor(config('taskmate.complexity_levels', [])),
             'guidelines' => config('taskmate.task_guidelines', []),
-            'riskQuestions' => collect(config('taskmate.risk_questions', []))
-                ->map(fn (array $items) => $this->optionsFor($items))
-                ->all(),
         ];
     }
 
@@ -232,7 +228,6 @@ class TaskController extends Controller
             'deliverables' => $task->deliverables,
             'estimatedDurationHours' => $task->estimated_duration_hours,
             'skillRequirements' => $task->skill_requirements,
-            'complexity' => config('taskmate.complexity_levels.'.$task->complexity, $task->complexity),
             'workModeValue' => $task->work_mode,
             'workplaceName' => $task->workplace_name,
             'workplaceAddress' => $task->workplace_address,
