@@ -171,3 +171,11 @@ Recommended starting position: allow students to browse while pending if the tea
 - Risk scores, keyword matches, screening history, admin notes, flags, sanctions, and escalation controls remain confined to administrator pages. The privacy audit found these details were already absent from ordinary task, profile, and report props, so those access rules were preserved.
 - The detailed admin moderation tools and report categories remain available for review and are listed as advanced scope pending team approval. No server workflow, schema, or stored records changed.
 - Automated tests cover the reduced public rating summary and verify that dimension scores remain stored. Phase checks passed: 257 PHP tests (3,571 assertions), 5 UI render tests, TypeScript checking, and the production build. The migration command reported no pending migrations.
+
+## Phase 7 outcome
+
+- The landing page and public “How TaskMate works” page now explain the main journey in order: account review, task posting and review, browsing and applying, agreement confirmation, completion/payment recording, and optional rating or reporting.
+- Landing actions match the signed-in user's role and account access. Unverified users are directed to their dashboard rather than shown unavailable posting or application actions.
+- The README and open-decisions list now distinguish the proposed core journey from advanced features that remain implemented while the team decides whether they belong in the first-version demo.
+- No routes, schema, records, or workflows were removed.
+- Phase checks passed: 257 PHP tests (3,571 assertions), 7 UI render tests, TypeScript checking, and the production build. The migration command reported no pending migrations.

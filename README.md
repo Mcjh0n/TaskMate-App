@@ -8,6 +8,12 @@ Students may browse and apply, and may post tasks while `students_can_post` is e
 
 **Prototype: use synthetic accounts and sample data only. Do not enter real identity or contact details.** TaskMate records agreements and payment status only. Payments move directly between users; TaskMate does not hold, process, recover, or guarantee payment. Verification, screening, and ratings do not guarantee safety.
 
+## Proposed first-version journey
+
+The simplified first-version proposal focuses on account review, clear task posting and review, student browsing and applications, agreement confirmation before work, and recording completion and payment status. Ratings and reports support this journey but are optional; serious concerns belong in reports, not rating comments.
+
+The repository also contains extended features such as multi-dimension rating summaries, detailed report categories and escalation, sanctions, off-platform flag scanning, notifications, and conversations. Their place in the first-version demo is still for the team to decide. They have not been removed, and no stored records were dropped as part of the simplification work. See [the product simplification proposal](docs/product-simplification-plan.md) and [open decisions](docs/open-decisions.md).
+
 ## Requirements
 
 - PHP 8.4, Composer, Node.js and npm, SQLite, and the Laravel/Vite requirements in the installed lockfiles.

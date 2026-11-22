@@ -5,6 +5,7 @@ Every item below is unresolved or provisional. Current behavior is not universit
 | Decision | Current location and provisional default | If decision differs |
 |---|---|---|
 | Who can post and what verification each role needs | `config/taskmate.php`: students can post by default; verification required | Change `students_can_post`, `require_verification`, role checks, and tests |
+| Advanced features in the first-version demo | Product simplification proposal keeps the main task journey central; existing multi-dimension ratings, detailed reports/escalation, sanctions, scanning, notifications, and conversations remain implemented pending team scope approval | Confirm what belongs in the demo. If any feature is deferred, hide or label its user entry points without deleting its schema or stored records |
 | Institutional email domains | `institutional_email_domains`: placeholder `cmu.edu.ph` | Confirm domains and update registration validation |
 | Task fields, categories, work modes, complexity | `categories`, `work_modes`, `complexity_levels`; categories marked provisional | Edit labels/keys and update any related data migration only with a data plan |
 | Task guidelines and prohibited work | `task_guidelines`, `prohibited_categories`, `prohibited_keywords` | Approve the rule list and adjust validation/moderation behavior |
