@@ -62,6 +62,27 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard'));
     }
 
+    public function test_admin_without_a_personal_team_is_sent_to_the_admin_dashboard_after_login(): void
+    {
+        $admin = User::factory()->verified()->make([
+            'name' => 'Synthetic Admin Without Team',
+            'email' => 'admin-without-team@example.test',
+        ]);
+        $admin->is_admin = true;
+        $admin->save();
+
+        $this->assertNull($admin->current_team_id);
+        $this->assertNull($admin->personalTeam());
+
+        $this->post(route('login.store'), [
+            'email' => $admin->email,
+            'password' => 'password',
+        ])->assertRedirect('/admin');
+
+        $this->assertAuthenticatedAs($admin);
+        $this->get('/admin')->assertOk();
+    }
+
     /* @chisel-passkeys */
     public function test_passkey_login_response_redirects_to_the_current_team_dashboard(): void
     {
