@@ -23,7 +23,7 @@ trait RedirectsToCurrentTeam
         // Some existing or locally seeded accounts may not have a personal team.
         // Keep authentication usable without making TaskMate depend on Teams.
         if (! $team) {
-            return route('home', [], false);
+            return route('taskmate.dashboard', [], false);
         }
 
         URL::defaults(['current_team' => $team->slug]);

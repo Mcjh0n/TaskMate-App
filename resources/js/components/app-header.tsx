@@ -13,7 +13,7 @@ import type { BreadcrumbItem } from '@/types';
 
 export function AppHeader({ breadcrumbs = [] }: { breadcrumbs?: BreadcrumbItem[] }) {
     const { auth, currentTeam } = usePage().props;
-    const dashboardUrl = currentTeam ? dashboard(currentTeam.slug) : '/';
+    const dashboardUrl = currentTeam ? dashboard(currentTeam.slug) : '/dashboard';
     const initials = useInitials();
     return <>
         <header className="flex min-h-16 items-center gap-3 border-b px-4">

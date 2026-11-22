@@ -43,6 +43,10 @@ Route::prefix('{current_team}')
         Route::get('dashboard', DashboardController::class)->name('dashboard');
     });
 
+Route::middleware(['auth', 'verified'])
+    ->get('/dashboard', DashboardController::class)
+    ->name('taskmate.dashboard');
+
 Route::middleware(['auth', 'account.active'])->group(function () {
     Route::post('invitations/{invitation}/accept', [TeamInvitationController::class, 'accept'])->name('invitations.accept');
     Route::delete('invitations/{invitation}', [TeamInvitationController::class, 'decline'])->name('invitations.decline');

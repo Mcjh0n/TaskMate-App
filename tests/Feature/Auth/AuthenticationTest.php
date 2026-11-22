@@ -83,6 +83,23 @@ class AuthenticationTest extends TestCase
         $this->get('/admin')->assertOk();
     }
 
+    public function test_faculty_without_a_personal_team_is_sent_to_the_taskmate_dashboard_after_login(): void
+    {
+        $faculty = User::factory()->verified()->facultyStaff()->make([
+            'name' => 'Synthetic Faculty Without Team',
+            'email' => 'faculty-without-team@example.test',
+        ]);
+        $faculty->save();
+
+        $this->post(route('login.store'), [
+            'email' => $faculty->email,
+            'password' => 'password',
+        ])->assertRedirect('/dashboard');
+
+        $this->assertAuthenticatedAs($faculty);
+        $this->get('/dashboard')->assertOk();
+    }
+
     /* @chisel-passkeys */
     public function test_passkey_login_response_redirects_to_the_current_team_dashboard(): void
     {

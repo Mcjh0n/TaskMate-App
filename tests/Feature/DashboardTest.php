@@ -37,6 +37,24 @@ class DashboardTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_faculty_without_a_team_can_visit_the_canonical_dashboard_path(): void
+    {
+        $faculty = User::factory()->verified()->facultyStaff()->make([
+            'email' => 'faculty-without-team@example.test',
+        ]);
+        $faculty->save();
+
+        $this->assertNull($faculty->current_team_id);
+        $this->assertNull($faculty->personalTeam());
+
+        $this->actingAs($faculty)->get('/dashboard')
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
+                ->where('auth.user.can_post_tasks', true),
+            );
+    }
+
     public function test_verified_student_dashboard_advertises_available_student_and_poster_actions(): void
     {
         config(['taskmate.students_can_post' => true]);
