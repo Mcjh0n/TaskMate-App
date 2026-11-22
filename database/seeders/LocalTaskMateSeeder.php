@@ -78,9 +78,9 @@ class LocalTaskMateSeeder extends Seeder
             $task->status = TaskStatus::Approved;
             $task->guidelines_confirmed_at = now();
             $task->decision_source = 'admin';
-            $task->risk_level = 'low';
-            $task->risk_score = 0;
-            $task->screened_at = now();
+            $task->risk_level = null;
+            $task->risk_score = null;
+            $task->screened_at = null;
             $task->reviewed_by = User::query()->where('email', 'admin@example.test')->value('id');
             $task->reviewed_at = now();
             $task->review_note = null;

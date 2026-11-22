@@ -6,7 +6,7 @@ TaskMate is a prototype campus task marketplace for the Central Mindanao Univers
 
 Students may browse and apply, and may post tasks while `students_can_post` is enabled. Master's and doctoral students use the ordinary Student account type. Faculty/staff may post tasks. Approved office or organization representatives may post tasks. Only students may apply; faculty/staff and organizations cannot apply.
 
-**Prototype: use synthetic accounts and sample data only. Do not enter real identity or contact details.** TaskMate records agreements and payment status only. Payments move directly between users; TaskMate does not hold, process, recover, or guarantee payment. Verification, screening, and ratings do not guarantee safety.
+**Prototype: use synthetic accounts and sample data only. Do not enter real identity or contact details.** TaskMate records agreements and payment status only. Payments move directly between users; TaskMate does not hold, process, recover, or guarantee payment. Verification, administrator review, and ratings do not guarantee safety.
 
 ## Proposed first-version journey
 
@@ -73,7 +73,7 @@ The local and demo seeders can be run repeatedly: synthetic users use a fixed `@
 
 ## Configuration
 
-Edit `config/taskmate.php` for institutional email domains, role posting rules, task categories/guidelines, risk questions and thresholds, browse/applications, agreement terms, report types/evidence limits, moderation placeholders, off-platform sample patterns, sanctions, ratings, notifications, messages, prototype mode, and rate limits. Many rules are explicitly provisional; see [open decisions](docs/open-decisions.md). Do not enable automated approval or use real data until the university approves the relevant policy.
+Edit `config/taskmate.php` for institutional email domains, role posting rules, task categories/guidelines, browse/applications, agreement terms, report types/evidence limits, moderation placeholders, off-platform sample patterns, sanctions, ratings, notifications, messages, prototype mode, and rate limits. Every new or resubmitted task waits for an administrator's decision. Automated risk scoring, auto-approval, and automatic blocking have been removed. Many other rules are explicitly provisional; see [open decisions](docs/open-decisions.md).
 
 One private, text-only conversation is created for each application. Only the task poster and applicant can read it. Administrators see only a reported message snapshot or one message flagged by the scanner. Messages are permanent; retention is undecided (`messages.retention_days` defaults to `null`). See [open decisions](docs/open-decisions.md) before using real data.
 
@@ -92,4 +92,4 @@ In-app alerts use the `notifications` config section. They poll while a signed-i
 
 ## Known limitations
 
-Task categories, screening rules, workplace validation, rating visibility, reports, sanctions, contact/escalation details, retention, consent, hosting, and evaluation protocols need team and university decisions. There is no recommendation algorithm. Appeals are not implemented. Starter-kit Teams migrations, routes, and data structures are retained, but TaskMate hides the team switcher and Teams settings/navigation UI. No study has been run and this repository contains no participant responses or test results.
+Task categories, workplace validation, rating visibility, reports, sanctions, contact/escalation details, retention, consent, hosting, and evaluation protocols need team and university decisions. Automated task risk screening is no longer active; prior screening records remain in storage but are not used or displayed. There is no recommendation algorithm. Appeals are not implemented. Starter-kit Teams migrations, routes, and data structures are retained, but TaskMate hides the team switcher and Teams settings/navigation UI. No study has been run and this repository contains no participant responses or test results.

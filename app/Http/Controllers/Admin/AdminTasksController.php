@@ -2,13 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\RiskLevel;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminTaskIndexRequest;
 use App\Models\AdminAction;
 use App\Models\Task;
-use App\Models\TaskScreening;
 use App\Enums\PaymentEventType;
 use App\Enums\PaymentStatus;
 use Inertia\Inertia;
@@ -25,7 +23,6 @@ class AdminTasksController extends Controller
                 ->where('title', 'like', "%{$search}%")
                 ->orWhereHas('poster', fn ($poster) => $poster->where('name', 'like', "%{$search}%"))))
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
-            ->when($filters['risk_level'] ?? null, fn ($query, string $level) => $query->where('risk_level', $level))
             ->when($filters['work_mode'] ?? null, fn ($query, string $mode) => $query->where('work_mode', $mode))
             ->orderByRaw("CASE status WHEN 'pending_review' THEN 0 ELSE 1 END")
             ->orderByDesc('created_at')
@@ -37,7 +34,6 @@ class AdminTasksController extends Controller
                 'title' => $task->title,
                 'posterName' => $task->poster->name,
                 'posterType' => config('taskmate.user_types.'.$task->poster->user_type->value),
-                'riskLevel' => $task->risk_level,
                 'status' => $task->status->value,
                 'statusLabel' => $task->status->label(),
                 'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
@@ -48,15 +44,13 @@ class AdminTasksController extends Controller
             'tasks' => $tasks,
             'filters' => $filters,
             'statuses' => collect(TaskStatus::cases())->map(fn (TaskStatus $status) => ['value' => $status->value, 'label' => $status->label()])->values(),
-            'riskLevels' => collect(RiskLevel::cases())->map(fn (RiskLevel $level) => ['value' => $level->value, 'label' => $level->label()])->values(),
             'workModes' => collect(config('taskmate.work_modes', []))->map(fn (string $label, string $value) => compact('value', 'label'))->values(),
         ]);
     }
 
     public function show(Task $task): Response
     {
-        $task->load(['poster', 'screenings', 'contentFlags', 'adminActions.admin:id,name', 'applications.applicant:id,name', 'agreement.currentVersion', 'agreement.completion', 'agreement.paymentEvents.actor:id,name']);
-        $latestScreening = $task->screenings->first();
+        $task->load(['poster', 'contentFlags', 'adminActions.admin:id,name', 'applications.applicant:id,name', 'agreement.currentVersion', 'agreement.completion', 'agreement.paymentEvents.actor:id,name']);
 
         return Inertia::render('admin/tasks/show', [
             'task' => [
@@ -93,11 +87,6 @@ class AdminTasksController extends Controller
                     'otherTasksCount' => $task->poster->tasks()->whereKeyNot($task->id)->count(),
                 ],
             ],
-            'screening' => $latestScreening ? $this->screeningData($latestScreening) : null,
-            'screeningHistory' => $task->screenings->map(fn (TaskScreening $screening) => [
-                ...$this->screeningData($screening),
-                'createdAt' => $screening->created_at?->toDateTimeString(),
-            ])->values(),
             'adminActions' => $task->adminActions->sortByDesc('created_at')->map(fn (AdminAction $action) => [
                 'id' => $action->id,
                 'action' => $action->action,
@@ -129,18 +118,6 @@ class AdminTasksController extends Controller
             'canReview' => $task->status === TaskStatus::PendingReview && $task->poster_id !== auth()->id(),
             'riskQuestions' => collect(config('taskmate.risk_questions', []))->mapWithKeys(fn (array $items, string $key) => [$key => $this->optionsFor($items)]),
         ]);
-    }
-
-    private function screeningData(TaskScreening $screening): array
-    {
-        return [
-            'riskLevel' => $screening->risk_level,
-            'riskScore' => $screening->risk_score,
-            'factors' => $screening->factors,
-            'keywordHits' => $screening->keyword_hits,
-            'hardTriggers' => $screening->hard_triggers,
-            'outcome' => $screening->outcome,
-        ];
     }
 
     private function questionLabel(string $question, ?string $value): ?string

@@ -8,7 +8,6 @@ use App\Enums\VerificationStatus;
 use App\Models\Application;
 use App\Models\Task;
 use App\Models\User;
-use App\Models\TaskScreening;
 use App\Models\Report;
 use App\Models\UserSanction;
 use App\Enums\SanctionType;
@@ -47,13 +46,12 @@ class DemoScenarioSeeder extends Seeder
             ['Synthetic scenario: Changes requested', TaskStatus::ChangesRequested],
             ['Synthetic scenario: Approved', TaskStatus::Approved],
             ['Synthetic scenario: Rejected', TaskStatus::Rejected],
-            ['Synthetic scenario: System-blocked', TaskStatus::Rejected],
             ['Synthetic scenario: Assigned', TaskStatus::Assigned],
             ['Synthetic scenario: In progress', TaskStatus::InProgress],
             ['Synthetic scenario: Completed', TaskStatus::Completed],
             ['Synthetic scenario: Removed', TaskStatus::Removed],
             ['Synthetic scenario: Cancelled', TaskStatus::Cancelled],
-            ['Synthetic scenario: High-risk escalated', TaskStatus::PendingReview],
+            ['Synthetic scenario: New manual review', TaskStatus::PendingReview],
             ['Synthetic scenario: Please message me on Telegram', TaskStatus::Approved],
         ] as [$title, $status]) {
             $task = $faculty->tasks()->where('title', $title)->first();
@@ -80,38 +78,24 @@ class DemoScenarioSeeder extends Seeder
             $task->workplace_setting = null;
             $task->status = $status;
             $task->guidelines_confirmed_at = now();
-            $task->risk_level = $title === 'Synthetic scenario: High-risk escalated' ? 'high' : 'low';
-            $task->risk_score = $title === 'Synthetic scenario: High-risk escalated' ? 8 : 0;
-            $task->decision_source = $title === 'Synthetic scenario: High-risk escalated' ? null : 'admin';
-            $task->screened_at = now();
+            $task->risk_level = null;
+            $task->risk_score = null;
+            $task->decision_source = null;
+            $task->screened_at = null;
             $task->reviewed_by = in_array($status, [TaskStatus::Approved, TaskStatus::Rejected, TaskStatus::ChangesRequested], true) ? $admin->id : null;
             $task->reviewed_at = in_array($status, [TaskStatus::Approved, TaskStatus::Rejected, TaskStatus::ChangesRequested], true) ? now() : null;
             $task->poster()->associate($faculty);
             $task->status = $status;
             if ($status === TaskStatus::ChangesRequested) $task->review_note = 'Synthetic note requesting clearer details.';
             if ($status === TaskStatus::Rejected) $task->review_note = 'Synthetic rejected task scenario.';
-            if ($title === 'Synthetic scenario: High-risk escalated') {
-                $task->risk_level = 'high'; $task->risk_score = 8; $task->decision_source = null;
-            }
-            if ($title === 'Synthetic scenario: System-blocked') {
-                $task->risk_level = 'high'; $task->risk_score = 9; $task->decision_source = 'system';
-                $task->review_note = 'This synthetic task was blocked for the local demo scenario.'; $task->reviewed_by = null;
-            }
             if (in_array($status, [TaskStatus::Approved, TaskStatus::Rejected, TaskStatus::ChangesRequested], true)) {
                 $task->reviewed_by = $admin->id; $task->reviewed_at = now();
             }
-            if ($title === 'Synthetic scenario: System-blocked') $task->reviewed_by = null;
             if ($status === TaskStatus::Removed) {
                 $task->removed_by = $admin->id; $task->removed_at = now(); $task->removal_reason = 'Synthetic removal scenario.';
             }
             $task->save();
 
-            if (in_array($title, ['Synthetic scenario: High-risk escalated', 'Synthetic scenario: System-blocked'], true) && ! $task->screenings()->exists()) {
-                $screening = new TaskScreening(); $screening->task()->associate($task);
-                $screening->risk_level = 'high'; $screening->risk_score = $title === 'Synthetic scenario: System-blocked' ? 9 : 8;
-                $screening->factors = [['factor' => 'Synthetic scenario', 'points' => 8, 'reason' => 'Demo data only.']];
-                $screening->keyword_hits = []; $screening->hard_triggers = []; $screening->outcome = $title === 'Synthetic scenario: System-blocked' ? 'blocked' : 'escalated'; $screening->save();
-            }
             if ($title === 'Synthetic scenario: Please message me on Telegram') {
                 app(OffPlatformScanner::class)->flag($task, $faculty, 'description', 'Please message me on Telegram');
             }

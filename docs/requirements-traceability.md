@@ -16,18 +16,18 @@ Status reflects code and documents at this prototype phase. “Implemented but p
 | FR-10 | Implemented | `tasks, TaskController, TaskPolicy` | `TaskPostingTest` |
 | FR-11 | Implemented | `tasks, TaskController, TaskPolicy` | `TaskPostingTest` |
 | FR-12 | Implemented | `tasks, TaskController, TaskPolicy` | `TaskPostingTest` |
-| FR-13 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-14 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-15 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-16 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-17 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-18 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-19 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-20 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-21 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-22 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-23 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
-| FR-24 | Implemented but provisional | `RiskScreeningService, admin task review` | `RiskScreeningTest` |
+| FR-13 | Not implemented | Automated risk screening was removed; all tasks require an administrator's decision | `TaskReviewWorkflowTest` verifies no automatic decision is made |
+| FR-14 | Not implemented | No risk levels or automated prioritization | `TaskReviewWorkflowTest` verifies manual review queue ordering |
+| FR-15 | Not implemented | No risk-score-based outcomes | `TaskReviewWorkflowTest` verifies submissions remain pending |
+| FR-16 | Not implemented | No keyword-based risk score or block | `TaskReviewWorkflowTest` submits former sample phrases and verifies pending status |
+| FR-17 | Not implemented | No automated risk assessment service is active | `TaskReviewWorkflowTest` |
+| FR-18 | Implemented but provisional | `TaskController`, admin task review; workplace details are disclosed and decisions are manual | `TaskPostingTest`, `TaskReviewWorkflowTest` |
+| FR-19 | Not implemented | Keyword-based risk decisions are disabled; task content is reviewed by an administrator | `TaskReviewWorkflowTest` |
+| FR-20 | Not implemented | No automated risk outcomes or escalation | `TaskReviewWorkflowTest` |
+| FR-21 | Implemented | Pending tasks can be approved, rejected, or sent back by an admin | `TaskReviewWorkflowTest` |
+| FR-22 | Implemented | `BrowseController` discloses workplace details before applying | `BrowseApplicationsTest` |
+| FR-23 | Implemented but provisional | Previously saved work-condition values remain visible; new posting form no longer collects the optional questionnaire | `TaskPostingTest`, `BrowseApplicationsTest` |
+| FR-24 | Implemented | Workplace address is a stated worksite; no location tracking exists | `TaskPostingTest`, `PrivacyAuditTest` |
 | FR-25 | Implemented but provisional | `browse, applications` | `BrowseApplicationsTest` |
 | FR-26 | Implemented but provisional | `browse, applications` | `BrowseApplicationsTest` |
 | FR-27 | Implemented but provisional | `browse, applications` | `BrowseApplicationsTest` |

@@ -97,9 +97,9 @@ test('admin pages use the sidebar shell and show admin alerts in the header', ()
 
 test('admin dashboard highlights the latest pending task and links to the review queue', () => {
     const markup = renderToStaticMarkup(React.createElement(AdminDashboard, {
-        counts: { pending: 0, moreInfoRequested: 0, verified: 0, rejected: 0, tasksAwaitingReview: 1, highRiskTasksAwaitingReview: 0, openReports: 0, reportsUnderReview: 0, highPriorityReports: 0, escalatedReports: 0, openFlags: 0, activeSuspensions: 0 },
+        counts: { pending: 0, moreInfoRequested: 0, verified: 0, rejected: 0, tasksAwaitingReview: 1, openReports: 0, reportsUnderReview: 0, highPriorityReports: 0, escalatedReports: 0, openFlags: 0, activeSuspensions: 0 },
         recentActions: [],
-        latestPendingTasks: [{ id: 17, title: 'Newest synthetic task', posterName: 'Synthetic Poster', riskLevel: 'low', submittedAt: '2026-11-23 10:00:00' }],
+        latestPendingTasks: [{ id: 17, title: 'Newest synthetic task', posterName: 'Synthetic Poster', submittedAt: '2026-11-23 10:00:00' }],
     }));
 
     assert.match(markup, /Latest tasks awaiting review/);

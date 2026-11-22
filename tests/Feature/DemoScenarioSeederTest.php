@@ -31,7 +31,7 @@ class DemoScenarioSeederTest extends TestCase
         }
         $this->assertTrue(Agreement::where('status', AgreementStatus::Negotiating->value)->exists());
         $this->assertTrue(Agreement::where('status', AgreementStatus::Agreed->value)->exists());
-        $this->assertTrue(Task::where('title', 'Synthetic scenario: High-risk escalated')->exists());
+        $this->assertTrue(Task::where('title', 'Synthetic scenario: New manual review')->exists());
         $this->assertTrue(Task::where('title', 'Synthetic scenario: Please message me on Telegram')->exists());
     }
 

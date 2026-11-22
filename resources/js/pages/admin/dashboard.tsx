@@ -16,7 +16,6 @@ type PendingTask = {
     id: number;
     title: string;
     posterName: string;
-    riskLevel: 'low' | 'moderate' | 'high' | null;
     submittedAt: string | null;
 };
 
@@ -27,7 +26,6 @@ type Props = {
         verified: number;
         rejected: number;
         tasksAwaitingReview: number;
-        highRiskTasksAwaitingReview: number;
         openReports: number;
         reportsUnderReview: number;
         highPriorityReports: number;
@@ -66,14 +64,10 @@ export default function AdminDashboard({ counts, recentActions, latestPendingTas
                         </div>
                     ))}
                 </section>
-                <section aria-label="Task review counts" className="grid gap-4 sm:grid-cols-2">
+                <section aria-label="Task review counts" className="grid gap-4">
                     <Link href={admin.tasks.index()} className="rounded-lg border p-4 hover:bg-muted/50">
                         <span className="text-sm text-muted-foreground">Tasks awaiting review</span>
                         <p className="mt-3 text-3xl font-semibold">{counts.tasksAwaitingReview}</p>
-                    </Link>
-                    <Link href={admin.tasks.index({ query: { risk_level: 'high', status: 'pending_review' } })} className="rounded-lg border p-4 hover:bg-muted/50">
-                        <span className="text-sm text-muted-foreground">High-risk tasks awaiting review</span>
-                        <p className="mt-3 text-3xl font-semibold">{counts.highRiskTasksAwaitingReview}</p>
                     </Link>
                 </section>
 
@@ -88,8 +82,8 @@ export default function AdminDashboard({ counts, recentActions, latestPendingTas
                     {latestPendingTasks.length ? (
                         <div className="overflow-x-auto rounded-lg border">
                             <table className="w-full text-left text-sm">
-                                <thead className="bg-muted/50 text-muted-foreground"><tr><th className="p-3">Task</th><th className="p-3">Poster</th><th className="p-3">Risk</th><th className="p-3">Submitted</th></tr></thead>
-                                <tbody>{latestPendingTasks.map((task) => <tr key={task.id} className="border-t"><td className="p-3"><Link className="font-medium underline underline-offset-4" href={admin.tasks.show(task.id)}>{task.title}</Link></td><td className="p-3">{task.posterName}</td><td className="p-3">{task.riskLevel ? task.riskLevel[0].toUpperCase() + task.riskLevel.slice(1) : 'Awaiting screening'}</td><td className="whitespace-nowrap p-3">{task.submittedAt ?? '—'}</td></tr>)}</tbody>
+                                <thead className="bg-muted/50 text-muted-foreground"><tr><th className="p-3">Task</th><th className="p-3">Poster</th><th className="p-3">Submitted</th></tr></thead>
+                                <tbody>{latestPendingTasks.map((task) => <tr key={task.id} className="border-t"><td className="p-3"><Link className="font-medium underline underline-offset-4" href={admin.tasks.show(task.id)}>{task.title}</Link></td><td className="p-3">{task.posterName}</td><td className="whitespace-nowrap p-3">{task.submittedAt ?? '—'}</td></tr>)}</tbody>
                             </table>
                         </div>
                     ) : <p className="rounded-lg border p-5 text-sm text-muted-foreground">No tasks are waiting for review.</p>}

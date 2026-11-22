@@ -101,8 +101,9 @@ class TaskPostingTest extends TestCase
         $this->assertNull($task->complexity);
         $this->assertNull($task->hazard_exposure);
         $this->assertNull($task->private_meeting_required);
-        $screening = $task->screenings()->firstOrFail();
-        $this->assertSame('No answer was provided for hazard exposure.', collect($screening->factors)->firstWhere('key', 'hazard_exposure')['reason']);
+        $this->assertSame(0, $task->screenings()->count());
+        $this->assertNull($task->risk_level);
+        $this->assertNull($task->risk_score);
     }
 
     public function test_simplified_edit_keeps_optional_details_already_saved_on_the_task(): void

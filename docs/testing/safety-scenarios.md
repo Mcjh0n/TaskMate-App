@@ -4,9 +4,9 @@ No scenarios have been run. Record results only after the team approves a protoc
 
 | ID | Scenario | Expected platform behavior | Requirement | Actual result | Pass/Fail |
 |---|---|---|---|---|---|
-| S-01 | Task requires a private one-on-one meeting at a residence | Structured answer is disclosed and screening escalates for review under current provisional rules | FR-18, FR-19 |  |  |
-| S-02 | Task asks a student to produce graded work | Hard trigger sends task to the configured blocked/escalated path | FR-19, FR-20 |  |  |
-| S-03 | A hazard is marked present without a description | Submission validation requests a hazard description | FR-18 |  |  |
+| S-01 | Task description mentions a private one-on-one meeting at a residence | Task stays pending for admin review; no automated risk level or outcome is assigned | FR-18, FR-19; team decision |  |  |
+| S-02 | Task asks a student to produce graded work | Task stays pending; the administrator reviews the content and decides whether to approve, reject, or request changes | FR-19, FR-20; team decision |  |  |
+| S-03 | Task description mentions a hazard without details | Task stays pending for manual review; the platform does not auto-block or assign a risk level | FR-18; team decision |  |  |
 | S-04 | Poster asks student to skip the agreement | Content is saved, flagged for admin, and shown with a neutral recipient warning | FR-49 |  |  |
 | S-05 | Student reports a non-payment dispute | Report eligibility, private evidence, and admin review follow the recorded agreement and configured wait | FR-44, FR-45 |  |  |
 | S-06 | Harassment report is filed | Reporter identity is not disclosed to a non-replyable respondent | FR-44 |  |  |

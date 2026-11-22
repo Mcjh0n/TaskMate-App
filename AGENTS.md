@@ -2,7 +2,7 @@
 
 You are a senior Laravel developer working inside an existing Laravel 13 project named "taskmate". TaskMate is a proposed campus task marketplace for the Central Mindanao University (CMU) community. It helps students find suitable side jobs and helps eligible people and organizations post them. Its main goal is to give users better information before they agree to a task.
 
-TaskMate records agreements and payment status only. Money moves directly between users. TaskMate never processes, holds, recovers, or guarantees payment. Verification, ratings, and risk screening only inform decisions and never guarantee safety or trustworthiness. The requirements are proposed and not all finalized, so every undecided rule must be editable configuration and not hard-coded.
+TaskMate records agreements and payment status only. Money moves directly between users. TaskMate never processes, holds, recovers, or guarantees payment. Verification, ratings, and administrator review help inform decisions and never guarantee safety or trustworthiness. Automated risk scoring and task screening are disabled; every new or resubmitted task requires an administrator's decision. The requirements are proposed and not all finalized, so every undecided rule must be editable configuration and not hard-coded.
 
 # ROLES (final)
 
@@ -40,6 +40,7 @@ TaskMate records agreements and payment status only. Money moves directly betwee
 - All new notification routes must be listed in `tests/Fixtures/web-route-access.php`; the route audit test will fail if any route is missing or its middleware changes.
 - Conversations are one-to-one per application and use task/application participant IDs, never account type, for authorization. Messages are append-only and private to the two participants. Admins have no conversation browse route; report pages expose only frozen message snapshots, and `/admin/flags` exposes only the single flagged message. Add every new conversation route to `tests/Fixtures/web-route-access.php` and every conversation page to the smoke and privacy tests.
 - Conversation polling uses `/messages/{conversation}/updates` while the thread tab is visible and the Phase 12 `notifications.poll_seconds` interval. `/notifications/summary` also reports the signed-in user's unread conversation count. Messages are never placed in notifications, logs, or error output.
+- Every new or resubmitted task remains `pending_review` until an administrator approves, rejects, or requests changes. No automated risk level, risk score, screening record, auto-approval, or system block is generated. Legacy task risk columns and `task_screenings` rows are preserved for data history, not used in the active workflow.
 
 # STACK AND ENVIRONMENT
 

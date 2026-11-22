@@ -63,7 +63,7 @@ return [
         'high' => 'High',
     ],
 
-    // PROVISIONAL: the team, adviser, and university must approve these screening questions and labels.
+    // Labels retained for previously saved work condition details. Automated screening is no longer active.
     'risk_questions' => [
         'physical_demand' => [
             'none' => 'None',
@@ -83,47 +83,6 @@ return [
         ],
     ],
 
-    // PROVISIONAL: the team, adviser, and university must approve all scoring rules and thresholds.
-    'risk_rules' => [
-        'points' => [
-            'category_base' => [
-                'tutoring_and_academic_support' => 0,
-                'design_and_creative' => 0,
-                'writing_and_editing' => 0,
-                'data_entry_and_clerical' => 0,
-                'event_support' => 0,
-                'tech_and_web' => 0,
-                'errands_and_delivery' => 0,
-                'other' => 0,
-                'default' => 0,
-            ],
-            'physical_demand' => ['none' => 0, 'light' => 0, 'moderate' => 1, 'heavy' => 2],
-            'academic_involvement' => ['none' => 0, 'supporting' => 0, 'produces_graded_work' => 0],
-            'hazard_exposure' => ['no' => 0, 'yes' => 2],
-            'private_meeting_required' => ['no' => 0, 'yes' => 3],
-            'workplace_setting' => [
-                'on_campus' => 0,
-                'off_campus_public' => 1,
-                'off_campus_private_or_residential' => 3,
-            ],
-            'keyword_per_hit' => 2,
-        ],
-        'keyword_max_points' => 4,
-        'thresholds' => ['moderate_from' => 3, 'high_from' => 7],
-        'hard_triggers' => [
-            // PROVISIONAL: fill with categories the team, adviser, and university prohibit.
-            'prohibited_categories' => [],
-            'academic_involvement' => 'produces_graded_work',
-        ],
-    ],
-
-    // PROVISIONAL: the team, adviser, and university must approve prohibited tasks and terms.
-    'prohibited_categories' => [],
-    // PROVISIONAL: sample phrases for testing only; replace after team, adviser, and university review.
-    'prohibited_keywords' => ['take my exam', 'do my homework', 'write my thesis', 'answer key'],
-    // PROVISIONAL: sample phrases for testing only; replace after team, adviser, and university review.
-    'risk_keywords' => ['heavy lifting', 'power tools', 'late at night', 'meet alone'],
-
     // PROVISIONAL: the Job and Task Guidelines must be finalized by the team and university.
     'task_guidelines' => [
         'PROVISIONAL: Tasks must be lawful and appropriate for a campus setting.',
@@ -132,16 +91,6 @@ return [
         'PROVISIONAL: The budget should be a fair estimate for the described work.',
         'PROVISIONAL: Payment is arranged directly between the poster and the student.',
     ],
-
-    // Retained for compatibility with earlier drafts; Phase 4 uses risk_keywords.
-    'high_risk_keywords' => [],
-
-    // PROVISIONAL: enable only after the team and university approve the risk rules.
-    'auto_approval_enabled' => false,
-    // PROVISIONAL: workplace-validation criteria are not decided; keep in-person tasks in review.
-    'in_person_requires_admin_review' => true,
-    // PROVISIONAL: the team, adviser, and university must approve this response.
-    'high_risk_action' => 'escalate',
 
     'browse' => [
         'per_page' => 12,

@@ -22,11 +22,7 @@ class AdminTaskDecisionRequest extends FormRequest
 
     public function rules(): array
     {
-        $task = $this->route('task');
-        $requiresOverrideNote = $this->input('decision') === 'approve'
-            && $task instanceof Task
-            && ($task->risk_level === 'high' || $this->hasProhibitedKeywordHit($task));
-        $noteRequired = in_array($this->input('decision'), ['reject', 'request_changes'], true) || $requiresOverrideNote;
+        $noteRequired = in_array($this->input('decision'), ['reject', 'request_changes'], true);
 
         return [
             'decision' => ['required', Rule::in(['approve', 'reject', 'request_changes'])],
@@ -37,13 +33,5 @@ class AdminTaskDecisionRequest extends FormRequest
     public function messages(): array
     {
         return ['note.required' => 'Add a note explaining this decision.'];
-    }
-
-    private function hasProhibitedKeywordHit(Task $task): bool
-    {
-        $hits = $task->screenings()->latest('id')->first()?->keyword_hits ?? [];
-
-        return collect($hits)
-            ->contains(fn (array $hit) => ($hit['type'] ?? null) === 'prohibited');
     }
 }

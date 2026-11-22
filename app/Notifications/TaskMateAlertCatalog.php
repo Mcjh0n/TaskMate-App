@@ -16,10 +16,8 @@ class TaskMateAlertCatalog
             'task.approved' => ['Task approved', 'Your task was approved.'],
             'task.rejected' => ['Task review updated', 'Your task could not be approved. Check your task page for details.'],
             'task.changes_requested' => ['Changes requested', 'An administrator requested changes to your task. Check your task page.'],
-            'task.blocked' => ['Task review updated', 'Your task could not be approved. Check your task page for next steps.'],
             'task.removed' => ['Task removed', 'Your task was removed by an administrator.'],
             'task.awaiting_review' => ['Task awaiting review', 'A task is awaiting administrator review.'],
-            'task.priority_review' => ['Priority task review', 'A task needs priority administrator review.'],
             'application.new' => ['New application', 'A student applied to one of your tasks.'],
             'application.accepted' => ['Application accepted', 'Your application was accepted.'],
             'application.declined' => ['Application update', 'Your application was declined.'],
@@ -73,7 +71,7 @@ class TaskMateAlertCatalog
     {
         $events = [
             'account.approved', 'account.rejected', 'account.more_info_requested', 'account.resubmitted', 'account.awaiting_review',
-            'task.approved', 'task.rejected', 'task.changes_requested', 'task.blocked', 'task.removed', 'task.awaiting_review', 'task.priority_review',
+            'task.approved', 'task.rejected', 'task.changes_requested', 'task.removed', 'task.awaiting_review',
             'application.new', 'application.accepted', 'application.declined', 'application.cancelled', 'application.withdrawn',
             'agreement.proposed', 'agreement.revised', 'agreement.sent_back', 'agreement.confirmed', 'agreement.locked', 'agreement.cancelled', 'agreement.admin_cancelled',
             'completion.delivered', 'completion.recorded', 'payment.marked', 'payment.received', 'payment.not_received',

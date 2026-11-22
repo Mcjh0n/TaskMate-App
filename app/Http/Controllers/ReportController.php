@@ -43,7 +43,7 @@ class ReportController extends Controller
         $isAdmin = $request->user()->isAdmin();
         $canReply = $request->user()->can('reply', $report);
         $task = $report->task;
-        $task->loadMissing(['screenings', 'applications.applicant:id,name,user_type,verification_status']);
+        $task->loadMissing(['applications.applicant:id,name,user_type,verification_status']);
 
         return Inertia::render('reports/show', [
             'report' => [
@@ -87,7 +87,7 @@ class ReportController extends Controller
                     'id' => $task->id, 'title' => $task->title, 'status' => $task->status->label(), 'category' => $task->category,
                     'description' => $task->description, 'requiredActivities' => $task->required_activities, 'deliverables' => $task->deliverables,
                     'skillRequirements' => $task->skill_requirements, 'workMode' => $task->work_mode, 'workplaceName' => $task->workplace_name,
-                    'workplaceAddress' => $task->workplace_address, 'screenings' => $task->screenings->map(fn ($screening) => ['riskLevel' => $screening->risk_level, 'riskScore' => $screening->risk_score, 'factors' => $screening->factors, 'createdAt' => $screening->created_at?->toDateTimeString()])->values(),
+                    'workplaceAddress' => $task->workplace_address,
                     'applications' => $task->applications->map(fn ($application) => ['name' => $application->applicant->name, 'status' => $application->status->value])->values(),
                     'flags' => $task->contentFlags()->get()->map(fn ($flag) => ['category' => $flag->category, 'matched' => $flag->matched, 'field' => $flag->field, 'status' => $flag->status->value])->values(),
                 ] : null,

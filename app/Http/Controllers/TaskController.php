@@ -7,8 +7,6 @@ use App\Enums\ApplicationStatus;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
-use App\Services\RiskScreening\RiskAssessment;
-use App\Services\RiskScreening\TaskModerationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +17,7 @@ use App\Services\RatingSummary;
 use App\Services\OffPlatformScanner;
 use App\Services\SanctionService;
 use App\Services\TaskMateNotifications;
+use App\Services\TaskSubmissionWorkflow;
 
 class TaskController extends Controller
 {
@@ -31,21 +30,22 @@ class TaskController extends Controller
         ]);
     }
 
-    public function store(StoreTaskRequest $request, TaskModerationService $moderation, OffPlatformScanner $scanner): RedirectResponse
+    public function store(StoreTaskRequest $request, TaskSubmissionWorkflow $submission, OffPlatformScanner $scanner): RedirectResponse
     {
-        [$task, $assessment] = DB::transaction(function () use ($request, $moderation, $scanner): array {
+        $task = DB::transaction(function () use ($request, $submission, $scanner): Task {
             $task = $request->user()->tasks()->make($request->safe()->except('guidelines_confirmed'));
-            $task->status = TaskStatus::PendingReview;
             $task->guidelines_confirmed_at = now();
             $task->save();
             foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
                 if ($task->{$field}) $scanner->flag($task, $request->user(), $field, $task->{$field});
             }
 
-            return [$task, $moderation->screenAndApply($task)];
+            $submission->submitForReview($task);
+
+            return $task;
         });
 
-        return redirect()->route('tasks.show', $task)->with('status', $moderation->posterMessage($assessment));
+        return redirect()->route('tasks.show', $task)->with('status', 'Your task is awaiting review by an administrator.');
     }
 
     public function mine(Request $request): Response
@@ -143,27 +143,23 @@ class TaskController extends Controller
         ]);
     }
 
-    public function update(UpdateTaskRequest $request, Task $task, TaskModerationService $moderation, OffPlatformScanner $scanner): RedirectResponse
+    public function update(UpdateTaskRequest $request, Task $task, TaskSubmissionWorkflow $submission, OffPlatformScanner $scanner): RedirectResponse
     {
         if ($task->status === TaskStatus::Assigned || $task->applications()->whereIn('status', [ApplicationStatus::Pending->value, ApplicationStatus::Accepted->value])->exists()) {
             abort(403, 'This task has active applicants or is assigned. Cancel it and post a new task to change its details.');
         }
-        $assessment = DB::transaction(function () use ($request, $task, $moderation, $scanner): RiskAssessment {
+        DB::transaction(function () use ($request, $task, $submission, $scanner): void {
             $task->fill($request->safe()->except('guidelines_confirmed'));
             $task->guidelines_confirmed_at = now();
-            $task->status = TaskStatus::PendingReview;
-            $task->review_note = null;
-            $task->reviewed_by = null;
-            $task->reviewed_at = null;
             $task->save();
             foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
                 if ($task->{$field}) $scanner->flag($task, $request->user(), $field, $task->{$field});
             }
 
-            return $moderation->screenAndApply($task);
+            $submission->submitForReview($task);
         });
 
-        return redirect()->route('tasks.show', $task)->with('status', $moderation->posterMessage($assessment));
+        return redirect()->route('tasks.show', $task)->with('status', 'Your task is awaiting review by an administrator.');
     }
 
     public function cancel(Request $request, Task $task, TaskMateNotifications $alerts): RedirectResponse

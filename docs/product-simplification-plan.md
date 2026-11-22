@@ -8,7 +8,7 @@ Help CMU students find suitable, clearly described side-jobs and help eligible p
 
 ## What the current product already includes
 
-The current application supports account verification, task posting and screening, browsing and applications, agreements, completion and payment records, ratings, reports, sanctions, notifications, and private conversations. It also includes separate admin queues and extensive privacy and route audits.
+The application supports account verification, task posting with mandatory manual admin review, browsing and applications, agreements, completion and payment records, ratings, reports, sanctions, notifications, and private conversations. Former automated risk screening records remain in storage as historical data, but the active workflow no longer assigns risk levels or makes system decisions.
 
 The task form currently requires a title, category, description, required activities, deliverables, estimated duration, complexity, budget, work mode, a rules confirmation, and structured safety answers. Workplace details are required for onsite and hybrid tasks. The browse page offers search, category, work mode, complexity, budget range, and sorting. The dashboard currently contains placeholder space that does not help users choose a next action.
 
@@ -149,7 +149,7 @@ Recommended starting position: allow students to browse while pending if the tea
 - Activities, deliverables, estimated hours, skills, complexity, and structured safety answers are available under an optional details section. Validation errors in that section automatically open it again.
 - Existing task records were preserved. A new migration allows the optional values to remain empty; task detail pages show when safety answers were not provided rather than implying a negative answer.
 - Screening gives missing safety answers no assumed “safe” value and keeps tasks with incomplete structured safety information in the review queue even if automatic approval is enabled.
-- Manual comparison in the browser remains for the team; automated feature tests cover minimal posting, optional data, validation, screening, and safe rendering of missing details.
+- Manual comparison in the browser remains for the team; automated feature tests cover minimal posting, optional data, validation, mandatory admin review, and safe rendering of missing details.
 
 ## Phase 4 outcome
 
@@ -168,7 +168,7 @@ Recommended starting position: allow students to browse while pending if the tea
 ## Phase 6 outcome
 
 - Public rating summaries now show only the overall average and visible rating count. The rating dimensions remain stored and are still available to the two agreement participants in their own agreement view; no rating data was deleted.
-- Risk scores, keyword matches, screening history, admin notes, flags, sanctions, and escalation controls remain confined to administrator pages. The privacy audit found these details were already absent from ordinary task, profile, and report props, so those access rules were preserved.
+- Risk scoring and automated screening are disabled. Historical screening rows are retained but are not exposed in current pages. Admin review, off-platform flags, sanctions, and admin notes remain in administrator pages.
 - The detailed admin moderation tools and report categories remain available for review and are listed as advanced scope pending team approval. No server workflow, schema, or stored records changed.
 - Automated tests cover the reduced public rating summary and verify that dimension scores remain stored. Phase checks passed: 257 PHP tests (3,571 assertions), 5 UI render tests, TypeScript checking, and the production build. The migration command reported no pending migrations.
 

@@ -6,10 +6,10 @@
 |---|---|---|---|---|---|---|---|
 | F-01 | Verification | Student | Register with configured institutional email and submit details | Account is pending; owner can see own submitted details | FR-01–08 |  |  |
 | F-02 | Verification | Admin | Review an account and approve, reject, or request information | Status and audit history reflect the chosen action | FR-05, FR-07 |  |  |
-| F-03 | Posting | Verified poster | Submit a complete task and confirm guidelines | Task enters review and screening history is recorded | FR-09–12 |  |  |
-| F-04 | Risk screening: low | Admin/poster | Submit a low-risk remote task under current configuration | Review or auto-approval follows configuration; no safety guarantee is implied | FR-13–20 |  |  |
-| F-05 | Risk screening: moderate | Admin/poster | Submit task meeting a moderate threshold | Task awaits admin review | FR-18–21 |  |  |
-| F-06 | Risk screening: high | Admin/poster | Submit task meeting a high threshold | Task is escalated or blocked per configured action | FR-18–21 |  |  |
+| F-03 | Posting | Verified poster | Submit a complete task and confirm guidelines | Task enters pending review; no automated screening record or decision is created | FR-09–12 |  |  |
+| F-04 | Manual task review | Verified poster/admin | Submit text that matched former risk keywords, then open the admin queue | Task stays pending; an administrator decides; no auto-approval or auto-block occurs | Team decision; FR-13–21 |  |  |
+| F-05 | Manual task review | Admin | Approve, reject, or request changes on a pending task | The administrator's choice and required notes determine the task state | FR-13–21 |  |  |
+| F-06 | Resubmission | Verified poster/admin | Edit a task after changes are requested | Task returns to pending review for a new manual decision | FR-09–12 |  |  |
 | F-07 | Workplace disclosure | Student | Open approved onsite/hybrid listing | Work name, address, setting, and conditions are visible before application | FR-22–29 |  |  |
 | F-08 | Application | Student | Apply, withdraw pending application, and inspect status | One application is recorded and status changes are enforced | FR-25–30 |  |  |
 | F-09 | Agreement | Poster/student | Propose, revise, send back, confirm same version | Agreement locks only after both confirm the current version | FR-31–34 |  |  |

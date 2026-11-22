@@ -47,7 +47,6 @@ class AdminDashboardController extends Controller
                 'id' => $task->id,
                 'title' => $task->title,
                 'posterName' => $task->poster->isOrganization() ? $task->poster->organization_name : $task->poster->name,
-                'riskLevel' => $task->risk_level,
                 'submittedAt' => $task->created_at?->toDateTimeString(),
             ]);
 
@@ -58,7 +57,6 @@ class AdminDashboardController extends Controller
                 'verified' => User::query()->where('verification_status', VerificationStatus::Verified->value)->count(),
                 'rejected' => User::query()->where('verification_status', VerificationStatus::Rejected->value)->count(),
                 'tasksAwaitingReview' => Task::query()->where('status', TaskStatus::PendingReview->value)->count(),
-                'highRiskTasksAwaitingReview' => Task::query()->where('status', TaskStatus::PendingReview->value)->where('risk_level', 'high')->count(),
                 'openReports' => Report::query()->where('status', ReportStatus::Open->value)->count(),
                 'reportsUnderReview' => Report::query()->where('status', ReportStatus::UnderReview->value)->count(),
                 'highPriorityReports' => Report::query()->where('priority', 'high')->whereIn('status', [ReportStatus::Open->value, ReportStatus::UnderReview->value])->count(),

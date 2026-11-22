@@ -36,7 +36,7 @@ class AdminTaskDecisionController extends Controller
                     'request_changes' => 'task_changes_requested',
                 },
                 'note' => $request->validated('note'),
-                'metadata' => ['decision' => $decision, 'risk_level' => $task->risk_level],
+                'metadata' => ['decision' => $decision],
             ]);
             $event = match ($decision) {
                 'approve' => 'task.approved',

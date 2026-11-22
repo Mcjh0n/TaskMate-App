@@ -32,7 +32,6 @@ const modules = {
         Link: ({ href, children, ...props }) => element('a', { ...props, href: typeof href === 'string' ? href : href?.url ?? '#', children }),
     },
     '@/layouts/admin-layout': (props) => element('main', props),
-    '@/components/risk-level-badge': { RiskLevelBadge: () => element('span', { children: 'Risk level' }) },
     '@/components/task-status-badge': { TaskStatusBadge: () => element('span', { children: 'Task status' }) },
     '@/components/verification-status-badge': { VerificationStatusBadge: () => element('span', { children: 'Verification status' }) },
     '@/components/safety-notice': { SafetyNotice: () => element('p', { children: 'Safety notice' }) },
@@ -87,15 +86,15 @@ const task = {
     poster: { id: 2, name: 'Synthetic Poster', type: 'Faculty / Staff', verificationStatus: 'verified', otherTasksCount: 1 },
 };
 
-test('admin task review renders when there is no agreement, application, screening history, or content flag', () => {
+test('admin task review renders a task for manual review without automated screening data', () => {
     const markup = renderToStaticMarkup(React.createElement(AdminTaskReview, {
         task,
-        screening: null,
         canReview: false,
     }));
 
     assert.match(markup, /Synthetic pending task/);
-    assert.match(markup, /No screening history is available/);
+    assert.match(markup, /Every submitted task is reviewed by an administrator/);
+    assert.doesNotMatch(markup, /Risk level|Screening breakdown|Score:/);
     assert.match(markup, /No applications have been submitted/);
     assert.match(markup, /No off-platform content flags have been recorded/);
     assert.doesNotMatch(markup, />Agreement</);
