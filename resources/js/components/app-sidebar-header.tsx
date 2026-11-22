@@ -6,8 +6,10 @@ import { usePage } from '@inertiajs/react';
 
 export function AppSidebarHeader({
     breadcrumbs = [],
+    showMessages = true,
 }: {
     breadcrumbs?: BreadcrumbItemType[];
+    showMessages?: boolean;
 }) {
     const pollSeconds = (usePage().props as { notificationPollSeconds?: number }).notificationPollSeconds ?? 10;
     return (
@@ -16,7 +18,7 @@ export function AppSidebarHeader({
                 <SidebarTrigger className="-ml-1" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
-            <div className="ml-auto"><NotificationBell pollSeconds={pollSeconds} /></div>
+            <div className="ml-auto"><NotificationBell pollSeconds={pollSeconds} showMessages={showMessages} /></div>
         </header>
     );
 }

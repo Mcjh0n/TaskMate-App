@@ -10,48 +10,80 @@ import ts from 'typescript';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const require = createRequire(import.meta.url);
-const source = readFileSync(resolve(root, 'resources/js/layouts/admin-layout.tsx'), 'utf8');
-const compiled = ts.transpileModule(source, {
-    compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
-}).outputText;
 
 function element(tag, { children, ...props } = {}) {
     return React.createElement(tag, props, children);
 }
 
-const Link = ({ href, children, ...props }) => element('a', { ...props, href: typeof href === 'string' ? href : href?.url ?? '#', children });
-const modules = {
-    '@inertiajs/react': { Link, usePage: () => ({ url: '/admin', props: { notificationPollSeconds: 10, auth: { user: { name: 'Synthetic Admin', verification_status: 'verified', is_admin: true } } } }) },
-    '@/components/ui/avatar': { Avatar: ({ children }) => element('span', { children }), AvatarFallback: ({ children }) => element('span', { children }) },
-    '@/components/ui/button': { Button: ({ children, ...props }) => element('button', { ...props, children }) },
-    '@/components/ui/dropdown-menu': {
-        DropdownMenu: ({ children }) => element('div', { children }),
-        DropdownMenuContent: ({ children }) => element('div', { children }),
-        DropdownMenuTrigger: ({ children }) => element('div', { children }),
+function loadComponent(path, modules, label, exportName = 'default') {
+    const source = readFileSync(resolve(root, path), 'utf8');
+    const compiled = ts.transpileModule(source, {
+        compilerOptions: { jsx: ts.JsxEmit.ReactJSX, module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true },
+    }).outputText;
+    const loaded = { exports: {} };
+    const mockRequire = (name) => {
+        if (name === 'react/jsx-runtime') return require('react/jsx-runtime');
+        if (name === 'react') return React;
+        if (!(name in modules)) throw new Error(`Unexpected module in ${label} render test: ${name}`);
+        const value = modules[name];
+        return typeof value === 'function' ? value : { __esModule: true, ...value };
+    };
+    new Function('require', 'module', 'exports', compiled)(mockRequire, loaded, loaded.exports);
+    return loaded.exports[exportName];
+}
+
+const adminRoutes = { default: {
+    dashboard: () => ({ url: '/admin' }),
+    users: { index: () => ({ url: '/admin/users' }) },
+    tasks: { index: () => ({ url: '/admin/tasks' }) },
+    reports: { index: () => ({ url: '/admin/reports' }) },
+    ratings: { index: () => ({ url: '/admin/ratings' }) },
+} };
+
+const Link = ({ href, children, prefetch: _prefetch, ...props }) => element('a', { ...props, href: typeof href === 'string' ? href : href?.url ?? '#', children });
+const AdminSidebar = loadComponent('resources/js/components/admin-sidebar.tsx', {
+    '@inertiajs/react': { Link },
+    'lucide-react': { BriefcaseBusiness: () => null, Flag: () => null, LayoutDashboard: () => null, ShieldCheck: () => null, Star: () => null, Users: () => null },
+    '@/components/app-logo': () => element('span', { children: 'TaskMate' }),
+    '@/components/nav-main': { NavMain: ({ items, groupLabel }) => element('nav', { 'aria-label': groupLabel, children: items.map((item) => React.createElement('a', { key: item.title, href: item.href, children: item.title })) }) },
+    '@/components/nav-user': { NavUser: () => element('div', { children: 'Profile settings Log out' }) },
+    '@/components/ui/sidebar': {
+        Sidebar: ({ children }) => element('aside', { children }),
+        SidebarContent: ({ children }) => element('div', { children }),
+        SidebarFooter: ({ children }) => element('div', { children }),
+        SidebarHeader: ({ children }) => element('div', { children }),
+        SidebarMenu: ({ children }) => element('div', { children }),
+        SidebarMenuButton: ({ children }) => element('div', { children }),
+        SidebarMenuItem: ({ children }) => element('div', { children }),
     },
-    '@/lib/utils': { cn: (...classes) => classes.filter(Boolean).join(' ') },
-    '@/routes/admin': { default: { dashboard: () => ({ url: '/admin' }), users: { index: () => ({ url: '/admin/users' }) }, tasks: { index: () => ({ url: '/admin/tasks' }) }, reports: { index: () => ({ url: '/admin/reports' }) }, ratings: { index: () => ({ url: '/admin/ratings' }) } } },
+    '@/routes/admin': adminRoutes,
+}, 'admin sidebar', 'AdminSidebar');
+
+const AdminLayout = loadComponent('resources/js/layouts/admin-layout.tsx', {
+    '@/components/app-content': { AppContent: ({ children }) => element('section', { 'data-part': 'content', children }) },
+    '@/components/admin-sidebar': { AdminSidebar: () => element('aside', { children: 'Admin sidebar' }) },
+    '@/components/app-shell': { AppShell: ({ children }) => element('div', { 'data-part': 'shell', children }) },
+    '@/components/app-sidebar-header': { AppSidebarHeader: ({ showMessages }) => element('header', { children: showMessages ? 'Header with messages' : 'Admin alerts only' }) },
     '@/components/prototype-banner': () => null,
-    '@/components/site-footer': () => null,
-    '@/components/notification-bell': { NotificationBell: () => null },
-    '@/components/user-menu-content': { UserMenuContent: () => element('div', { children: 'Profile settings Log out' }) },
-    '@/hooks/use-initials': { useInitials: () => (name) => name.slice(0, 1) },
-};
-const loaded = { exports: {} };
-const mockRequire = (name) => {
-    if (name === 'react/jsx-runtime') return require('react/jsx-runtime');
-    if (name === 'react') return React;
-    if (!(name in modules)) throw new Error(`Unexpected module in admin layout render test: ${name}`);
-    const value = modules[name];
-    return typeof value === 'function' ? value : { __esModule: true, ...value };
-};
-new Function('require', 'module', 'exports', compiled)(mockRequire, loaded, loaded.exports);
-const AdminLayout = loaded.exports.default;
+    '@/components/site-footer': () => element('footer', { children: 'Footer' }),
+}, 'admin layout');
 
-test('admin header provides the account menu with profile settings and logout actions', () => {
-    const markup = renderToStaticMarkup(React.createElement(AdminLayout, { children: element('main', { children: 'Admin page' }) }));
+test('admin sidebar lists admin destinations and includes profile and logout controls', () => {
+    const markup = renderToStaticMarkup(React.createElement(AdminSidebar));
 
-    assert.match(markup, /Open account menu/);
-    assert.match(markup, /Profile settings/);
-    assert.match(markup, /Log out/);
+    assert.match(markup, /aria-label="Administration"/);
+    for (const label of ['Dashboard', 'Users', 'Tasks', 'Reports', 'Flags', 'Ratings', 'Profile settings', 'Log out']) {
+        assert.match(markup, new RegExp(label));
+    }
+    assert.doesNotMatch(markup, /Browse Tasks|My Applications/);
+});
+
+test('admin pages use the sidebar shell and show admin alerts in the header', () => {
+    const markup = renderToStaticMarkup(React.createElement(AdminLayout, { children: element('div', { children: 'Admin page' }) }));
+
+    assert.match(markup, /data-part="shell"/);
+    assert.match(markup, /Admin sidebar/);
+    assert.match(markup, /Admin alerts only/);
+    assert.match(markup, /Admin page/);
+    assert.match(markup, /Footer/);
 });
