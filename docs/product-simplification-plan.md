@@ -157,3 +157,10 @@ Recommended starting position: allow students to browse while pending if the tea
 - The current access rule is preserved: unverified accounts cannot browse, post, or apply. In particular, students must be verified before browsing; this phase clarifies that behavior instead of changing authorization.
 - Registration fields are explained where they appear: ID numbers support administrator review and stay private; affiliation may appear on profiles; organization names are display names; position and supporting information support administrator review.
 - The details-resubmission page repeats those privacy and purpose notes. Existing data, registration requirements, and role permissions were not changed.
+
+## Phase 5 outcome
+
+- The task detail page now directs students to review the full work and condition details before the short application form; the message prompt explains what to include and the suggested amount remains optional.
+- My Applications explains what each active or final status means and the next step, including pending applications that remain active while another applicant negotiates.
+- Agreement pages explain that both people must confirm the same version before work starts. Confirming, proposing changes, asking for a change, and cancelling before lock use shorter action labels; the legal and payment boundary notice remains visible.
+- Application, agreement, and authorization rules were unchanged. No schema changes were needed.

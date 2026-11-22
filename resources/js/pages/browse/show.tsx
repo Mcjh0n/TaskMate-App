@@ -14,7 +14,7 @@ import { RatingSummary } from '@/components/rating-summary';
 import { ProblemReportForm } from '@/components/problem-report-form';
 
 type Task = {
-    id: number; title: string; category: string; description: string; requiredActivities: string; deliverables: string;
+    id: number; title: string; category: string; description: string; requiredActivities: string | null; deliverables: string | null;
     estimatedDurationHours: string | null; skillRequirements: string | null; complexity: string | null; budget: string; workMode: string;
     workplaceName: string | null; workplaceAddress: string | null; workplaceSetting: string | null; deadline: string | null;
     physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean | null; hazardDescription: string | null;
@@ -31,7 +31,7 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
             <div className="mx-auto max-w-4xl space-y-5 p-4 sm:p-6">
                 {status && <div role="status" className="rounded-lg border px-4 py-3 text-sm">{status}</div>}
                 {limitedView && <div className="rounded-lg border p-4 text-sm">This task is currently {currentTaskStatus?.toLowerCase()}. You can review the task details and your application status.</div>}
-                <div><p className="text-sm text-muted-foreground">{task.category}</p><h1 className="mt-1 text-2xl font-semibold">{task.title}</h1></div>
+                <div><p className="text-sm text-muted-foreground">{task.category}</p><h1 className="mt-1 text-2xl font-semibold">{task.title}</h1><p className="mt-2 text-sm text-muted-foreground">Review the work, conditions, budget, and workplace details before you decide to apply.</p>{canApply && !application && <a href="#application-form" className="mt-3 inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline">Go to application form</a>}</div>
                 <section aria-label="Task summary" className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-xl border bg-muted/30 p-5 sm:col-span-2">
                         <p className="text-sm text-muted-foreground">Estimated budget</p>
@@ -45,8 +45,8 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
                 <section className="space-y-4 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">About the work</h2>
                     <p className="whitespace-pre-wrap">{task.description}</p>
-                    <div><h3 className="font-medium">Required activities</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.requiredActivities}</p></div>
-                    <div><h3 className="font-medium">Deliverables</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>
+                    {task.requiredActivities && <div><h3 className="font-medium">Main activities</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.requiredActivities}</p></div>}
+                    {task.deliverables && <div><h3 className="font-medium">Expected result</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>}
                     {task.skillRequirements && <p><strong>Skills:</strong> {task.skillRequirements}</p>}
                     {task.estimatedDurationHours && <p><strong>Estimated duration:</strong> {task.estimatedDurationHours} hours</p>}
                     {task.complexity && <p><strong>Complexity:</strong> {task.complexity}</p>}
@@ -79,13 +79,13 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
                         {conversation?.sendBlockedReason && <p className="text-sm text-muted-foreground">{conversation.sendBlockedReason}</p>}
                     </section>
                 ) : canApply && (
-                    <section className="space-y-4 rounded-xl border p-5">
+                    <section id="application-form" className="space-y-4 rounded-xl border p-5">
                         <h2 className="text-lg font-semibold">Apply to this task</h2>
-                        <p className="text-sm text-muted-foreground">You can apply once to this task. Review the work details before sending your message.</p>
+                        <p className="text-sm text-muted-foreground">Send one short message to introduce yourself and explain why this task suits you. A suggested amount is optional. You can apply only once.</p>
                         <Form {...applications.store.form(task.id)} className="space-y-4">
                             {({ errors, processing }) => (
                                 <>
-                                    <div className="grid gap-2"><Label htmlFor="message">Message to the poster</Label><Textarea id="message" name="message" maxLength={messageMaxLength} required /><p className="text-xs text-muted-foreground">Maximum {messageMaxLength} characters.</p><InputError message={errors.message} /></div>
+                                    <div className="grid gap-2"><Label htmlFor="message">Message to the poster</Label><Textarea id="message" name="message" maxLength={messageMaxLength} required placeholder="Briefly introduce yourself and explain how you can help." /><p className="text-xs text-muted-foreground">Up to {messageMaxLength} characters.</p><InputError message={errors.message} /></div>
                                     <div className="grid gap-2"><Label htmlFor="proposed_amount">Suggested amount (optional)</Label><Input id="proposed_amount" name="proposed_amount" type="number" min="1" max="1000000" step="0.01" /><p className="text-xs text-muted-foreground">This is only a suggestion. The final amount is agreed later between you and the poster.</p><InputError message={errors.proposed_amount} /></div>
                                     <div className="flex items-start gap-2"><input id="work_details_confirmed" name="work_details_confirmed" type="checkbox" value="1" required className="mt-1" /><Label htmlFor="work_details_confirmed">I have read the work details and conditions.</Label></div>
                                     <InputError message={errors.work_details_confirmed} />
