@@ -92,4 +92,8 @@ test('agreement page clearly states that both people must confirm the same versi
     assert.match(markup, /I agree to these terms/);
     assert.match(markup, /Propose different terms/);
     assert.match(markup, /Ask for a change/);
+    for (const id of ['revise-deliverables', 'revise-terms', 'revise-final-amount', 'revise-start-date', 'revise-due-date', 'revise-payment-arrangement', 'revise-comment', 'send-back-body', 'cancel-reason']) {
+        assert.match(markup, new RegExp(`for=\\"${id}\\"`), `Expected a visible or screen-reader label for ${id}.`);
+        assert.match(markup, new RegExp(`id=\\"${id}\\"`), `Expected the field ${id} to match its label.`);
+    }
 });

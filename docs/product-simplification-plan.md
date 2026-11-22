@@ -179,3 +179,10 @@ Recommended starting position: allow students to browse while pending if the tea
 - The README and open-decisions list now distinguish the proposed core journey from advanced features that remain implemented while the team decides whether they belong in the first-version demo.
 - No routes, schema, records, or workflows were removed.
 - Phase checks passed: 257 PHP tests (3,571 assertions), 7 UI render tests, TypeScript checking, and the production build. The migration command reported no pending migrations.
+
+## Phase 8 outcome
+
+- Reviewed the main browse/apply, task posting, agreement, completion, and reporting screens alongside the existing route, privacy, and page-render audits. The audited layouts use responsive breakpoints, shared keyboard-focus styles, and labeled primary workflow fields.
+- Fixed missing programmatic labels in agreement revision, send-back, cancellation, completion, and non-payment report fields. Validation errors are now associated with the affected fields where those forms display them. Added a UI regression assertion for the agreement action fields.
+- `php artisan migrate` reported no pending migrations. `npx tsc --noEmit` passed. `php artisan test` passed: 257 tests and 3,571 assertions. `npm run build` passed, including all 7 UI render tests and TypeScript checking. The existing optional font fallback warning for `fontaine` was printed; the build completed successfully.
+- No participant sessions, usability feedback, acceptance scores, or evaluation results were collected or invented. Usability evaluation remains a template/planned activity until the team approves its protocol.
