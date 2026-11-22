@@ -136,3 +136,9 @@ Recommended starting position: allow students to browse while pending if the tea
 - The purge selector now includes synthetic accepted applications, and purge removes their dependent conversation snapshots, events, reads, messages, and conversation rows before their tasks. The demo seed/reset/purge tests pass without removing the manual-record preservation assertions.
 - The dashboard placeholders were replaced with role- and account-state-aware next actions. Suspended users do not receive post/apply action links through shared navigation props.
 - The baseline test failure noted above was observed before Phase 1 and is covered by the current test run after the fix.
+
+## Phase 2 outcome
+
+- Search, category, work mode, and sort remain visible in the primary browse controls. Complexity and budget range are grouped under a collapsible “More filters” section; active advanced filters reopen the section.
+- Task cards now include a short work description and make the budget, work mode, deadline, and stated workplace easier to scan. The task detail page presents budget, work mode, deadline, and worksite before the longer work and condition details.
+- Browse access, query validation, filtering, sorting, task visibility, and privacy rules were retained. No schema or route changes were needed.

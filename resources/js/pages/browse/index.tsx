@@ -6,7 +6,23 @@ import { VerificationStatusBadge } from '@/components/verification-status-badge'
 import browse from '@/routes/browse';
 
 type Option = { value: string; label: string };
-type Listing = { id: number; title: string; category: string; budget: string; workMode: string; estimatedDurationHours: string; complexity: string; deadline: string | null; posterName: string; posterType: string; posterVerificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; hasApplied: boolean };
+type Listing = {
+    id: number;
+    title: string;
+    descriptionPreview: string;
+    category: string;
+    budget: string;
+    workMode: string;
+    estimatedDurationHours: string;
+    complexity: string;
+    deadline: string | null;
+    workplaceName: string | null;
+    workplaceAddress: string | null;
+    posterName: string;
+    posterType: string;
+    posterVerificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested';
+    hasApplied: boolean;
+};
 type Props = {
     tasks: { data: Listing[]; links: { url: string | null; label: string; active: boolean }[] };
     filters: { search?: string; category?: string; work_mode?: string; complexity?: string; min_budget?: string; max_budget?: string; sort?: string };
@@ -14,13 +30,107 @@ type Props = {
 };
 
 export default function BrowseTasks({ tasks, filters, options }: Props) {
+    const advancedFiltersActive = Boolean(filters.complexity || filters.min_budget || filters.max_budget);
     const [values, setValues] = useState({ search: filters.search ?? '', category: filters.category ?? '', work_mode: filters.work_mode ?? '', complexity: filters.complexity ?? '', min_budget: filters.min_budget ?? '', max_budget: filters.max_budget ?? '', sort: filters.sort ?? 'newest' });
+    const [moreFiltersOpen, setMoreFiltersOpen] = useState(advancedFiltersActive);
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
         router.get(browse.index().url, values, { preserveState: true, replace: true });
     };
 
-    return <><Head title="Browse tasks" /><div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6"><div><h1 className="text-2xl font-semibold">Browse tasks</h1><p className="mt-1 text-sm text-muted-foreground">Review the work details and conditions before you apply.</p></div><form onSubmit={submit} className="grid gap-3 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-4"><input aria-label="Search tasks" placeholder="Search tasks" value={values.search} onChange={(event) => setValues({ ...values, search: event.target.value })} className="h-10 rounded-md border bg-background px-3 text-sm" /><select aria-label="Category" value={values.category} onChange={(event) => setValues({ ...values, category: event.target.value })} className="h-10 rounded-md border bg-background px-3 text-sm"><option value="">All categories</option>{options.categories.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><select aria-label="Work mode" value={values.work_mode} onChange={(event) => setValues({ ...values, work_mode: event.target.value })} className="h-10 rounded-md border bg-background px-3 text-sm"><option value="">All work modes</option>{options.workModes.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><select aria-label="Complexity" value={values.complexity} onChange={(event) => setValues({ ...values, complexity: event.target.value })} className="h-10 rounded-md border bg-background px-3 text-sm"><option value="">All complexity levels</option>{options.complexities.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><input aria-label="Minimum budget" placeholder="Minimum budget" type="number" min="0" value={values.min_budget} onChange={(event) => setValues({ ...values, min_budget: event.target.value })} className="h-10 rounded-md border bg-background px-3 text-sm" /><input aria-label="Maximum budget" placeholder="Maximum budget" type="number" min="0" value={values.max_budget} onChange={(event) => setValues({ ...values, max_budget: event.target.value })} className="h-10 rounded-md border bg-background px-3 text-sm" /><select aria-label="Sort tasks" value={values.sort} onChange={(event) => setValues({ ...values, sort: event.target.value })} className="h-10 rounded-md border bg-background px-3 text-sm">{options.sorts.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><button type="submit" className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">Apply filters</button></form>
-        {tasks.data.length ? <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{tasks.data.map((task) => <article key={task.id} className="space-y-3 rounded-xl border p-5"><div className="flex items-start justify-between gap-2"><h2 className="font-semibold">{task.title}</h2>{task.hasApplied && <ApplicationStatusBadge status="pending" label="Applied" />}</div><p className="text-sm text-muted-foreground">{task.category} · {task.workMode}</p><p className="text-lg font-medium">₱{formatAmount(task.budget)}</p><p className="text-sm">{task.estimatedDurationHours} hours · {task.complexity}{task.deadline ? ` · Due ${formatDate(task.deadline)}` : ''}</p><div className="border-t pt-3"><p className="text-sm font-medium">{task.posterName}</p><p className="text-xs text-muted-foreground">{task.posterType}</p><VerificationStatusBadge status={task.posterVerificationStatus} /></div><Link href={browse.show(task.id)} className="inline-block text-sm underline underline-offset-4">View task details</Link></article>)}</div> : <div className="rounded-xl border p-10 text-center"><h2 className="font-semibold">No tasks match your search</h2><p className="mt-2 text-sm text-muted-foreground">Try changing or clearing your filters.</p></div>}
-        {tasks.links.length > 3 && <nav className="flex flex-wrap gap-2" aria-label="Pagination">{tasks.links.map((link, index) => link.url ? <Link key={index} href={link.url} className={`rounded border px-3 py-1 text-sm ${link.active ? 'bg-muted font-medium' : ''}`} dangerouslySetInnerHTML={{ __html: link.label }} /> : <span key={index} className="rounded border px-3 py-1 text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: link.label }} />)}</nav>}</div></>;
+    return (
+        <>
+            <Head title="Browse tasks" />
+            <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+                <div>
+                    <h1 className="text-2xl font-semibold">Browse tasks</h1>
+                    <p className="mt-1 text-sm text-muted-foreground">Search approved tasks and review the work details before you apply.</p>
+                </div>
+
+                <form onSubmit={submit} className="space-y-4 rounded-xl border p-4 sm:p-5">
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <label className="grid gap-1.5 text-sm font-medium lg:col-span-2" htmlFor="search-tasks">
+                            Search tasks
+                            <input id="search-tasks" name="search" placeholder="Try tutoring, design, or an activity" value={values.search} onChange={(event) => setValues({ ...values, search: event.target.value })} className="h-10 rounded-md border bg-background px-3 font-normal" />
+                        </label>
+                        <label className="grid gap-1.5 text-sm font-medium" htmlFor="filter-category">
+                            Category
+                            <select id="filter-category" name="category" value={values.category} onChange={(event) => setValues({ ...values, category: event.target.value })} className="h-10 rounded-md border bg-background px-3 font-normal"><option value="">All categories</option>{options.categories.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+                        </label>
+                        <label className="grid gap-1.5 text-sm font-medium" htmlFor="filter-work-mode">
+                            Work mode
+                            <select id="filter-work-mode" name="work_mode" value={values.work_mode} onChange={(event) => setValues({ ...values, work_mode: event.target.value })} className="h-10 rounded-md border bg-background px-3 font-normal"><option value="">All work modes</option>{options.workModes.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+                        </label>
+                        <label className="grid gap-1.5 text-sm font-medium sm:col-span-2 lg:col-span-2" htmlFor="sort-tasks">
+                            Sort by
+                            <select id="sort-tasks" name="sort" value={values.sort} onChange={(event) => setValues({ ...values, sort: event.target.value })} className="h-10 rounded-md border bg-background px-3 font-normal">{options.sorts.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+                        </label>
+                    </div>
+
+                    <details open={moreFiltersOpen} onToggle={(event) => setMoreFiltersOpen(event.currentTarget.open)} className="rounded-lg border px-4 py-3">
+                        <summary className="cursor-pointer text-sm font-medium">More filters{advancedFiltersActive ? ' · filters active' : ''}</summary>
+                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            <label className="grid gap-1.5 text-sm font-medium" htmlFor="filter-complexity">
+                                Complexity
+                                <select id="filter-complexity" name="complexity" value={values.complexity} onChange={(event) => setValues({ ...values, complexity: event.target.value })} className="h-10 rounded-md border bg-background px-3 font-normal"><option value="">Any complexity</option>{options.complexities.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>
+                            </label>
+                            <label className="grid gap-1.5 text-sm font-medium" htmlFor="min-budget">
+                                Minimum budget (PHP)
+                                <input id="min-budget" name="min_budget" type="number" min="0" max="1000000" step="0.01" value={values.min_budget} onChange={(event) => setValues({ ...values, min_budget: event.target.value })} className="h-10 rounded-md border bg-background px-3 font-normal" />
+                            </label>
+                            <label className="grid gap-1.5 text-sm font-medium" htmlFor="max-budget">
+                                Maximum budget (PHP)
+                                <input id="max-budget" name="max_budget" type="number" min="0" max="1000000" step="0.01" value={values.max_budget} onChange={(event) => setValues({ ...values, max_budget: event.target.value })} className="h-10 rounded-md border bg-background px-3 font-normal" />
+                            </label>
+                        </div>
+                    </details>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                        <button type="submit" className="min-h-10 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">Show tasks</button>
+                        <Link href={browse.index().url} className="text-sm underline underline-offset-4">Clear filters</Link>
+                    </div>
+                </form>
+
+                {tasks.data.length ? (
+                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        {tasks.data.map((task) => (
+                            <article key={task.id} className="flex flex-col gap-3 rounded-xl border p-5">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">{task.category}</p>
+                                        <h2 className="mt-1 text-lg font-semibold">{task.title}</h2>
+                                    </div>
+                                    {task.hasApplied && <ApplicationStatusBadge status="pending" label="Applied" />}
+                                </div>
+
+                                <p className="line-clamp-3 text-sm text-muted-foreground">{task.descriptionPreview}</p>
+
+                                <div className="rounded-lg bg-muted/40 p-3">
+                                    <p className="text-xl font-semibold">₱{formatAmount(task.budget)}</p>
+                                    <p className="mt-1 text-sm">{task.workMode} · about {task.estimatedDurationHours} hours</p>
+                                    {task.deadline && <p className="mt-1 text-sm">Deadline: {formatDate(task.deadline)}</p>}
+                                    {(task.workplaceName || task.workplaceAddress) && <p className="mt-1 text-sm">Workplace: {[task.workplaceName, task.workplaceAddress].filter(Boolean).join(' · ')}</p>}
+                                </div>
+
+                                <div className="mt-auto border-t pt-3">
+                                    <p className="text-sm font-medium">{task.posterName}</p>
+                                    <p className="text-xs text-muted-foreground">{task.posterType}</p>
+                                    <div className="mt-1"><VerificationStatusBadge status={task.posterVerificationStatus} /></div>
+                                </div>
+                                <Link href={browse.show(task.id)} className="text-sm font-medium underline underline-offset-4">View task details</Link>
+                            </article>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="rounded-xl border p-10 text-center">
+                        <h2 className="font-semibold">No tasks match your search</h2>
+                        <p className="mt-2 text-sm text-muted-foreground">Try changing or clearing your filters.</p>
+                        <Link href={browse.index().url} className="mt-4 inline-block text-sm underline underline-offset-4">Clear filters</Link>
+                    </div>
+                )}
+
+                {tasks.links.length > 3 && <nav className="flex flex-wrap gap-2" aria-label="Task pages">{tasks.links.map((link, index) => link.url ? <Link key={index} href={link.url} aria-current={link.active ? 'page' : undefined} className={`rounded border px-3 py-1 text-sm ${link.active ? 'bg-muted font-medium' : ''}`} dangerouslySetInnerHTML={{ __html: link.label }} /> : <span key={index} aria-disabled="true" className="rounded border px-3 py-1 text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: link.label }} />)}</nav>}
+            </div>
+        </>
+    );
 }

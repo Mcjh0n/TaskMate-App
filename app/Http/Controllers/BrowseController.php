@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Services\RatingSummary;
+use Illuminate\Support\Str;
 
 class BrowseController extends Controller
 {
@@ -105,12 +106,15 @@ class BrowseController extends Controller
         return [
             'id' => $task->id,
             'title' => $task->title,
+            'descriptionPreview' => Str::limit(strip_tags($task->description), 180),
             'category' => config('taskmate.categories.'.$task->category, $task->category),
             'budget' => $task->budget,
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
             'estimatedDurationHours' => $task->estimated_duration_hours,
             'complexity' => config('taskmate.complexity_levels.'.$task->complexity, $task->complexity),
             'deadline' => $task->deadline?->toDateString(),
+            'workplaceName' => $task->workplace_name,
+            'workplaceAddress' => $task->workplace_address,
             'posterName' => $task->poster->isOrganization() ? $task->poster->organization_name : $task->poster->name,
             'posterType' => config('taskmate.user_types.'.$task->poster->user_type->value),
             'posterVerificationStatus' => $task->poster->verification_status->value,

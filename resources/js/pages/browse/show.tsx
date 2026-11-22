@@ -31,28 +31,33 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
             <div className="mx-auto max-w-4xl space-y-5 p-4 sm:p-6">
                 {status && <div role="status" className="rounded-lg border px-4 py-3 text-sm">{status}</div>}
                 {limitedView && <div className="rounded-lg border p-4 text-sm">This task is currently {currentTaskStatus?.toLowerCase()}. You can review the task details and your application status.</div>}
-                <div><p className="text-sm text-muted-foreground">{task.category} · {task.workMode}</p><h1 className="mt-1 text-2xl font-semibold">{task.title}</h1></div>
+                <div><p className="text-sm text-muted-foreground">{task.category}</p><h1 className="mt-1 text-2xl font-semibold">{task.title}</h1></div>
+                <section aria-label="Task summary" className="grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-xl border bg-muted/30 p-5 sm:col-span-2">
+                        <p className="text-sm text-muted-foreground">Estimated budget</p>
+                        <p className="mt-1 text-2xl font-semibold">₱{formatAmount(task.budget)}</p>
+                        <p className="mt-3 text-sm text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p>
+                    </div>
+                    <div className="rounded-xl border p-4"><p className="text-sm text-muted-foreground">Work mode</p><p className="mt-1 font-medium">{task.workMode}</p></div>
+                    <div className="rounded-xl border p-4"><p className="text-sm text-muted-foreground">Deadline</p><p className="mt-1 font-medium">{task.deadline ? formatDate(task.deadline) : 'No deadline listed'}</p></div>
+                    {(task.workplaceName || task.workplaceAddress) && <div className="rounded-xl border p-4 sm:col-span-2"><p className="text-sm text-muted-foreground">Workplace</p>{task.workplaceName && <p className="mt-1 font-medium">{task.workplaceName}</p>}{task.workplaceAddress && <p className="mt-1 text-sm">{task.workplaceAddress}</p>}</div>}
+                </section>
                 <section className="space-y-4 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Work details</h2>
+                    <h2 className="text-lg font-semibold">About the work</h2>
                     <p className="whitespace-pre-wrap">{task.description}</p>
                     <div><h3 className="font-medium">Required activities</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.requiredActivities}</p></div>
                     <div><h3 className="font-medium">Deliverables</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>
                     {task.skillRequirements && <p><strong>Skills:</strong> {task.skillRequirements}</p>}
                     <p><strong>Estimated duration:</strong> {task.estimatedDurationHours} hours</p>
                     <p><strong>Complexity:</strong> {task.complexity}</p>
-                    {task.deadline && <p><strong>Deadline:</strong> {formatDate(task.deadline)}</p>}
-                    <p><strong>Work mode:</strong> {task.workMode}</p>
-                    {task.workplaceName && <p><strong>Workplace:</strong> {task.workplaceName}</p>}
-                    {task.workplaceAddress && <p><strong>Workplace address:</strong> {task.workplaceAddress}</p>}
+                </section>
+                <section className="space-y-2 rounded-xl border p-5">
+                    <h2 className="text-lg font-semibold">Work conditions</h2>
                     {task.workplaceSetting && <p><strong>Workplace setting:</strong> {task.workplaceSetting.replaceAll('_', ' ')}</p>}
                     <p><strong>Physical demand:</strong> {task.physicalDemand}</p>
                     <p><strong>Academic involvement:</strong> {task.academicInvolvement}</p>
                     <p><strong>Hazards involved:</strong> {task.hazardExposure ? `Yes — ${task.hazardDescription}` : 'No'}</p>
                     <p><strong>Private or isolated one-on-one meeting required:</strong> {task.privateMeetingRequired ? 'Yes' : 'No'}</p>
-                </section>
-                <section className="space-y-2 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Estimated budget: ₱{formatAmount(task.budget)}</h2>
-                    <p className="text-sm text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p>
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">About the poster</h2>
