@@ -122,6 +122,7 @@ class PrivacyAuditTest extends TestCase
             ->missing('poster.email')
             ->missing('poster.idNumber')
             ->missing('poster.supportingInfo')
+            ->missing('poster.ratingSummary.dimensions')
             ->missing('task.riskLevel')
             ->missing('task.riskScore')
             ->missing('screeningHistory'));

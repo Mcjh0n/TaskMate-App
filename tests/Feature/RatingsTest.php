@@ -156,7 +156,8 @@ class RatingsTest extends TestCase
         $this->actingAs($pair['poster'])->post(route('agreements.rate.store', $pair['agreement']), $this->payload());
         $summary = app(RatingSummary::class)->forUser($pair['student']);
         $this->assertSame(5.0, $summary['average']);
-        $this->assertSame(5.0, $summary['dimensions']['work_quality']['average']);
+        $this->assertArrayNotHasKey('dimensions', $summary);
+        $this->assertDatabaseHas('rating_scores', ['rating_id' => $pair['agreement']->ratings()->firstOrFail()->id, 'dimension' => 'work_quality', 'score' => 5]);
         $pair['agreement']->ratings()->first()->forceFill([]);
         $rating = Rating::firstOrFail();
         $admin = $pair['admin'];
@@ -215,6 +216,7 @@ class RatingsTest extends TestCase
             ->missing('profile.idNumber')
             ->missing('profile.supportingInfo')
             ->missing('profile.reportCount')
-            ->has('profile.ratingSummary'));
+            ->has('profile.ratingSummary')
+            ->missing('profile.ratingSummary.dimensions'));
     }
 }

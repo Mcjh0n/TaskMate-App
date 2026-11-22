@@ -146,7 +146,8 @@ class BrowseApplicationsTest extends TestCase
             ->missing('task.keywordHits')
             ->missing('poster.email')
             ->missing('poster.idNumber')
-            ->missing('poster.supportingInfo'));
+            ->missing('poster.supportingInfo')
+            ->missing('poster.ratingSummary.dimensions'));
         foreach ([TaskStatus::PendingReview, TaskStatus::ChangesRequested, TaskStatus::Rejected, TaskStatus::Cancelled, TaskStatus::Assigned] as $state) {
             $this->get(route('browse.show', $this->task($poster, ['status' => $state])))->assertNotFound();
         }

@@ -164,3 +164,10 @@ Recommended starting position: allow students to browse while pending if the tea
 - My Applications explains what each active or final status means and the next step, including pending applications that remain active while another applicant negotiates.
 - Agreement pages explain that both people must confirm the same version before work starts. Confirming, proposing changes, asking for a change, and cancelling before lock use shorter action labels; the legal and payment boundary notice remains visible.
 - Application, agreement, and authorization rules were unchanged. No schema changes were needed.
+
+## Phase 6 outcome
+
+- Public rating summaries now show only the overall average and visible rating count. The rating dimensions remain stored and are still available to the two agreement participants in their own agreement view; no rating data was deleted.
+- Risk scores, keyword matches, screening history, admin notes, flags, sanctions, and escalation controls remain confined to administrator pages. The privacy audit found these details were already absent from ordinary task, profile, and report props, so those access rules were preserved.
+- The detailed admin moderation tools and report categories remain available for review and are listed as advanced scope pending team approval. No server workflow, schema, or stored records changed.
+- Automated tests were updated for the reduced public rating summary, but checks were intentionally not run yet at the user's request to finish the remaining phases before testing. No test results are claimed for this phase.
