@@ -93,6 +93,9 @@ class DemoScenarioSeederTest extends TestCase
         $this->assertDatabaseHas('agreements', ['id' => $manualAgreement->id, 'task_id' => $manualTask->id]);
         $this->assertDatabaseHas('task_completions', ['agreement_id' => $manualAgreement->id, 'completion_note' => 'Manual completion that must remain intact.']);
         $this->assertDatabaseMissing('users', ['email' => 'admin@example.test']);
+        $this->assertDatabaseCount('conversations', 0);
+        $this->assertDatabaseCount('conversation_messages', 0);
+        $this->assertDatabaseCount('conversation_events', 0);
 
         $this->artisan('taskmate:reset-demo', ['--force' => true])->assertSuccessful();
         $this->assertDatabaseHas('users', ['id' => $manualPoster->id, 'email' => 'manual.poster@cmu.edu.ph']);

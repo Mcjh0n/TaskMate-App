@@ -37,7 +37,7 @@ class TaskMatePurgeDemoData extends Command
                 ->orWhere('description', 'Synthetic payment-status scenario.'))
             ->pluck('id')->all() : [];
         $applicationIds = Schema::hasTable('applications') ? DB::table('applications')->whereIn('task_id', $taskIds)
-            ->where(fn ($query) => $query->where('message', 'like', 'Synthetic application%'))
+            ->where(fn ($query) => $query->where('message', 'like', 'Synthetic application%')->orWhere('message', 'like', 'Synthetic accepted application%'))
             ->pluck('id')->all() : [];
         $agreementIds = Schema::hasTable('agreements') ? DB::table('agreements')->whereIn('application_id', $applicationIds)->pluck('id')->all() : [];
         $conversationIds = Schema::hasTable('conversations') ? DB::table('conversations')->whereIn('application_id', $applicationIds)->pluck('id')->all() : [];
@@ -52,12 +52,25 @@ class TaskMatePurgeDemoData extends Command
             if ($messageIds !== []) $query->orWhere(fn ($related) => $related->where('flaggable_type', 'App\\Models\\ConversationMessage')->whereIn('flaggable_id', $messageIds));
         })->pluck('id')->all() : [];
 
-        DB::transaction(function () use ($userIds, $taskIds, $applicationIds, $agreementIds, $reportIds, $ratingIds, $flagIds): void {
+        DB::transaction(function () use ($userIds, $taskIds, $applicationIds, $agreementIds, $conversationIds, $messageIds, $reportIds, $ratingIds, $flagIds): void {
             foreach (DB::table('report_evidence')->whereIn('report_id', $reportIds)->pluck('stored_path') as $path) {
                 \Illuminate\Support\Facades\Storage::disk('evidence')->delete($path);
             }
             $this->delete('rating_scores', 'rating_id', $ratingIds);
             $this->delete('ratings', 'id', $ratingIds);
+            // Conversations point directly to tasks with a restrictive foreign key.
+            // Remove only the conversation records belonging to the synthetic applications
+            // before deleting those tasks; report snapshots may also hold message references.
+            if (Schema::hasTable('report_message_snapshots') && ($reportIds !== [] || $messageIds !== [])) {
+                DB::table('report_message_snapshots')->where(function ($query) use ($reportIds, $messageIds): void {
+                    if ($reportIds !== []) $query->orWhereIn('report_id', $reportIds);
+                    if ($messageIds !== []) $query->orWhereIn('message_id', $messageIds);
+                })->delete();
+            }
+            $this->delete('conversation_events', 'conversation_id', $conversationIds);
+            $this->delete('conversation_reads', 'conversation_id', $conversationIds);
+            $this->delete('conversation_messages', 'id', $messageIds);
+            $this->delete('conversations', 'id', $conversationIds);
             $this->delete('agreement_confirmations', 'agreement_version_id', $this->ids('agreement_versions', 'agreement_id', $agreementIds));
             $this->delete('agreement_messages', 'agreement_id', $agreementIds);
             $this->delete('agreement_versions', 'agreement_id', $agreementIds);

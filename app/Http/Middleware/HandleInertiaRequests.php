@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\SanctionService;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -36,6 +37,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
+        $accountSuspended = $user !== null && app(SanctionService::class)->suspended($user) !== null;
 
         return [
             ...parent::share($request),
@@ -46,8 +48,8 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'user_type' => $user->user_type?->value,
                     'is_admin' => $user->is_admin,
-                    'can_post_tasks' => $user->canPost(),
-                    'can_apply_tasks' => $user->canApply(),
+                    'can_post_tasks' => ! $accountSuspended && $user->canPost(),
+                    'can_apply_tasks' => ! $accountSuspended && $user->canApply(),
                     'verification_status' => $user->verification_status?->value,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,

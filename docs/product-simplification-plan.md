@@ -130,3 +130,9 @@ Recommended starting position: allow students to browse while pending if the tea
 - `php artisan test`: 251 tests, 249 passed, 2 failed. Both failures are in demo-data purge/reset coverage with SQLite foreign-key violations while deleting tasks that still have related records. The failures are in `tests/Feature/DemoScenarioSeederTest.php`; the stack points to `app/Console/Commands/TaskMatePurgeDemoData.php`. Fix this baseline issue before later UX changes and do not weaken those tests.
 - The repository has existing route/privacy audit coverage and role-specific workflow tests; use those to protect behavior while the screens are simplified.
 - No test participants, usability results, acceptance scores, or policy approvals are represented in this proposal.
+
+## Phase 1 outcome
+
+- The purge selector now includes synthetic accepted applications, and purge removes their dependent conversation snapshots, events, reads, messages, and conversation rows before their tasks. The demo seed/reset/purge tests pass without removing the manual-record preservation assertions.
+- The dashboard placeholders were replaced with role- and account-state-aware next actions. Suspended users do not receive post/apply action links through shared navigation props.
+- The baseline test failure noted above was observed before Phase 1 and is covered by the current test run after the fix.

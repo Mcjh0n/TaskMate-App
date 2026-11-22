@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Enums\SanctionType;
 use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;
+use App\Models\UserSanction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -33,6 +35,39 @@ class DashboardTest extends TestCase
             ->get(route('dashboard'));
 
         $response->assertOk();
+    }
+
+    public function test_verified_student_dashboard_advertises_available_student_and_poster_actions(): void
+    {
+        config(['taskmate.students_can_post' => true]);
+        $user = User::factory()->verified()->create();
+
+        $this->actingAs($user)->get(route('dashboard', $user->currentTeam->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
+                ->where('auth.user.can_apply_tasks', true)
+                ->where('auth.user.can_post_tasks', true),
+            );
+    }
+
+    public function test_suspended_student_dashboard_does_not_advertise_blocked_actions(): void
+    {
+        $user = User::factory()->verified()->create();
+        UserSanction::factory()->create([
+            'user_id' => $user->id,
+            'type' => SanctionType::Suspension,
+            'starts_at' => now()->subMinute(),
+            'ends_at' => now()->addDay(),
+        ]);
+
+        $this->actingAs($user)->get(route('dashboard', $user->currentTeam->slug))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
+                ->where('auth.user.can_apply_tasks', false)
+                ->where('auth.user.can_post_tasks', false),
+            );
     }
 
     public function test_dashboard_includes_pending_invitations_for_the_authenticated_user()
