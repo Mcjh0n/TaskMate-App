@@ -70,6 +70,24 @@ class DashboardTest extends TestCase
             );
     }
 
+    public function test_dashboard_receives_student_posting_setting_for_accurate_verification_guidance(): void
+    {
+        $student = User::factory()->create(['user_type' => 'student']);
+
+        config(['taskmate.students_can_post' => false]);
+        $this->actingAs($student)->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->component('dashboard')
+                ->where('studentsCanPost', false));
+
+        config(['taskmate.students_can_post' => true]);
+        $this->actingAs($student)->get(route('dashboard'))
+            ->assertOk()
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('studentsCanPost', true));
+    }
+
     public function test_dashboard_includes_pending_invitations_for_the_authenticated_user()
     {
         $owner = User::factory()->create(['name' => 'Taylor Otwell']);

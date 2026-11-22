@@ -11,7 +11,7 @@ class EnsureAccountVerified
     public function handle(Request $request, Closure $next): Response
     {
         if (config('taskmate.require_verification', true) && ! $request->user()?->isVerified()) {
-            return to_route('dashboard')->with('status', 'Your account must be verified before you can continue.');
+            return to_route('dashboard')->with('status', 'An administrator must verify your TaskMate account before you can use this feature.');
         }
 
         return $next($request);

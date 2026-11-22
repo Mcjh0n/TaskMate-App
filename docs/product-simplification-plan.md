@@ -115,7 +115,7 @@ Review pending accounts and tasks → approve, request changes, or reject → re
 
 ## Decisions to approve before changing behavior
 
-1. May a pending student browse approved task details, or must verification happen first?
+1. May a pending student browse approved task details, or must verification happen first? Current behavior requires verification before browsing; this proposal preserves that until the team decides otherwise.
 2. Which registration fields are necessary at signup, especially student/employee ID and affiliation?
 3. Which account types are in the proposal/demo scope: students, faculty/staff posters, and organization posters?
 4. Which task fields are essential before submission, and which can be optional?
@@ -150,3 +150,10 @@ Recommended starting position: allow students to browse while pending if the tea
 - Existing task records were preserved. A new migration allows the optional values to remain empty; task detail pages show when safety answers were not provided rather than implying a negative answer.
 - Screening gives missing safety answers no assumed “safe” value and keeps tasks with incomplete structured safety information in the review queue even if automatic approval is enabled.
 - Manual comparison in the browser remains for the team; automated feature tests cover minimal posting, optional data, validation, screening, and safe rendering of missing details.
+
+## Phase 4 outcome
+
+- Registration now explains the review steps, distinguishes email confirmation from administrator account review, and describes what each account type can do after approval.
+- The current access rule is preserved: unverified accounts cannot browse, post, or apply. In particular, students must be verified before browsing; this phase clarifies that behavior instead of changing authorization.
+- Registration fields are explained where they appear: ID numbers support administrator review and stay private; affiliation may appear on profiles; organization names are display names; position and supporting information support administrator review.
+- The details-resubmission page repeats those privacy and purpose notes. Existing data, registration requirements, and role permissions were not changed.

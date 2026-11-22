@@ -31,6 +31,7 @@ class DashboardController extends Controller
         return Inertia::render('dashboard', [
             'pendingInvitations' => $pendingInvitations,
             'status' => $request->session()->get('status'),
+            'studentsCanPost' => (bool) config('taskmate.students_can_post', true),
             'verificationNote' => in_array($request->user()->verification_status, [VerificationStatus::Rejected, VerificationStatus::MoreInfoRequested], true)
                 ? $request->user()->verification_note
                 : null,

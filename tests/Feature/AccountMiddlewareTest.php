@@ -44,7 +44,7 @@ class AccountMiddlewareTest extends TestCase
         $this->actingAs($user)
             ->get('/test/verified-only')
             ->assertRedirect(route('dashboard'))
-            ->assertSessionHas('status', 'Your account must be verified before you can continue.');
+            ->assertSessionHas('status', 'An administrator must verify your TaskMate account before you can use this feature.');
     }
 
     public function test_account_verified_middleware_blocks_each_unverified_status(): void
@@ -54,7 +54,7 @@ class AccountMiddlewareTest extends TestCase
             $this->actingAs($user)
                 ->get('/test/verified-only')
                 ->assertRedirect(route('dashboard'))
-                ->assertSessionHas('status', 'Your account must be verified before you can continue.');
+                ->assertSessionHas('status', 'An administrator must verify your TaskMate account before you can use this feature.');
         }
     }
 
