@@ -36,6 +36,21 @@ class AdminDashboardController extends Controller
                 'createdAt' => $action->created_at?->toDateTimeString(),
             ]);
 
+        $latestPendingTasks = Task::query()
+            ->with('poster:id,name,user_type,organization_name')
+            ->where('status', TaskStatus::PendingReview->value)
+            ->latest('created_at')
+            ->latest('id')
+            ->limit(5)
+            ->get()
+            ->map(fn (Task $task) => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'posterName' => $task->poster->isOrganization() ? $task->poster->organization_name : $task->poster->name,
+                'riskLevel' => $task->risk_level,
+                'submittedAt' => $task->created_at?->toDateTimeString(),
+            ]);
+
         return Inertia::render('admin/dashboard', [
             'counts' => [
                 'pending' => User::query()->where('verification_status', VerificationStatus::Pending->value)->count(),
@@ -52,6 +67,7 @@ class AdminDashboardController extends Controller
                 'activeSuspensions' => UserSanction::query()->where('type', 'suspension')->whereNull('lifted_at')->where('starts_at', '<=', now())->where('ends_at', '>', now())->count(),
             ],
             'recentActions' => $recentActions,
+            'latestPendingTasks' => $latestPendingTasks,
         ]);
     }
 }

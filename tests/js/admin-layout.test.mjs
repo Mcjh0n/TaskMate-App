@@ -35,7 +35,7 @@ function loadComponent(path, modules, label, exportName = 'default') {
 const adminRoutes = { default: {
     dashboard: () => ({ url: '/admin' }),
     users: { index: () => ({ url: '/admin/users' }) },
-    tasks: { index: () => ({ url: '/admin/tasks' }) },
+    tasks: { index: (options) => ({ url: options?.query?.status ? `/admin/tasks?status=${options.query.status}` : '/admin/tasks' }), show: (id) => ({ url: `/admin/tasks/${id}` }) },
     reports: { index: () => ({ url: '/admin/reports' }) },
     ratings: { index: () => ({ url: '/admin/ratings' }) },
 } };
@@ -68,6 +68,13 @@ const AdminLayout = loadComponent('resources/js/layouts/admin-layout.tsx', {
     '@/components/site-footer': () => element('footer', { children: 'Footer' }),
 }, 'admin layout');
 
+const AdminDashboard = loadComponent('resources/js/pages/admin/dashboard.tsx', {
+    '@inertiajs/react': { Head: () => null, Link },
+    '@/layouts/admin-layout': { default: ({ children }) => element('div', { children }) },
+    '@/components/verification-status-badge': { VerificationStatusBadge: ({ status }) => element('span', { children: status }) },
+    '@/routes/admin': adminRoutes,
+}, 'admin dashboard');
+
 test('admin sidebar lists admin destinations and includes profile and logout controls', () => {
     const markup = renderToStaticMarkup(React.createElement(AdminSidebar));
 
@@ -86,4 +93,17 @@ test('admin pages use the sidebar shell and show admin alerts in the header', ()
     assert.match(markup, /Admin alerts only/);
     assert.match(markup, /Admin page/);
     assert.match(markup, /Footer/);
+});
+
+test('admin dashboard highlights the latest pending task and links to the review queue', () => {
+    const markup = renderToStaticMarkup(React.createElement(AdminDashboard, {
+        counts: { pending: 0, moreInfoRequested: 0, verified: 0, rejected: 0, tasksAwaitingReview: 1, highRiskTasksAwaitingReview: 0, openReports: 0, reportsUnderReview: 0, highPriorityReports: 0, escalatedReports: 0, openFlags: 0, activeSuspensions: 0 },
+        recentActions: [],
+        latestPendingTasks: [{ id: 17, title: 'Newest synthetic task', posterName: 'Synthetic Poster', riskLevel: 'low', submittedAt: '2026-11-23 10:00:00' }],
+    }));
+
+    assert.match(markup, /Latest tasks awaiting review/);
+    assert.match(markup, /Newest synthetic task/);
+    assert.match(markup, /href="\/admin\/tasks\/17"/);
+    assert.match(markup, /href="\/admin\/tasks\?status=pending_review"/);
 });

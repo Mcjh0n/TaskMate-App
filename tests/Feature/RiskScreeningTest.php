@@ -287,13 +287,13 @@ class RiskScreeningTest extends TestCase
         }
     }
 
-    public function test_admin_queue_is_protected_filterable_and_high_risk_first(): void
+    public function test_admin_queue_is_protected_filterable_and_shows_newest_pending_first(): void
     {
         $admin = $this->verifiedPoster();
         $admin->forceFill(['is_admin' => true])->save();
         $poster = $this->verifiedPoster();
-        $high = Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Needle high', 'risk_level' => 'high', 'work_mode' => 'remote']);
-        $low = Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Needle low', 'risk_level' => 'low', 'work_mode' => 'onsite']);
+        $olderHigh = Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Needle high', 'risk_level' => 'high', 'work_mode' => 'remote', 'created_at' => now()->subHour()]);
+        $newerLow = Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Needle low', 'risk_level' => 'low', 'work_mode' => 'onsite', 'created_at' => now()]);
         Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Different', 'risk_level' => 'moderate']);
 
         $this->get(route('admin.tasks.index'))->assertRedirect(route('login'));
@@ -301,9 +301,9 @@ class RiskScreeningTest extends TestCase
         $this->actingAs($admin)->get(route('admin.tasks.index', ['search' => 'Needle']))->assertOk()->assertInertia(fn ($page) => $page
             ->component('admin/tasks/index')
             ->has('tasks.data', 2)
-            ->where('tasks.data.0.id', $high->id)
-            ->where('tasks.data.1.id', $low->id));
-        $this->get(route('admin.tasks.index', ['risk_level' => 'low', 'work_mode' => 'onsite']))->assertInertia(fn ($page) => $page->has('tasks.data', 1)->where('tasks.data.0.id', $low->id));
+            ->where('tasks.data.0.id', $newerLow->id)
+            ->where('tasks.data.1.id', $olderHigh->id));
+        $this->get(route('admin.tasks.index', ['risk_level' => 'low', 'work_mode' => 'onsite']))->assertInertia(fn ($page) => $page->has('tasks.data', 1)->where('tasks.data.0.id', $newerLow->id));
     }
 
     public function test_admin_task_decisions_require_notes_where_needed_and_are_audited(): void

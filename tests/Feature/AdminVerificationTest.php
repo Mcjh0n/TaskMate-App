@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\UserType;
 use App\Enums\VerificationStatus;
 use App\Models\AdminAction;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -56,6 +57,33 @@ class AdminVerificationTest extends TestCase
             ->where('recentActions.0.note', 'Synthetic admin note.')
             ->missing('recentActions.0.idNumber')
             ->missing('recentActions.0.supportingInfo'));
+    }
+
+    public function test_admin_dashboard_lists_newest_pending_tasks_first(): void
+    {
+        $admin = $this->makeAdmin();
+        $poster = User::factory()->verified()->create();
+        $older = Task::factory()->create([
+            'poster_id' => $poster->id,
+            'title' => 'Synthetic older pending task',
+            'created_at' => now()->subHour(),
+        ]);
+        $newer = Task::factory()->create([
+            'poster_id' => $poster->id,
+            'title' => 'Synthetic latest pending task',
+            'created_at' => now(),
+        ]);
+        Task::factory()->create([
+            'poster_id' => $poster->id,
+            'title' => 'Synthetic approved task',
+            'status' => \App\Enums\TaskStatus::Approved,
+        ]);
+
+        $this->actingAs($admin)->get('/admin')->assertOk()->assertInertia(fn (Assert $page) => $page
+            ->component('admin/dashboard')
+            ->has('latestPendingTasks', 2)
+            ->where('latestPendingTasks.0.id', $newer->id)
+            ->where('latestPendingTasks.1.id', $older->id));
     }
 
     public function test_user_search_filters_pending_first_and_list_excludes_raw_identity_fields(): void

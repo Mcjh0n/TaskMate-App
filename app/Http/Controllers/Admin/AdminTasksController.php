@@ -27,8 +27,9 @@ class AdminTasksController extends Controller
             ->when($filters['status'] ?? null, fn ($query, string $status) => $query->where('status', $status))
             ->when($filters['risk_level'] ?? null, fn ($query, string $level) => $query->where('risk_level', $level))
             ->when($filters['work_mode'] ?? null, fn ($query, string $mode) => $query->where('work_mode', $mode))
-            ->orderByRaw("CASE risk_level WHEN 'high' THEN 0 WHEN 'moderate' THEN 1 WHEN 'low' THEN 2 ELSE 3 END")
-            ->orderBy('created_at')
+            ->orderByRaw("CASE status WHEN 'pending_review' THEN 0 ELSE 1 END")
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->paginate(15)
             ->withQueryString()
             ->through(fn (Task $task) => [
