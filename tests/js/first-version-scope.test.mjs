@@ -68,3 +68,14 @@ test('how-it-works page describes the main task flow and role limits', () => {
     assert.match(markup, /Only students can apply/);
     assert.match(markup, /Payment is made directly between them/);
 });
+
+test('task detail pages omit uncollected work-condition fields but keep workplace information', () => {
+    const ownerTask = readFileSync(resolve(root, 'resources/js/pages/tasks/show.tsx'), 'utf8');
+    const studentTask = readFileSync(resolve(root, 'resources/js/pages/browse/show.tsx'), 'utf8');
+    const adminTask = readFileSync(resolve(root, 'resources/js/pages/admin/tasks/show.tsx'), 'utf8');
+
+    for (const source of [ownerTask, studentTask, adminTask]) {
+        assert.doesNotMatch(source, /Work conditions|Safety answers|Physical demand|Academic involvement|Hazards involved|Private or isolated one-on-one meeting required/);
+        assert.match(source, /Workplace/);
+    }
+});

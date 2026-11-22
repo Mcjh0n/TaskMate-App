@@ -134,13 +134,7 @@ class BrowseController extends Controller
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
             'workplaceName' => $task->workplace_name,
             'workplaceAddress' => $task->workplace_address,
-            'workplaceSetting' => $task->workplace_setting ? config('taskmate.risk_questions.workplace_setting.'.$task->workplace_setting, $task->workplace_setting) : null,
             'deadline' => $task->deadline?->toDateString(),
-            'physicalDemand' => config('taskmate.risk_questions.physical_demand.'.$task->physical_demand, $task->physical_demand),
-            'academicInvolvement' => config('taskmate.risk_questions.academic_involvement.'.$task->academic_involvement, $task->academic_involvement),
-            'hazardExposure' => $task->hazard_exposure,
-            'hazardDescription' => $task->hazard_exposure ? $task->hazard_description : null,
-            'privateMeetingRequired' => $task->private_meeting_required,
         ];
     }
 

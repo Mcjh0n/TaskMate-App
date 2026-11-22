@@ -215,8 +215,12 @@ class TaskPostingTest extends TestCase
                 ->where('task.requiredActivities', null)
                 ->where('task.deliverables', null)
                 ->where('task.estimatedDurationHours', null)
-                ->where('task.hazardExposure', null)
-                ->where('task.privateMeetingRequired', null));
+                ->missing('task.physicalDemand')
+                ->missing('task.academicInvolvement')
+                ->missing('task.hazardExposure')
+                ->missing('task.hazardDescription')
+                ->missing('task.privateMeetingRequired')
+                ->missing('task.workplaceSetting'));
     }
 
     public function test_editing_approved_task_resubmits_and_clears_review_note(): void

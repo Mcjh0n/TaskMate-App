@@ -20,9 +20,8 @@ type Applicant = {
 type Task = {
     id: number; title: string; category: string; budget: string; workMode: string; status: string; description: string;
     requiredActivities: string | null; deliverables: string | null; estimatedDurationHours: string | null; skillRequirements: string | null;
-                    workplaceName: string | null; workplaceAddress: string | null; workplaceSetting: string | null;
-    physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean | null; hazardDescription: string | null;
-    privateMeetingRequired: boolean | null; deadline: string | null; reviewNote: string | null; removalReason?: string | null; createdAt: string | null;
+    workplaceName: string | null; workplaceAddress: string | null;
+    deadline: string | null; reviewNote: string | null; removalReason?: string | null; createdAt: string | null;
     hasActiveApplications: boolean; applicantsCount: number;
 };
 type Props = { task: Task; statusLabel: string; canEdit: boolean; canCancel: boolean; canRespondApplications: boolean; status?: string | null; applicants: Applicant[]; agreement: { id: number; status: string; statusLabel: string; paymentStatus: string; paymentStatusLabel: string } | null; canProposeAgreement: boolean; problemReport?: { taskAction: string | null; types: { value: string; label: string }[]; applicantActions: { applicationId: number; action: string }[]; flaggedApplicants: number[]; offPlatformWarning: boolean } };
@@ -45,14 +44,6 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, canRes
                     {task.estimatedDurationHours && <p className="text-sm">Estimated duration: {task.estimatedDurationHours} hours</p>}
                     {task.skillRequirements && <p className="text-sm">Skills: {task.skillRequirements}</p>}
                 </section>
-                {(task.workplaceSetting || task.physicalDemand || task.academicInvolvement || task.hazardExposure !== null || task.privateMeetingRequired !== null) && <section className="space-y-2 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Work conditions</h2>
-                    {task.workMode.toLowerCase() !== 'remote' && <p className="text-sm">Workplace setting: {task.workplaceSetting?.replaceAll('_', ' ') ?? 'Not provided'}</p>}
-                    <p className="text-sm">Physical demand: {task.physicalDemand ?? 'Not provided'}</p>
-                    <p className="text-sm">Academic involvement: {task.academicInvolvement ?? 'Not provided'}</p>
-                    <p className="text-sm">Hazards involved: {task.hazardExposure === null ? 'Not provided' : task.hazardExposure ? `Yes — ${task.hazardDescription}` : 'No'}</p>
-                    <p className="text-sm">Private or isolated one-on-one meeting required: {task.privateMeetingRequired === null ? 'Not provided' : task.privateMeetingRequired ? 'Yes' : 'No'}</p>
-                </section>}
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Work details</h2><p>{task.workMode}</p>
                     {task.workplaceName && <p>{task.workplaceName}</p>}{task.workplaceAddress && <p>{task.workplaceAddress}</p>}

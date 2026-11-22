@@ -229,12 +229,6 @@ class TaskController extends Controller
             'workplaceAddress' => $task->workplace_address,
             'deadline' => $task->deadline?->toDateString(),
             'guidelinesConfirmedAt' => $task->guidelines_confirmed_at?->toDateTimeString(),
-            'physicalDemand' => $task->physical_demand,
-            'academicInvolvement' => $task->academic_involvement,
-            'hazardExposure' => $task->hazard_exposure,
-            'hazardDescription' => $task->hazard_description,
-            'privateMeetingRequired' => $task->private_meeting_required,
-            'workplaceSetting' => $task->workplace_setting,
         ];
     }
 }

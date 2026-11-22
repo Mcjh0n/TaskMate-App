@@ -68,13 +68,7 @@ class AdminTasksController extends Controller
                 'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
                 'workplaceName' => $task->workplace_name,
                 'workplaceAddress' => $task->workplace_address,
-                'workplaceSetting' => $task->workplace_setting,
                 'deadline' => $task->deadline?->toDateString(),
-                'physicalDemand' => $this->questionLabel('physical_demand', $task->physical_demand),
-                'academicInvolvement' => $this->questionLabel('academic_involvement', $task->academic_involvement),
-                'hazardExposure' => $task->hazard_exposure,
-                'hazardDescription' => $task->hazard_description,
-                'privateMeetingRequired' => $task->private_meeting_required,
                 'status' => $task->status->value,
                 'statusLabel' => $task->status->label(),
                 'reviewNote' => $task->review_note,
@@ -118,11 +112,6 @@ class AdminTasksController extends Controller
             'canReview' => $task->status === TaskStatus::PendingReview && $task->poster_id !== auth()->id(),
             'riskQuestions' => collect(config('taskmate.risk_questions', []))->mapWithKeys(fn (array $items, string $key) => [$key => $this->optionsFor($items)]),
         ]);
-    }
-
-    private function questionLabel(string $question, ?string $value): ?string
-    {
-        return $value === null ? null : config("taskmate.risk_questions.{$question}.{$value}", $value);
     }
 
     private function optionsFor(array $options): array

@@ -16,9 +16,7 @@ import { ProblemReportForm } from '@/components/problem-report-form';
 type Task = {
     id: number; title: string; category: string; description: string; requiredActivities: string | null; deliverables: string | null;
     estimatedDurationHours: string | null; skillRequirements: string | null; budget: string; workMode: string;
-    workplaceName: string | null; workplaceAddress: string | null; workplaceSetting: string | null; deadline: string | null;
-    physicalDemand: string | null; academicInvolvement: string | null; hazardExposure: boolean | null; hazardDescription: string | null;
-    privateMeetingRequired: boolean | null;
+    workplaceName: string | null; workplaceAddress: string | null; deadline: string | null;
 };
 type Poster = { displayName: string; accountType: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; memberSince: string | null; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
 type Application = { status: string; statusLabel: string; appliedAt: string | null };
@@ -31,7 +29,7 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
             <div className="mx-auto max-w-4xl space-y-5 p-4 sm:p-6">
                 {status && <div role="status" className="rounded-lg border px-4 py-3 text-sm">{status}</div>}
                 {limitedView && <div className="rounded-lg border p-4 text-sm">This task is currently {currentTaskStatus?.toLowerCase()}. You can review the task details and your application status.</div>}
-                <div><p className="text-sm text-muted-foreground">{task.category}</p><h1 className="mt-1 text-2xl font-semibold">{task.title}</h1><p className="mt-2 text-sm text-muted-foreground">Review the work, conditions, budget, and workplace details before you decide to apply.</p>{canApply && !application && <a href="#application-form" className="mt-3 inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline">Go to application form</a>}</div>
+                <div><p className="text-sm text-muted-foreground">{task.category}</p><h1 className="mt-1 text-2xl font-semibold">{task.title}</h1><p className="mt-2 text-sm text-muted-foreground">Review the work, budget, and workplace details before you decide to apply.</p>{canApply && !application && <a href="#application-form" className="mt-3 inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline">Go to application form</a>}</div>
                 <section aria-label="Task summary" className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-xl border bg-muted/30 p-5 sm:col-span-2">
                         <p className="text-sm text-muted-foreground">Estimated budget</p>
@@ -49,14 +47,6 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
                     {task.deliverables && <div><h3 className="font-medium">Expected result</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>}
                     {task.skillRequirements && <p><strong>Skills:</strong> {task.skillRequirements}</p>}
                     {task.estimatedDurationHours && <p><strong>Estimated duration:</strong> {task.estimatedDurationHours} hours</p>}
-                </section>
-                <section className="space-y-2 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Work conditions</h2>
-                    {task.workMode.toLowerCase() !== 'remote' && <p><strong>Workplace setting:</strong> {task.workplaceSetting?.replaceAll('_', ' ') ?? 'Not provided'}</p>}
-                    <p><strong>Physical demand:</strong> {task.physicalDemand ?? 'Not provided'}</p>
-                    <p><strong>Academic involvement:</strong> {task.academicInvolvement ?? 'Not provided'}</p>
-                    <p><strong>Hazards involved:</strong> {task.hazardExposure === null ? 'Not provided' : task.hazardExposure ? `Yes — ${task.hazardDescription}` : 'No'}</p>
-                    <p><strong>Private or isolated one-on-one meeting required:</strong> {task.privateMeetingRequired === null ? 'Not provided' : task.privateMeetingRequired ? 'Yes' : 'No'}</p>
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">About the poster</h2>
