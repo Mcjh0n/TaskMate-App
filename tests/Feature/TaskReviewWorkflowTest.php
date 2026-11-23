@@ -29,6 +29,7 @@ class TaskReviewWorkflowTest extends TestCase
             'budget_mode' => 'single',
             'budget' => 1000,
             'work_mode' => 'online',
+            'estimated_duration_days' => 3,
             'guidelines_confirmed' => '1',
         ], $overrides);
     }

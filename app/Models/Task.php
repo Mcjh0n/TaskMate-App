@@ -33,6 +33,7 @@ class Task extends Model
         'required_activities',
         'deliverables',
         'estimated_duration_hours',
+        'estimated_duration_days',
         'skill_requirements',
         'complexity',
         'budget',
@@ -55,6 +56,7 @@ class Task extends Model
         return [
             'status' => TaskStatus::class,
             'estimated_duration_hours' => 'decimal:1',
+            'estimated_duration_days' => 'integer',
             'budget' => 'decimal:2',
             'budget_min' => 'decimal:2',
             'budget_max' => 'decimal:2',

@@ -1,4 +1,4 @@
-import { formatDate, formatAmount } from '@/lib/format';
+import { formatAmount, formatDate } from '@/lib/format';
 import { PAYMENT_BOUNDARY_NOTICE, STUDENT_TASK_SAFETY_NOTICE } from '@/constants/notices';
 import { Form, Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
@@ -15,8 +15,8 @@ import { ProblemReportForm } from '@/components/problem-report-form';
 
 type Task = {
     id: number; title: string; category: string; description: string; requiredActivities: string | null; deliverables: string | null;
-    estimatedDurationHours: string | null; skillRequirements: string | null; budget: string | null; budgetMin: string | null; budgetMax: string | null; budgetDisplay: string; workMode: string;
-    workplaceName: string | null; workplaceAddress: string | null; deadline: string | null;
+    estimatedDurationDays: number | null; skillRequirements: string | null; budget: string | null; budgetMin: string | null; budgetMax: string | null; budgetDisplay: string; workMode: string;
+    workplaceName: string | null; workplaceAddress: string | null;
 };
 type Poster = { displayName: string; accountType: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; memberSince: string | null; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
 type Application = { status: string; statusLabel: string; appliedAt: string | null };
@@ -37,7 +37,6 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
                         <p className="mt-3 text-sm text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p>
                     </div>
                     <div className="rounded-xl border p-4"><p className="text-sm text-muted-foreground">Work mode</p><p className="mt-1 font-medium">{task.workMode}</p></div>
-                    <div className="rounded-xl border p-4"><p className="text-sm text-muted-foreground">Deadline</p><p className="mt-1 font-medium">{task.deadline ? formatDate(task.deadline) : 'No deadline listed'}</p></div>
                     {(task.workplaceName || task.workplaceAddress) && <div className="rounded-xl border p-4 sm:col-span-2"><p className="text-sm text-muted-foreground">Workplace</p>{task.workplaceName && <p className="mt-1 font-medium">{task.workplaceName}</p>}{task.workplaceAddress && <p className="mt-1 text-sm">{task.workplaceAddress}</p>}</div>}
                 </section>
                 <section className="space-y-4 rounded-xl border p-5">
@@ -46,7 +45,7 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
                     {task.requiredActivities && <div><h3 className="font-medium">Main activities</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.requiredActivities}</p></div>}
                     {task.deliverables && <div><h3 className="font-medium">Expected result</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>}
                     {task.skillRequirements && <p><strong>Skills:</strong> {task.skillRequirements}</p>}
-                    {task.estimatedDurationHours && <p><strong>Estimated duration:</strong> {task.estimatedDurationHours} hours</p>}
+                    {task.estimatedDurationDays && <p><strong>Estimated duration:</strong> {task.estimatedDurationDays} {task.estimatedDurationDays === 1 ? 'day' : 'days'} total</p>}
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">About the poster</h2>

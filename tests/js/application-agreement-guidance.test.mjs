@@ -83,18 +83,18 @@ test('agreement page clearly states that both people must confirm the same versi
             id: 1, status: 'negotiating', statusLabel: 'Negotiating', lockedAt: null, cancelledAt: null, cancelledBy: null, cancellationReason: null, recordReference: null,
             task: { id: 1, title: 'Synthetic task', budget: '500.00', status: 'Assigned' },
             poster: { id: 2, name: 'Synthetic Poster' }, student: { id: 3, name: 'Synthetic Worker' },
-            currentVersion: { id: 1, versionNumber: 1, proposerId: 2, proposerName: 'Synthetic Poster', deliverables: 'A synthetic result', terms: 'Complete the task as discussed.', finalAmount: '500.00', startDate: null, dueDate: '2026-12-01', workMode: 'Remote', workplaceName: null, workplaceAddress: null, paymentArrangement: 'Direct payment after completion.', comment: null, createdAt: null, confirmations: [] },
+            currentVersion: { id: 1, versionNumber: 1, proposerId: 2, proposerName: 'Synthetic Poster', deliverables: 'A synthetic result', terms: 'Complete the task as discussed.', finalAmount: '500.00', startDate: null, durationDays: 3, workMode: 'Remote', workplaceName: null, workplaceAddress: null, paymentArrangement: 'Direct payment after completion.', comment: null, createdAt: null, confirmations: [] },
             versions: [], messages: [],
         },
         completionPayment: {}, viewerId: 3, actionsAllowed: true, notice: 'Agreement notice', termsMaxLength: 3000,
     }));
 
-    assert.match(markup, /Review the work, amount, dates, and payment arrangement/);
+    assert.match(markup, /Review the work, amount, schedule, and payment arrangement/);
     assert.match(markup, /both people confirm the same version/);
     assert.match(markup, /I agree/);
     assert.match(markup, /Propose different terms/);
     assert.match(markup, /Request a change/);
-    for (const id of ['revise-deliverables', 'revise-terms', 'revise-final-amount', 'revise-start-date', 'revise-due-date', 'revise-payment-arrangement', 'revise-comment', 'send-back-body', 'cancel-reason']) {
+    for (const id of ['revise-deliverables', 'revise-terms', 'revise-final-amount', 'revise-start-date', 'revise-payment-arrangement', 'revise-comment', 'send-back-body', 'cancel-reason']) {
         assert.match(markup, new RegExp(`for=\\"${id}\\"`), `Expected a visible or screen-reader label for ${id}.`);
         assert.match(markup, new RegExp(`id=\\"${id}\\"`), `Expected the field ${id} to match its label.`);
     }
@@ -106,7 +106,7 @@ test('poster sees a prefilled draft summary and can send it with one action', ()
             id: 7, status: 'draft', statusLabel: 'Draft', lockedAt: null, cancelledAt: null, cancelledBy: null, cancellationReason: null, recordReference: null,
             task: { id: 4, title: 'Synthetic task', budget: '500.00', budgetDisplay: '₱500.00', status: 'Assigned' },
             poster: { id: 2, name: 'Synthetic Poster' }, student: { id: 3, name: 'Synthetic Worker' },
-            currentVersion: { id: 9, versionNumber: 1, proposerId: 2, proposerName: 'Synthetic Poster', deliverables: 'Prepared deliverables', terms: 'Prepared terms', finalAmount: '450.00', startDate: null, dueDate: '2026-12-01', workMode: 'Remote', workplaceName: null, workplaceAddress: null, paymentArrangement: 'Prepared arrangement', comment: null, createdAt: null, confirmations: [] },
+            currentVersion: { id: 9, versionNumber: 1, proposerId: 2, proposerName: 'Synthetic Poster', deliverables: 'Prepared deliverables', terms: 'Prepared terms', finalAmount: '450.00', startDate: null, durationDays: 3, workMode: 'Remote', workplaceName: null, workplaceAddress: null, paymentArrangement: 'Prepared arrangement', comment: null, createdAt: null, confirmations: [] },
             versions: [], messages: [],
         },
         completionPayment: {}, viewerId: 2, actionsAllowed: true, notice: 'Agreement notice', termsMaxLength: 3000,

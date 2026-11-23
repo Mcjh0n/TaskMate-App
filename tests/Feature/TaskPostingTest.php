@@ -22,7 +22,7 @@ class TaskPostingTest extends TestCase
             'description' => 'Help prepare and organize a synthetic campus workshop.',
             'required_activities' => 'Arrange chairs and prepare sign-in sheets.',
             'deliverables' => 'A ready workshop room and completed sign-in sheets.',
-            'estimated_duration_hours' => 4,
+            'estimated_duration_days' => 3,
             'skill_requirements' => 'Organized and reliable.',
             'complexity' => 'low',
             'budget_mode' => 'single',
@@ -35,7 +35,6 @@ class TaskPostingTest extends TestCase
             'hazard_exposure' => '0',
             'private_meeting_required' => '0',
             'workplace_setting' => 'on_campus',
-            'deadline' => now()->addWeek()->toDateString(),
             'guidelines_confirmed' => '1',
         ], $overrides);
     }
@@ -92,6 +91,7 @@ class TaskPostingTest extends TestCase
             'budget_mode' => 'single',
             'budget' => 1200,
             'work_mode' => 'online',
+            'estimated_duration_days' => 2,
             'guidelines_confirmed' => '1',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
@@ -100,6 +100,7 @@ class TaskPostingTest extends TestCase
         $this->assertNull($task->required_activities);
         $this->assertNull($task->deliverables);
         $this->assertNull($task->estimated_duration_hours);
+        $this->assertSame(2, $task->estimated_duration_days);
         $this->assertNull($task->complexity);
         $this->assertNull($task->hazard_exposure);
         $this->assertNull($task->private_meeting_required);
@@ -116,6 +117,7 @@ class TaskPostingTest extends TestCase
             'required_activities' => 'Previously saved activity details.',
             'deliverables' => 'Previously saved deliverables.',
             'estimated_duration_hours' => 3,
+            'estimated_duration_days' => 4,
             'skill_requirements' => 'Previously saved skills.',
             'complexity' => 'medium',
             'hazard_exposure' => true,
@@ -131,6 +133,7 @@ class TaskPostingTest extends TestCase
             'work_mode' => 'on_campus',
             'workplace_name' => 'Synthetic Student Center',
             'workplace_address' => 'Synthetic campus room 101',
+            'estimated_duration_days' => 5,
             'guidelines_confirmed' => '1',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
@@ -138,13 +141,14 @@ class TaskPostingTest extends TestCase
         $this->assertSame('Previously saved activity details.', $task->required_activities);
         $this->assertSame('Previously saved deliverables.', $task->deliverables);
         $this->assertSame('3.0', $task->estimated_duration_hours);
+        $this->assertSame(5, $task->estimated_duration_days);
         $this->assertSame('Previously saved skills.', $task->skill_requirements);
         $this->assertSame('medium', $task->complexity);
         $this->assertTrue($task->hazard_exposure);
         $this->assertSame('Previously saved hazard information.', $task->hazard_description);
     }
 
-    public function test_invalid_choices_limits_past_deadline_and_missing_workplace_are_rejected(): void
+    public function test_workplace_and_duration_limits_are_validated_without_a_deadline(): void
     {
         $poster = $this->verifiedPoster();
         $this->actingAs($poster)->post(route('tasks.store'), $this->taskData(['category' => 'invented']))->assertSessionHasErrors('category');
@@ -155,9 +159,10 @@ class TaskPostingTest extends TestCase
         $this->post(route('tasks.store'), $this->taskData(['budget' => 0]))->assertSessionHasErrors('budget');
         $this->post(route('tasks.store'), $this->taskData(['budget' => 1000000]))->assertSessionHasErrors('budget');
         $this->post(route('tasks.store'), $this->taskData(['budget' => '100.123']))->assertSessionHasErrors('budget');
-        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_hours' => 0.4]))->assertSessionHasErrors('estimated_duration_hours');
-        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_hours' => 501]))->assertSessionHasErrors('estimated_duration_hours');
-        $this->post(route('tasks.store'), $this->taskData(['deadline' => now()->subDay()->toDateString()]))->assertSessionHasErrors('deadline');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_days' => 0]))->assertSessionHasErrors('estimated_duration_days');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_days' => 366]))->assertSessionHasErrors('estimated_duration_days');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_days' => 1.5]))->assertSessionHasErrors('estimated_duration_days');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_days' => null]))->assertSessionHasErrors('estimated_duration_days');
         $this->post(route('tasks.store'), $this->taskData(['guidelines_confirmed' => '0']))->assertSessionHasErrors('guidelines_confirmed');
         $this->post(route('tasks.store'), $this->taskData(['complexity' => 'invented']))->assertSessionHasErrors('complexity');
         $this->post(route('tasks.store'), $this->taskData(['physical_demand' => 'invented']))->assertSessionHasErrors('physical_demand');
@@ -256,6 +261,7 @@ class TaskPostingTest extends TestCase
             'required_activities' => null,
             'deliverables' => null,
             'estimated_duration_hours' => null,
+            'estimated_duration_days' => null,
             'complexity' => null,
             'physical_demand' => null,
             'academic_involvement' => null,
@@ -271,7 +277,8 @@ class TaskPostingTest extends TestCase
                 ->component('tasks/show')
                 ->where('task.requiredActivities', null)
                 ->where('task.deliverables', null)
-                ->where('task.estimatedDurationHours', null)
+                ->where('task.estimatedDurationDays', null)
+                ->missing('task.deadline')
                 ->missing('task.physicalDemand')
                 ->missing('task.academicInvolvement')
                 ->missing('task.hazardExposure')

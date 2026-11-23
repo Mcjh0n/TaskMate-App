@@ -67,13 +67,8 @@ const task = {
     workMode: 'Remote',
     workplaceName: null,
     workplaceAddress: null,
-    workplaceSetting: null,
-    deadline: null,
-    physicalDemand: 'None',
-    academicInvolvement: 'None',
-    hazardExposure: false,
-    hazardDescription: null,
-    privateMeetingRequired: false,
+    estimatedDurationDays: 3,
+    budgetDisplay: '₱500.00',
     status: 'pending_review',
     statusLabel: 'Pending review',
     reviewNote: null,
@@ -88,7 +83,9 @@ test('admin task review renders a task for manual review without automated scree
     }));
 
     assert.match(markup, /Synthetic pending task/);
-    assert.doesNotMatch(markup, /Main activities|Expected result or deliverables|Skills:|Estimated duration:|Complexity:/);
+    assert.doesNotMatch(markup, /Main activities|Expected result or deliverables|Skills:|Complexity:/);
+    assert.match(markup, /Estimated duration:<\/strong> 3 days total/);
+    assert.doesNotMatch(markup, /Deadline|Due date/);
     assert.match(markup, /Every submitted task is reviewed by an administrator/);
     assert.doesNotMatch(markup, /Risk level|Screening breakdown|Score:/);
     assert.match(markup, /No applications have been submitted/);

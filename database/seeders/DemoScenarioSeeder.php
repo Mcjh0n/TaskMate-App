@@ -63,7 +63,7 @@ class DemoScenarioSeeder extends Seeder
             $task->description = 'Synthetic scenario record for local testing only.';
             $task->required_activities = 'Review the clearly synthetic scenario details.';
             $task->deliverables = 'A synthetic sample deliverable.';
-            $task->estimated_duration_hours = 2;
+            $task->estimated_duration_days = 2;
             $task->skill_requirements = null;
             $task->complexity = 'low';
             $task->budget = 500;
@@ -165,7 +165,7 @@ class DemoScenarioSeeder extends Seeder
             $task->poster()->associate($faculty); $task->title = $taskTitle;
             $task->category = array_key_first(config('taskmate.categories')); $task->description = 'Synthetic payment-status scenario.';
             $task->required_activities = 'Synthetic activity.'; $task->deliverables = 'Synthetic deliverable.';
-            $task->estimated_duration_hours = 1; $task->complexity = 'low'; $task->budget = 500; $task->work_mode = 'online';
+            $task->estimated_duration_days = 1; $task->complexity = 'low'; $task->budget = 500; $task->work_mode = 'online';
             $task->status = TaskStatus::InProgress; $task->guidelines_confirmed_at = now();
             $task->physical_demand = 'none'; $task->academic_involvement = 'none';
             $task->hazard_exposure = false; $task->private_meeting_required = false; $task->workplace_setting = null;
@@ -187,7 +187,7 @@ class DemoScenarioSeeder extends Seeder
                 $version = new AgreementVersion(); $version->agreement()->associate($agreement); $version->version_number = 1;
                 $version->proposed_by = $faculty->id; $version->deliverables = 'Synthetic agreed deliverable.';
                 $version->terms = 'Synthetic agreement terms for local testing only.'; $version->final_amount = 500;
-                $version->start_date = today()->subDay(); $version->due_date = today()->addDays(5);
+                $version->start_date = today()->subDay(); $version->due_date = null; $version->duration_days = $task->estimated_duration_days;
                 $version->work_mode = 'online'; $version->payment_arrangement = 'Synthetic direct payment arrangement after completion.';
                 $version->comment = 'Synthetic demo proposal.'; $version->created_at = now();
                 $version->content_hash = app(AgreementContentHasher::class)->hash($version); $version->save();

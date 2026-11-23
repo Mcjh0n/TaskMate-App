@@ -28,7 +28,7 @@ class AgreementWorkflowTest extends TestCase
         $poster = User::factory()->verified()->facultyStaff()->create();
         $student = User::factory()->verified()->create();
         $outsider = User::factory()->verified()->create();
-        $task = Task::factory()->assigned()->create(['poster_id' => $poster->id, 'deadline' => today()->addDays(10)]);
+        $task = Task::factory()->assigned()->create(['poster_id' => $poster->id, 'estimated_duration_days' => 3]);
         $application = Application::factory()->accepted()->create([
             'task_id' => $task->id,
             'applicant_id' => $student->id,
@@ -45,7 +45,6 @@ class AgreementWorkflowTest extends TestCase
             'terms' => 'The student submits drafts, and the poster gives feedback within one day.',
             'final_amount' => '1400.00',
             'start_date' => today()->addDay()->toDateString(),
-            'due_date' => today()->addDays(5)->toDateString(),
             'payment_arrangement' => 'The poster pays directly by bank transfer after the final files are accepted.',
             'comment' => 'Synthetic test proposal',
         ], $override);
@@ -89,13 +88,14 @@ class AgreementWorkflowTest extends TestCase
         $this->assertSame(AgreementStatus::Draft, $agreement->status);
         $this->assertSame('Three edited poster designs', $version->deliverables);
         $this->assertSame('1250.00', $version->final_amount);
-        $this->assertSame($pair['task']->deadline->toDateString(), $version->due_date->toDateString());
+        $this->assertNull($version->due_date);
+        $this->assertSame(3, $version->duration_days);
         $this->assertSame('off_campus', $version->work_mode);
         $this->assertSame('Synthetic campus library', $version->workplace_name);
         $this->assertSame('Synthetic campus address', $version->workplace_address);
         $this->assertSame(0, $version->confirmations()->count());
         $this->actingAs($pair['poster'])->get(route('agreements.show', $agreement))->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->where('agreement.status', 'draft')->where('agreement.currentVersion.deliverables', 'Three edited poster designs'));
+            ->assertInertia(fn (Assert $page) => $page->where('agreement.status', 'draft')->where('agreement.currentVersion.deliverables', 'Three edited poster designs')->where('agreement.currentVersion.durationDays', 3)->missing('agreement.currentVersion.dueDate'));
         $this->actingAs($pair['student'])->get(route('agreements.show', $agreement))->assertForbidden();
 
         $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']))->assertRedirect();
@@ -130,7 +130,8 @@ class AgreementWorkflowTest extends TestCase
         $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertRedirect();
         $agreement = Agreement::query()->where('task_id', $pair['task']->id)->firstOrFail();
         $this->assertSame('1250.00', $agreement->currentVersion->final_amount);
-        $this->assertSame($pair['task']->deadline->toDateString(), $agreement->currentVersion->due_date->toDateString());
+        $this->assertNull($agreement->currentVersion->due_date);
+        $this->assertSame(3, $agreement->currentVersion->duration_days);
         $this->assertNotEmpty($agreement->currentVersion->terms);
         $this->assertNotEmpty($agreement->currentVersion->payment_arrangement);
         $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']), ['final_amount' => '1', 'terms' => 'forged'])->assertRedirect();

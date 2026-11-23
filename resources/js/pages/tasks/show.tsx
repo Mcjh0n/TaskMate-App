@@ -1,4 +1,4 @@
-import { formatDate, formatAmount } from '@/lib/format';
+import { formatAmount, formatDate } from '@/lib/format';
 import { PAYMENT_BOUNDARY_NOTICE } from '@/constants/notices';
 import { Form, Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
@@ -19,9 +19,9 @@ type Applicant = {
 };
 type Task = {
     id: number; title: string; category: string; budget: string | null; budgetMin: string | null; budgetMax: string | null; budgetDisplay: string; workMode: string; status: string; description: string;
-    requiredActivities: string | null; deliverables: string | null; estimatedDurationHours: string | null; skillRequirements: string | null;
+    requiredActivities: string | null; deliverables: string | null; estimatedDurationDays: number | null; skillRequirements: string | null;
     workplaceName: string | null; workplaceAddress: string | null;
-    deadline: string | null; reviewNote: string | null; removalReason?: string | null; createdAt: string | null;
+    reviewNote: string | null; removalReason?: string | null; createdAt: string | null;
     hasActiveApplications: boolean; applicantsCount: number;
 };
 type Props = { task: Task; statusLabel: string; canEdit: boolean; canCancel: boolean; canRespondApplications: boolean; status?: string | null; applicants: Applicant[]; agreement: { id: number; status: string; statusLabel: string; paymentStatus: string; paymentStatusLabel: string } | null; canProposeAgreement: boolean; problemReport?: { taskAction: string | null; types: { value: string; label: string }[]; applicantActions: { applicationId: number; action: string }[]; flaggedApplicants: number[]; offPlatformWarning: boolean } };
@@ -41,14 +41,13 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, canRes
                     <p className="whitespace-pre-wrap">{task.description}</p>
                     {task.requiredActivities && <div><h3 className="font-medium">Main activities</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.requiredActivities}</p></div>}
                     {task.deliverables && <div><h3 className="font-medium">Expected result or deliverables</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>}
-                    {task.estimatedDurationHours && <p className="text-sm">Estimated duration: {task.estimatedDurationHours} hours</p>}
+                    {task.estimatedDurationDays && <p className="text-sm">Estimated duration: {task.estimatedDurationDays} {task.estimatedDurationDays === 1 ? 'day' : 'days'} total</p>}
                     {task.skillRequirements && <p className="text-sm">Skills: {task.skillRequirements}</p>}
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Work details</h2><p>{task.workMode}</p>
                     {task.workplaceName && <p>{task.workplaceName}</p>}{task.workplaceAddress && <p>{task.workplaceAddress}</p>}
                     <p className="text-sm text-muted-foreground">In-person work details are shown to students before they apply. Workplace information should describe a place of work, not a home address.</p>
-                    {task.deadline && <p>Deadline: {formatDate(task.deadline)}</p>}
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Compensation</h2><p>Estimated budget: {task.budgetDisplay}</p>

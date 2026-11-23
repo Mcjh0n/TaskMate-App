@@ -21,7 +21,6 @@ class StoreAgreementVersionRequest extends FormRequest
             'terms' => ['required', 'string', 'max:'.config('taskmate.agreement.terms_max_length', 3000)],
             'final_amount' => ['required', 'numeric', 'min:1', 'max:1000000'],
             'start_date' => ['nullable', 'date', 'after:today'],
-            'due_date' => ['required', 'date', 'after:today'],
             'payment_arrangement' => ['required', 'string', 'max:2000'],
             'comment' => ['nullable', 'string', 'max:1000'],
         ];

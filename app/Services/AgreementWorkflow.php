@@ -46,9 +46,6 @@ class AgreementWorkflow
             $agreement->status = AgreementStatus::Draft;
             $agreement->save();
 
-            $dueDate = $task->deadline && $task->deadline->toDateString() > today()->toDateString()
-                ? $task->deadline->toDateString()
-                : today()->addDays(7)->toDateString();
             $deliverables = trim((string) $task->deliverables) ?: trim($task->description);
             $amount = $application->proposed_amount ?? $task->budget ?? $task->budget_min ?? $task->budget_max;
             if ($amount === null) {
@@ -57,10 +54,10 @@ class AgreementWorkflow
 
             $this->addVersion($agreement, $poster, $task, [
                 'deliverables' => $deliverables,
-                'terms' => 'Complete the work described in the task listing and provide the listed deliverables by the due date.',
+                'terms' => 'Complete the work described in the task listing and provide the listed deliverables within the agreed duration.',
                 'final_amount' => $amount,
                 'start_date' => null,
-                'due_date' => $dueDate,
+                'duration_days' => $task->estimated_duration_days,
                 'payment_arrangement' => 'The poster and worker will agree directly on the payment method and timing before payment.',
             ], null, 1, false);
 
@@ -208,10 +205,11 @@ class AgreementWorkflow
         $version->terms = $data['terms'];
         $version->final_amount = $data['final_amount'];
         $version->start_date = $data['start_date'] ?? null;
-        $version->due_date = $data['due_date'];
+        $version->due_date = null;
+        $version->duration_days = $task->estimated_duration_days;
         $version->work_mode = $task->work_mode;
-        $version->workplace_name = $task->workplace_name;
-        $version->workplace_address = $task->workplace_address;
+        $version->workplace_name = $task->work_mode === 'online' ? null : $task->workplace_name;
+        $version->workplace_address = $task->work_mode === 'online' ? null : $task->workplace_address;
         $version->payment_arrangement = $data['payment_arrangement'];
         $version->comment = $comment;
         $version->created_at = now();
@@ -221,6 +219,7 @@ class AgreementWorkflow
             'final_amount' => number_format((float) $version->final_amount, 2, '.', ''),
             'start_date' => $version->start_date?->toDateString(),
             'due_date' => $version->due_date?->toDateString(),
+            'duration_days' => $version->duration_days,
             'work_mode' => $version->work_mode,
             'workplace_name' => $version->workplace_name,
             'workplace_address' => $version->workplace_address,

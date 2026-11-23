@@ -14,12 +14,12 @@ class AgreementVersion extends Model
 
     protected $fillable = [
         'version_number', 'proposed_by', 'deliverables', 'terms', 'final_amount', 'start_date',
-        'due_date', 'work_mode', 'workplace_name', 'workplace_address', 'payment_arrangement', 'comment',
+        'due_date', 'duration_days', 'work_mode', 'workplace_name', 'workplace_address', 'payment_arrangement', 'comment',
     ];
 
     protected function casts(): array
     {
-        return ['final_amount' => 'decimal:2', 'start_date' => 'date', 'due_date' => 'date', 'created_at' => 'datetime'];
+        return ['final_amount' => 'decimal:2', 'start_date' => 'date', 'due_date' => 'date', 'duration_days' => 'integer', 'created_at' => 'datetime'];
     }
 
     protected static function booted(): void

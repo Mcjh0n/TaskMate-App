@@ -139,7 +139,7 @@ class AgreementController extends Controller
             'terms' => $item->terms,
             'finalAmount' => $item->final_amount,
             'startDate' => $item->start_date?->toDateString(),
-            'dueDate' => $item->due_date?->toDateString(),
+            'durationDays' => $item->duration_days,
             'workMode' => config('taskmate.work_modes.'.$item->work_mode, config('taskmate.legacy_work_modes.'.$item->work_mode, $item->work_mode)),
             'workplaceName' => $item->workplace_name,
             'workplaceAddress' => $item->workplace_address,

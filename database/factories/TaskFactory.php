@@ -21,7 +21,7 @@ class TaskFactory extends Factory
             'description' => fake()->paragraph(),
             'required_activities' => fake()->paragraph(),
             'deliverables' => fake()->sentence(),
-            'estimated_duration_hours' => fake()->randomFloat(1, 1, 40),
+            'estimated_duration_days' => fake()->numberBetween(1, 14),
             'skill_requirements' => fake()->optional()->sentence(),
             'complexity' => 'medium',
             'budget' => fake()->randomFloat(2, 500, 10000),
@@ -34,7 +34,6 @@ class TaskFactory extends Factory
             'hazard_description' => null,
             'private_meeting_required' => false,
             'workplace_setting' => 'on_campus',
-            'deadline' => fake()->optional()->dateTimeBetween('+2 days', '+2 months')?->format('Y-m-d'),
             'status' => TaskStatus::PendingReview,
             'guidelines_confirmed_at' => now(),
         ];

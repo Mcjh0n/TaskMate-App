@@ -52,7 +52,6 @@ class BrowseApplicationsTest extends TestCase
             'hazard_description' => 'Synthetic equipment handling.',
             'private_meeting_required' => false,
             'complexity' => 'medium',
-            'deadline' => null,
             'risk_level' => 'low',
             'risk_score' => 0,
             'decision_source' => 'admin',
@@ -105,7 +104,7 @@ class BrowseApplicationsTest extends TestCase
         $poster = $this->poster();
         $cheap = $this->task($poster, ['title' => 'Needle remote cheap', 'budget' => 1000, 'work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null, 'complexity' => 'low']);
         $range = $this->task($poster, ['title' => 'Needle ranged task', 'budget' => null, 'budget_min' => 1800, 'budget_max' => 2500, 'work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null, 'complexity' => 'low']);
-        $expensive = $this->task($poster, ['title' => 'Needle onsite expensive', 'budget' => 5000, 'work_mode' => 'on_campus', 'complexity' => 'high', 'deadline' => '2026-11-13']);
+        $expensive = $this->task($poster, ['title' => 'Needle onsite expensive', 'budget' => 5000, 'work_mode' => 'on_campus', 'complexity' => 'high']);
         $cheap->created_at = now()->subDay();
         $cheap->save();
         $this->task($poster, ['status' => TaskStatus::PendingReview, 'title' => 'Hidden pending']);
@@ -113,7 +112,7 @@ class BrowseApplicationsTest extends TestCase
         $this->task($poster, ['status' => TaskStatus::Rejected, 'title' => 'Hidden rejected']);
         $this->task($poster, ['status' => TaskStatus::Cancelled, 'title' => 'Hidden cancelled']);
         $this->task($poster, ['status' => TaskStatus::Assigned, 'title' => 'Hidden assigned']);
-        $this->task($poster, ['deadline' => '2026-11-12', 'title' => 'Expired hidden']);
+        $pastDate = $this->task($poster, ['deadline' => '2026-11-12', 'title' => 'Past date remains available']);
 
         $this->actingAs($student)->get(route('browse.index', ['search' => 'Needle', 'sort' => 'budget_high']))
             ->assertOk()->assertInertia(fn ($page) => $page->component('browse/index')->has('tasks.data', 3)
@@ -121,16 +120,20 @@ class BrowseApplicationsTest extends TestCase
                 ->where('tasks.data.0.descriptionPreview', 'Help prepare general learning materials.')
                 ->where('tasks.data.0.workplaceName', 'Synthetic Learning Center')
                 ->where('tasks.data.0.workplaceAddress', 'Synthetic campus location')
-                ->where('tasks.data.0.deadline', '2026-11-13'));
-        $this->get(route('browse.index', ['search' => 'learning']))->assertInertia(fn ($page) => $page->has('tasks.data', 3));
-        $this->get(route('browse.index', ['category' => 'tutoring_and_academic_support']))->assertInertia(fn ($page) => $page->has('tasks.data', 3));
+                ->where('tasks.data.0.estimatedDurationDays', $expensive->estimated_duration_days)
+                ->where('tasks.data.0.posterType', 'CMU Faculty / Staff')
+                ->where('tasks.data.0.deliverablesPreview', $expensive->deliverables)
+                ->missing('tasks.data.0.deadline'));
+        $this->get(route('browse.index'))->assertInertia(fn ($page) => $page->has('tasks.data', 4)->where('tasks.data.0.id', $pastDate->id));
+        $this->get(route('browse.index', ['search' => 'learning']))->assertInertia(fn ($page) => $page->has('tasks.data', 4));
+        $this->get(route('browse.index', ['category' => 'tutoring_and_academic_support']))->assertInertia(fn ($page) => $page->has('tasks.data', 4));
         $this->get(route('browse.index', ['work_mode' => 'online']))->assertInertia(fn ($page) => $page->has('tasks.data', 2)->where('tasks.data.0.id', $range->id));
         $this->get(route('browse.index', ['complexity' => 'high']))->assertInertia(fn ($page) => $page->has('tasks.data', 1)->where('tasks.data.0.id', $expensive->id));
         $this->get(route('browse.index', ['min_budget' => 3000]))->assertInertia(fn ($page) => $page->has('tasks.data', 1));
         $this->get(route('browse.index', ['min_budget' => 2300, 'max_budget' => 2600]))->assertInertia(fn ($page) => $page->has('tasks.data', 1)->where('tasks.data.0.id', $range->id)->where('tasks.data.0.budgetDisplay', '₱1,800.00–₱2,500.00'));
         $this->get('/browse?max_budget=1500')->assertOk()->assertInertia(fn ($page) => $page->has('tasks.data', 1));
         $this->get(route('browse.index', ['sort' => 'budget_low']))->assertInertia(fn ($page) => $page->where('tasks.data.0.id', $cheap->id));
-        $this->get('/browse?sort=newest')->assertInertia(fn ($page) => $page->where('tasks.data.0.id', $expensive->id));
+        $this->get('/browse?sort=newest')->assertInertia(fn ($page) => $page->where('tasks.data.0.id', $pastDate->id));
         $this->get(route('browse.index', ['work_mode' => 'invalid']))->assertSessionHasErrors('work_mode');
         $this->get(route('browse.index', ['max_budget' => 100, 'min_budget' => 200]))->assertSessionHasErrors('max_budget');
         Carbon::setTestNow();
@@ -168,7 +171,7 @@ class BrowseApplicationsTest extends TestCase
         $this->get(route('tasks.show', $task))->assertForbidden();
     }
 
-    public function test_apply_success_validation_deadline_ownership_duplicate_and_no_resubmission(): void
+    public function test_apply_success_validation_ownership_duplicate_and_no_resubmission(): void
     {
         $student = $this->student();
         $poster = $this->poster();
@@ -199,7 +202,8 @@ class BrowseApplicationsTest extends TestCase
         $this->actingAs($student)->post(route('applications.store', $declinedTask), $this->applicationData())->assertForbidden();
 
         $this->actingAs($student)->post(route('applications.store', $this->task($poster, ['status' => TaskStatus::PendingReview])), $this->applicationData())->assertForbidden();
-        $this->post(route('applications.store', $this->task($poster, ['deadline' => now()->subDay()])), $this->applicationData())->assertForbidden();
+        $pastDeadlineTask = $this->task($poster, ['deadline' => now()->subDay(), 'title' => 'Deadline no longer blocks applications']);
+        $this->post(route('applications.store', $pastDeadlineTask), $this->applicationData())->assertRedirect();
         $this->post(route('applications.store', $this->task($student, ['title' => 'Own task'])), $this->applicationData())->assertForbidden();
         $this->post(route('applications.store', $this->task($poster, ['title' => 'Missing message'])), $this->applicationData(['message' => '']))->assertSessionHasErrors('message');
         $this->post(route('applications.store', $this->task($poster, ['title' => 'Long message'])), $this->applicationData(['message' => str_repeat('x', 1001)]))->assertSessionHasErrors('message');

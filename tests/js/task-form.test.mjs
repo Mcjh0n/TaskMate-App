@@ -48,18 +48,20 @@ test('task form keeps only the essentials and required workplace details', () =>
         action: { action: '/tasks', method: 'post' },
         options: {
             categories: [{ value: 'other', label: 'Other' }],
-            workModes: [{ value: 'remote', label: 'Remote' }, { value: 'onsite', label: 'On-site' }],
+            workModes: [{ value: 'online', label: 'Online' }, { value: 'on_campus', label: 'On-campus' }, { value: 'off_campus', label: 'Off-campus' }],
             guidelines: ['Follow the platform rules.'],
         },
         task: null,
         resetWarning: false,
     }));
 
-    for (const text of ['Task title', 'Category', 'What needs to be done?', 'Estimated budget format', 'Single amount', 'Budget range', 'Estimated amount (PHP)', 'Work mode', 'Deadline (optional)', 'I confirm that this task follows the platform rules.']) {
+    for (const text of ['Task title', 'Category', 'What needs to be done?', 'Estimated duration (calendar days)', 'Estimated budget format', 'Single amount', 'Budget range', 'Estimated amount (PHP)', 'Work mode', 'I confirm that this task follows the platform rules.']) {
         assert.match(markup, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
     assert.match(markup, /type="text" inputMode="decimal" maxLength="9"/);
     assert.doesNotMatch(markup, /Maximum budget: ₱999,999\.99|TaskMate records agreements and payment status only/);
+    assert.match(markup, /name="estimated_duration_days"/);
+    assert.doesNotMatch(markup, /name="deadline"/);
     for (const field of ['complexity', 'required_activities', 'deliverables', 'estimated_duration_hours', 'skill_requirements', 'physical_demand', 'academic_involvement', 'hazard_exposure', 'private_meeting_required', 'workplace_setting']) {
         assert.doesNotMatch(markup, new RegExp(`name="${field}"`), `The simplified form should not ask for ${field}.`);
     }

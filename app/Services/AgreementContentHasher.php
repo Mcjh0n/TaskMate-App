@@ -21,6 +21,11 @@ class AgreementContentHasher
             'payment_arrangement' => $version->payment_arrangement,
         ] : $version;
 
+        // Preserve old immutable hashes: duration was not part of earlier versions.
+        if ($version instanceof AgreementVersion && $version->duration_days !== null) {
+            $fields['duration_days'] = $version->duration_days;
+        }
+
         ksort($fields);
 
         return hash('sha256', json_encode($fields, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));

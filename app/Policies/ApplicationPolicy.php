@@ -19,9 +19,6 @@ class ApplicationPolicy
         if ($task->status !== TaskStatus::Approved) {
             return Response::deny('This task is not approved and cannot accept applications.');
         }
-        if ($task->deadline !== null && $task->deadline->toDateString() < today()->toDateString()) {
-            return Response::deny('The deadline for this task has passed.');
-        }
         if ($task->poster_id === $user->id) {
             return Response::deny('You cannot apply to your own task.');
         }

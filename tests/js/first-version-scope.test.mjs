@@ -76,6 +76,6 @@ test('task detail pages omit uncollected work-condition fields but keep workplac
 
     for (const source of [ownerTask, studentTask, adminTask]) {
         assert.doesNotMatch(source, /Work conditions|Safety answers|Physical demand|Academic involvement|Hazards involved|Private or isolated one-on-one meeting required/);
-        assert.match(source, /Workplace/);
+        assert.match(source, /Workplace|Location/);
     }
 });

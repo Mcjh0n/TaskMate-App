@@ -182,6 +182,8 @@ Recommended starting position: allow students to browse while pending if the tea
 
 ## Phase 8 outcome
 
+- Follow-up after the plan: the browse cards now follow the supplied compact task layout and show poster name/type, work mode, deliverable, estimated calendar-day duration, work location for in-person tasks, budget, and an Apply link. New task posts do not collect deadlines; new agreements record duration without a due date. Legacy date/hour columns remain stored for historical records.
+
 - Reviewed the main browse/apply, task posting, agreement, completion, and reporting screens alongside the existing route, privacy, and page-render audits. The audited layouts use responsive breakpoints, shared keyboard-focus styles, and labeled primary workflow fields.
 - Fixed missing programmatic labels in agreement revision, send-back, cancellation, completion, and non-payment report fields. Validation errors are now associated with the affected fields where those forms display them. Added a UI regression assertion for the agreement action fields.
 - `php artisan migrate` reported no pending migrations. `npx tsc --noEmit` passed. `php artisan test` passed: 257 tests and 3,571 assertions. `npm run build` passed, including all 7 UI render tests and TypeScript checking. The existing optional font fallback warning for `fontaine` was printed; the build completed successfully.

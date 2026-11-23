@@ -60,7 +60,6 @@ class AdminRatingsController extends Controller
                 'recordReference' => $rating->agreement->currentVersion?->content_hash,
                 'agreedAmount' => $rating->agreement->currentVersion?->final_amount,
                 'paymentArrangement' => $rating->agreement->currentVersion?->payment_arrangement,
-                'dueDate' => $rating->agreement->currentVersion?->due_date?->toDateString(),
                 'rater' => $rating->rater->name,
                 'ratee' => $rating->ratee->name,
                 'hidden' => $rating->is_hidden,

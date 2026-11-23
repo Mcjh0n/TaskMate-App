@@ -1,4 +1,3 @@
-import { formatDate } from '@/lib/format';
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
@@ -13,13 +12,15 @@ type Listing = {
     category: string;
     budgetDisplay: string;
     workMode: string;
-    deadline: string | null;
+    estimatedDurationDays: number | null;
+    deliverablesPreview: string | null;
     workplaceName: string | null;
     workplaceAddress: string | null;
     posterName: string;
     posterType: string;
     posterVerificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested';
     hasApplied: boolean;
+    canApply: boolean;
 };
 type Props = {
     tasks: { data: Listing[]; links: { url: string | null; label: string; active: boolean }[] };
@@ -86,7 +87,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                 </form>
 
                 {tasks.data.length ? (
-                    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid gap-4 lg:grid-cols-2">
                         {tasks.data.map((task) => (
                             <article key={task.id} className="flex flex-col gap-3 rounded-xl border p-5">
                                 <div className="flex items-start justify-between gap-2">
@@ -94,24 +95,16 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                         <p className="text-sm text-muted-foreground">{task.category}</p>
                                         <h2 className="mt-1 text-lg font-semibold">{task.title}</h2>
                                     </div>
-                                    {task.hasApplied && <ApplicationStatusBadge status="pending" label="Applied" />}
+                                    <div className="flex flex-col items-end gap-1"><span className="shrink-0 rounded-full border px-3 py-1 text-sm font-semibold">{task.workMode}</span>{task.hasApplied && <ApplicationStatusBadge status="pending" label="Applied" />}</div>
                                 </div>
-
+                                <p className="text-sm"><span className="font-medium">Poster:</span> {task.posterName} · {task.posterType}</p>
                                 <p className="line-clamp-3 text-sm text-muted-foreground">{task.descriptionPreview}</p>
-
-                                <div className="rounded-lg bg-muted/40 p-3">
-                                    <p className="text-xl font-semibold">{task.budgetDisplay}</p>
-                                    <p className="mt-1 text-sm">{task.workMode}</p>
-                                    {task.deadline && <p className="mt-1 text-sm">Deadline: {formatDate(task.deadline)}</p>}
-                                    {(task.workplaceName || task.workplaceAddress) && <p className="mt-1 text-sm">Workplace: {[task.workplaceName, task.workplaceAddress].filter(Boolean).join(' · ')}</p>}
-                                </div>
-
+                                {task.deliverablesPreview && <p className="text-sm"><span className="font-medium">Deliverable:</span> {task.deliverablesPreview}</p>}
+                                <p className="text-sm"><span className="font-medium">Estimated duration:</span> {task.estimatedDurationDays ? `${task.estimatedDurationDays} ${task.estimatedDurationDays === 1 ? 'day' : 'days'} total` : 'Not provided'}</p>
+                                {(task.workplaceName || task.workplaceAddress) && <p className="text-sm"><span className="font-medium">{task.workMode === 'On-campus' ? 'On-campus location:' : 'Off-campus location:'}</span> {[task.workplaceName, task.workplaceAddress].filter(Boolean).join(' · ')}</p>}
                                 <div className="mt-auto border-t pt-3">
-                                    <p className="text-sm font-medium">{task.posterName}</p>
-                                    <p className="text-xs text-muted-foreground">{task.posterType}</p>
-                                    <div className="mt-1"><VerificationStatusBadge status={task.posterVerificationStatus} /></div>
+                                    <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-xl font-semibold">{task.budgetDisplay}</p><div className="mt-1"><VerificationStatusBadge status={task.posterVerificationStatus} /></div></div><Link href={task.canApply && !task.hasApplied ? `/browse/${task.id}#application-form` : browse.show(task.id)} className="inline-flex min-h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{task.hasApplied ? 'View application' : task.canApply ? 'Apply' : 'View task'}</Link></div>
                                 </div>
-                                <Link href={browse.show(task.id)} className="text-sm font-medium underline underline-offset-4">View task details</Link>
                             </article>
                         ))}
                     </div>

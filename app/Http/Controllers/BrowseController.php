@@ -20,7 +20,6 @@ class BrowseController extends Controller
             ->with('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at')
             ->where('status', TaskStatus::Approved->value)
             ->whereDoesntHave('poster.sanctions', fn ($sanctions) => $sanctions->whereNull('lifted_at')->where('type', 'suspension')->where('starts_at', '<=', now())->where('ends_at', '>', now()))
-            ->where(fn ($query) => $query->whereNull('deadline')->orWhereDate('deadline', '>=', today()))
             ->when($filters['search'] ?? null, function ($query, string $search) {
                 $query->where(fn ($query) => $query
                     ->where('title', 'like', "%{$search}%")
@@ -38,10 +37,10 @@ class BrowseController extends Controller
                 ->orWhere(fn ($query) => $query->whereNull('budget')->where('budget_min', '<=', $filters['max_budget']))))
             ->when(($filters['sort'] ?? 'newest') === 'budget_high', fn ($query) => $query->orderByRaw('COALESCE(budget, budget_max) DESC'))
             ->when(($filters['sort'] ?? 'newest') === 'budget_low', fn ($query) => $query->orderByRaw('COALESCE(budget, budget_min) ASC'))
-            ->when(($filters['sort'] ?? 'newest') === 'newest', fn ($query) => $query->latest())
+            ->when(($filters['sort'] ?? 'newest') === 'newest', fn ($query) => $query->latest()->orderByDesc('id'))
             ->paginate((int) config('taskmate.browse.per_page', 12))
             ->withQueryString()
-            ->through(fn (Task $task) => $this->listing($task, $request->user()->id));
+            ->through(fn (Task $task) => $this->listing($task, $request->user()->id, $request->user()->canApply()));
 
         return Inertia::render('browse/index', [
             'tasks' => $tasks,
@@ -58,7 +57,6 @@ class BrowseController extends Controller
     {
         abort_unless($task->status === TaskStatus::Approved, 404);
         abort_if($task->poster->sanctions()->whereNull('lifted_at')->where('type', 'suspension')->where('starts_at', '<=', now())->where('ends_at', '>', now())->exists(), 404);
-        abort_if($task->deadline !== null && $task->deadline->toDateString() < today()->toDateString(), 404);
         $task->load('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at');
         $application = $task->applications()->where('applicant_id', $request->user()->id)->first();
         $conversation = $application ? $application->conversation()->first() : null;
@@ -74,7 +72,6 @@ class BrowseController extends Controller
             'conversation' => $conversation ? ['id' => $conversation->id, 'sendBlockedReason' => $conversation->sendingBlockedReason($request->user())] : null,
             'canApply' => $application === null && $task->status === TaskStatus::Approved
                 && $request->user()->canApply()
-                && ($task->deadline === null || $task->deadline->toDateString() >= today()->toDateString())
                 && $task->poster_id !== $request->user()->id,
             'applicantVerificationStatus' => $request->user()->verification_status->value,
             'problemReport' => ['action' => route('tasks.problem-reports.store', $task), 'types' => $this->problemReportTypes()],
@@ -106,7 +103,7 @@ class BrowseController extends Controller
         ]);
     }
 
-    private function listing(Task $task, int $studentId): array
+    private function listing(Task $task, int $studentId, bool $canApply): array
     {
         return [
             'id' => $task->id,
@@ -118,13 +115,15 @@ class BrowseController extends Controller
             'budgetMax' => $task->budget_max,
             'budgetDisplay' => $task->budgetDisplay(),
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, config('taskmate.legacy_work_modes.'.$task->work_mode, $task->work_mode)),
-            'deadline' => $task->deadline?->toDateString(),
-            'workplaceName' => $task->workplace_name,
-            'workplaceAddress' => $task->workplace_address,
+            'estimatedDurationDays' => $task->estimated_duration_days,
+            'deliverablesPreview' => $task->deliverables,
+            'workplaceName' => $task->work_mode === 'online' ? null : $task->workplace_name,
+            'workplaceAddress' => $task->work_mode === 'online' ? null : $task->workplace_address,
             'posterName' => $task->poster->isOrganization() ? $task->poster->organization_name : $task->poster->name,
             'posterType' => config('taskmate.user_types.'.$task->poster->user_type->value),
             'posterVerificationStatus' => $task->poster->verification_status->value,
             'hasApplied' => $task->applications()->where('applicant_id', $studentId)->exists(),
+            'canApply' => $canApply,
         ];
     }
 
@@ -137,16 +136,15 @@ class BrowseController extends Controller
             'description' => $task->description,
             'requiredActivities' => $task->required_activities,
             'deliverables' => $task->deliverables,
-            'estimatedDurationHours' => $task->estimated_duration_hours,
+            'estimatedDurationDays' => $task->estimated_duration_days,
             'skillRequirements' => $task->skill_requirements,
             'budget' => $task->budget,
             'budgetMin' => $task->budget_min,
             'budgetMax' => $task->budget_max,
             'budgetDisplay' => $task->budgetDisplay(),
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, config('taskmate.legacy_work_modes.'.$task->work_mode, $task->work_mode)),
-            'workplaceName' => $task->workplace_name,
-            'workplaceAddress' => $task->workplace_address,
-            'deadline' => $task->deadline?->toDateString(),
+            'workplaceName' => $task->work_mode === 'online' ? null : $task->workplace_name,
+            'workplaceAddress' => $task->work_mode === 'online' ? null : $task->workplace_address,
         ];
     }
 

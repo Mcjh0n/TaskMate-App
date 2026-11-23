@@ -5,8 +5,8 @@ import { update } from '@/routes/tasks';
 type Option = { value: string; label: string };
 type TaskData = {
     id: number; title: string; category: string; description: string; requiredActivities: string | null; deliverables: string | null;
-    estimatedDurationHours: string | null; skillRequirements: string | null; complexity: string | null; budget: string | null; budgetMin: string | null; budgetMax: string | null; budgetMode: 'single' | 'range'; budgetDisplay: string;
-    workModeValue: string; workplaceName: string | null; workplaceAddress: string | null; deadline: string | null;
+    estimatedDurationDays: number | null; skillRequirements: string | null; complexity: string | null; budget: string | null; budgetMin: string | null; budgetMax: string | null; budgetMode: 'single' | 'range'; budgetDisplay: string;
+    workModeValue: string; workplaceName: string | null; workplaceAddress: string | null;
 };
 type Props = {
     options: { categories: Option[]; workModes: Option[]; guidelines: string[] };

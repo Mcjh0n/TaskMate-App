@@ -57,7 +57,8 @@ class TaskMatePageSmokeTest extends TestCase
         $version->terms = 'Synthetic terms.';
         $version->final_amount = 500;
         $version->start_date = today()->addDay();
-        $version->due_date = today()->addWeek();
+        $version->due_date = null;
+        $version->duration_days = $task->estimated_duration_days;
         $version->work_mode = 'online';
         $version->payment_arrangement = 'Direct payment after completion.';
         $version->created_at = now();
