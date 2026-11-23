@@ -150,6 +150,7 @@ class TaskPostingTest extends TestCase
         $this->post(route('tasks.store'), $this->taskData(['work_mode' => 'hybrid', 'workplace_name' => '', 'workplace_address' => '']))->assertSessionHasErrors(['workplace_name', 'workplace_address']);
         $this->post(route('tasks.store'), $this->taskData(['budget' => 0]))->assertSessionHasErrors('budget');
         $this->post(route('tasks.store'), $this->taskData(['budget' => 1000000]))->assertSessionHasErrors('budget');
+        $this->post(route('tasks.store'), $this->taskData(['budget' => '100.123']))->assertSessionHasErrors('budget');
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_hours' => 0.4]))->assertSessionHasErrors('estimated_duration_hours');
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_hours' => 501]))->assertSessionHasErrors('estimated_duration_hours');
         $this->post(route('tasks.store'), $this->taskData(['deadline' => now()->subDay()->toDateString()]))->assertSessionHasErrors('deadline');
@@ -163,6 +164,10 @@ class TaskPostingTest extends TestCase
         $poster = $this->verifiedPoster();
         $this->actingAs($poster)->post(route('tasks.store'), $this->taskData(['budget' => '999999.99']))->assertRedirect()->assertSessionHasNoErrors();
         $this->assertDatabaseHas('tasks', ['poster_id' => $poster->id, 'budget' => '999999.99']);
+
+        $editableTask = Task::factory()->create(['poster_id' => $poster->id, 'status' => TaskStatus::PendingReview]);
+        $this->put(route('tasks.update', $editableTask), $this->taskData(['budget' => '100.123']))->assertSessionHasErrors('budget');
+        $this->put(route('tasks.update', $editableTask), $this->taskData(['budget' => '1000000']))->assertSessionHasErrors('budget');
     }
 
     public function test_remote_task_discards_workplace_details_and_untrusted_status_fields(): void

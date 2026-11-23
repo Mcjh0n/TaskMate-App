@@ -1,4 +1,3 @@
-import { PAYMENT_BOUNDARY_NOTICE } from '@/constants/notices';
 import { useState } from 'react';
 import { Form } from '@inertiajs/react';
 import InputError from '@/components/input-error';
@@ -19,8 +18,19 @@ type Props = {
     resetWarning: boolean;
 };
 
+export function sanitizeTaskBudget(value: string): string {
+    const filtered = value.replace(/[^0-9.]/g, '');
+    const decimalPosition = filtered.indexOf('.');
+    if (decimalPosition === -1) return filtered.slice(0, 6);
+
+    const whole = filtered.slice(0, decimalPosition).slice(0, 6);
+    const fraction = filtered.slice(decimalPosition + 1).replace(/\./g, '').slice(0, 2);
+    return `${whole}.${fraction}`;
+}
+
 export default function TaskForm({ action, options, task, resetWarning }: Props) {
     const [workMode, setWorkMode] = useState(task?.workModeValue ?? '');
+    const [budget, setBudget] = useState(task?.budget ?? '');
     const hasWorkplace = workMode === 'onsite' || workMode === 'hybrid';
 
     return (
@@ -38,7 +48,7 @@ export default function TaskForm({ action, options, task, resetWarning }: Props)
 
                     <section className="space-y-4 rounded-xl border p-5">
                         <h2 className="text-lg font-semibold">Budget and work setup</h2>
-                        <div className="grid gap-2"><Label htmlFor="budget">Estimated budget (PHP)</Label><Input id="budget" name="budget" type="number" min="1" max="999999.99" step="0.01" defaultValue={task?.budget} required /><InputError message={errors.budget} /><p className="text-sm text-muted-foreground">Maximum budget: ₱999,999.99. {PAYMENT_BOUNDARY_NOTICE}</p></div>
+                        <div className="grid gap-2"><Label htmlFor="budget">Estimated budget (PHP)</Label><Input id="budget" name="budget" type="text" inputMode="decimal" maxLength={9} pattern="[0-9]{1,6}(\.[0-9]{1,2})?" value={budget} onChange={(event) => setBudget(sanitizeTaskBudget(event.target.value))} required /><InputError message={errors.budget} /></div>
                         <div className="grid gap-2"><Label htmlFor="work_mode">Work mode</Label><select id="work_mode" name="work_mode" value={workMode} onChange={(event) => setWorkMode(event.target.value)} className="h-10 rounded-md border bg-background px-3 text-sm" required><option value="" disabled>Select a work mode</option>{options.workModes.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><InputError message={errors.work_mode} /></div>
                         {hasWorkplace && <div className="space-y-3 rounded-lg border bg-muted/30 p-4"><p className="text-sm text-muted-foreground">Students see the place of work before applying. Enter a worksite, not a home address.</p><div className="grid gap-2"><Label htmlFor="workplace_name">Workplace name</Label><Input id="workplace_name" name="workplace_name" defaultValue={task?.workplaceName ?? ''} required /><InputError message={errors.workplace_name} /></div><div className="grid gap-2"><Label htmlFor="workplace_address">Workplace address</Label><Input id="workplace_address" name="workplace_address" defaultValue={task?.workplaceAddress ?? ''} required /><InputError message={errors.workplace_address} /></div></div>}
                         <div className="grid gap-2"><Label htmlFor="deadline">Deadline (optional)</Label><Input id="deadline" name="deadline" type="date" min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)} defaultValue={task?.deadline ?? ''} /><InputError message={errors.deadline} /></div>

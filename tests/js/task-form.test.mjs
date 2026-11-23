@@ -24,7 +24,6 @@ function loadTaskForm() {
     const Form = ({ children, ...props }) => element('form', { ...props, children });
     const passthrough = (tag) => (props) => element(tag, props);
     const modules = {
-        '@/constants/notices': { PAYMENT_BOUNDARY_NOTICE: 'TaskMate records agreements and payment status only.' },
         '@inertiajs/react': { Form },
         '@/components/input-error': () => null,
         '@/components/ui/button': { Button: passthrough('button') },
@@ -40,11 +39,11 @@ function loadTaskForm() {
         return typeof value === 'function' ? value : { __esModule: true, ...value };
     };
     new Function('require', 'module', 'exports', compiled)(mockRequire, loaded, loaded.exports);
-    return loaded.exports.default;
+    return loaded.exports;
 }
 
 test('task form keeps only the essentials and required workplace details', () => {
-    const TaskForm = loadTaskForm();
+    const { default: TaskForm } = loadTaskForm();
     const markup = renderToStaticMarkup(React.createElement(TaskForm, {
         action: { action: '/tasks', method: 'post' },
         options: {
@@ -59,7 +58,17 @@ test('task form keeps only the essentials and required workplace details', () =>
     for (const text of ['Task title', 'Category', 'What needs to be done?', 'Estimated budget (PHP)', 'Work mode', 'Deadline (optional)', 'I confirm that this task follows the platform rules.']) {
         assert.match(markup, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
+    assert.match(markup, /type="text" inputMode="decimal" maxLength="9"/);
+    assert.doesNotMatch(markup, /Maximum budget: ₱999,999\.99|TaskMate records agreements and payment status only/);
     for (const field of ['complexity', 'required_activities', 'deliverables', 'estimated_duration_hours', 'skill_requirements', 'physical_demand', 'academic_involvement', 'hazard_exposure', 'private_meeting_required', 'workplace_setting']) {
         assert.doesNotMatch(markup, new RegExp(`name="${field}"`), `The simplified form should not ask for ${field}.`);
     }
+});
+
+test('budget input rejects exponent letters and limits whole and decimal digits', () => {
+    const { sanitizeTaskBudget } = loadTaskForm();
+    assert.equal(sanitizeTaskBudget('999999999999999999999999'), '999999');
+    assert.equal(sanitizeTaskBudget('1e6'), '16');
+    assert.equal(sanitizeTaskBudget('999999.9999'), '999999.99');
+    assert.equal(sanitizeTaskBudget('12a.3e4'), '12.34');
 });
