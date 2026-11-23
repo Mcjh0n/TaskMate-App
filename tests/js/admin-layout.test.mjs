@@ -34,7 +34,7 @@ function loadComponent(path, modules, label, exportName = 'default') {
 
 const adminRoutes = { default: {
     dashboard: () => ({ url: '/admin' }),
-    users: { index: () => ({ url: '/admin/users' }) },
+    users: { index: (options) => ({ url: options?.query?.verification_status ? `/admin/users?verification_status=${options.query.verification_status}` : '/admin/users' }) },
     tasks: { index: (options) => ({ url: options?.query?.status ? `/admin/tasks?status=${options.query.status}` : '/admin/tasks' }), show: (id) => ({ url: `/admin/tasks/${id}` }) },
     reports: { index: () => ({ url: '/admin/reports' }) },
     ratings: { index: () => ({ url: '/admin/ratings' }) },
@@ -106,4 +106,16 @@ test('admin dashboard highlights the latest pending task and links to the review
     assert.match(markup, /Newest synthetic task/);
     assert.match(markup, /href="\/admin\/tasks\/17"/);
     assert.match(markup, /href="\/admin\/tasks\?status=pending_review"/);
+});
+
+test('admin verification count cards open the matching user status filter', () => {
+    const markup = renderToStaticMarkup(React.createElement(AdminDashboard, {
+        counts: { pending: 1, moreInfoRequested: 2, verified: 9, rejected: 3, tasksAwaitingReview: 0, openReports: 0, reportsUnderReview: 0, highPriorityReports: 0, escalatedReports: 0, openFlags: 0, activeSuspensions: 0 },
+        recentActions: [],
+        latestPendingTasks: [],
+    }));
+
+    for (const status of ['pending', 'more_info_requested', 'verified', 'rejected']) {
+        assert.match(markup, new RegExp(`href="/admin/users\\?verification_status=${status}"`));
+    }
 });

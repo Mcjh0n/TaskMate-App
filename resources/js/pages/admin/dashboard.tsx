@@ -55,13 +55,18 @@ export default function AdminDashboard({ counts, recentActions, latestPendingTas
                 </div>
                 <section aria-label="Verification counts" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {countCards.map((card) => (
-                        <div key={card.key} className="rounded-lg border p-4">
-                            <div className="flex items-center justify-between gap-2">
+                        <Link
+                            key={card.key}
+                            href={admin.users.index({ query: { verification_status: card.status } })}
+                            aria-label={`${card.label}: ${counts[card.key as keyof Props['counts']]}. View matching accounts`}
+                            className="rounded-lg border p-4 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                            <div className="flex flex-col items-start gap-2">
                                 <span className="text-sm text-muted-foreground">{card.label}</span>
                                 <VerificationStatusBadge status={card.status} />
                             </div>
                             <p className="mt-3 text-3xl font-semibold">{counts[card.key as keyof Props['counts']]}</p>
-                        </div>
+                        </Link>
                     ))}
                 </section>
                 <section aria-label="Task review counts" className="grid gap-4">
