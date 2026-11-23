@@ -65,6 +65,7 @@ class AdminTasksController extends Controller
                 'skillRequirements' => $task->skill_requirements,
                 'complexity' => config('taskmate.complexity_levels.'.$task->complexity, $task->complexity),
                 'budget' => $task->budget,
+                'budgetDisplay' => $task->budgetDisplay(),
                 'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
                 'workplaceName' => $task->workplace_name,
                 'workplaceAddress' => $task->workplace_address,

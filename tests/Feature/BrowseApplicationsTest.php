@@ -104,6 +104,7 @@ class BrowseApplicationsTest extends TestCase
         $student = $this->student();
         $poster = $this->poster();
         $cheap = $this->task($poster, ['title' => 'Needle remote cheap', 'budget' => 1000, 'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null, 'complexity' => 'low']);
+        $range = $this->task($poster, ['title' => 'Needle ranged task', 'budget' => null, 'budget_min' => 1800, 'budget_max' => 2500, 'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null, 'complexity' => 'low']);
         $expensive = $this->task($poster, ['title' => 'Needle onsite expensive', 'budget' => 5000, 'work_mode' => 'onsite', 'complexity' => 'high', 'deadline' => '2026-11-13']);
         $cheap->created_at = now()->subDay();
         $cheap->save();
@@ -115,17 +116,18 @@ class BrowseApplicationsTest extends TestCase
         $this->task($poster, ['deadline' => '2026-11-12', 'title' => 'Expired hidden']);
 
         $this->actingAs($student)->get(route('browse.index', ['search' => 'Needle', 'sort' => 'budget_high']))
-            ->assertOk()->assertInertia(fn ($page) => $page->component('browse/index')->has('tasks.data', 2)
+            ->assertOk()->assertInertia(fn ($page) => $page->component('browse/index')->has('tasks.data', 3)
                 ->where('tasks.data.0.id', $expensive->id)
                 ->where('tasks.data.0.descriptionPreview', 'Help prepare general learning materials.')
                 ->where('tasks.data.0.workplaceName', 'Synthetic Learning Center')
                 ->where('tasks.data.0.workplaceAddress', 'Synthetic campus location')
                 ->where('tasks.data.0.deadline', '2026-11-13'));
-        $this->get(route('browse.index', ['search' => 'learning']))->assertInertia(fn ($page) => $page->has('tasks.data', 2));
-        $this->get(route('browse.index', ['category' => 'tutoring_and_academic_support']))->assertInertia(fn ($page) => $page->has('tasks.data', 2));
-        $this->get(route('browse.index', ['work_mode' => 'remote']))->assertInertia(fn ($page) => $page->has('tasks.data', 1)->where('tasks.data.0.id', $cheap->id));
+        $this->get(route('browse.index', ['search' => 'learning']))->assertInertia(fn ($page) => $page->has('tasks.data', 3));
+        $this->get(route('browse.index', ['category' => 'tutoring_and_academic_support']))->assertInertia(fn ($page) => $page->has('tasks.data', 3));
+        $this->get(route('browse.index', ['work_mode' => 'remote']))->assertInertia(fn ($page) => $page->has('tasks.data', 2)->where('tasks.data.0.id', $range->id));
         $this->get(route('browse.index', ['complexity' => 'high']))->assertInertia(fn ($page) => $page->has('tasks.data', 1)->where('tasks.data.0.id', $expensive->id));
         $this->get(route('browse.index', ['min_budget' => 3000]))->assertInertia(fn ($page) => $page->has('tasks.data', 1));
+        $this->get(route('browse.index', ['min_budget' => 2300, 'max_budget' => 2600]))->assertInertia(fn ($page) => $page->has('tasks.data', 1)->where('tasks.data.0.id', $range->id)->where('tasks.data.0.budgetDisplay', '₱1,800.00–₱2,500.00'));
         $this->get('/browse?max_budget=1500')->assertOk()->assertInertia(fn ($page) => $page->has('tasks.data', 1));
         $this->get(route('browse.index', ['sort' => 'budget_low']))->assertInertia(fn ($page) => $page->where('tasks.data.0.id', $cheap->id));
         $this->get('/browse?sort=newest')->assertInertia(fn ($page) => $page->where('tasks.data.0.id', $expensive->id));

@@ -33,6 +33,17 @@ class StoreTaskRequest extends FormRequest
         return ['guidelines_confirmed.accepted' => 'You must confirm that this task follows the platform rules.'];
     }
 
+    public function after(): array
+    {
+        return [function ($validator): void {
+            if ($this->input('budget_mode') === 'range'
+                && is_numeric($this->input('budget_min')) && is_numeric($this->input('budget_max'))
+                && (float) $this->input('budget_max') < (float) $this->input('budget_min')) {
+                $validator->errors()->add('budget_max', 'The maximum budget must be at least the minimum budget.');
+            }
+        }];
+    }
+
     protected function taskRules(): array
     {
         $requiresWorkplace = in_array($this->input('work_mode'), ['onsite', 'hybrid'], true);
@@ -49,7 +60,10 @@ class StoreTaskRequest extends FormRequest
             'estimated_duration_hours' => ['nullable', 'numeric', 'min:0.5', 'max:500'],
             'skill_requirements' => ['nullable', 'string', 'max:5000'],
             'complexity' => ['nullable', 'string', Rule::in(array_keys(config('taskmate.complexity_levels', [])))],
-            'budget' => ['required', 'numeric', 'decimal:0,2', 'min:1', 'max:999999.99'],
+            'budget_mode' => ['required', Rule::in(['single', 'range'])],
+            'budget' => ['exclude_unless:budget_mode,single', 'required', 'numeric', 'decimal:0,2', 'min:1', 'max:999999.99'],
+            'budget_min' => ['exclude_unless:budget_mode,range', 'required', 'numeric', 'decimal:0,2', 'min:1', 'max:999999.99'],
+            'budget_max' => ['exclude_unless:budget_mode,range', 'required', 'numeric', 'decimal:0,2', 'min:1', 'max:999999.99'],
             'work_mode' => ['required', 'string', Rule::in(array_keys(config('taskmate.work_modes', [])))],
             'workplace_name' => [$requiresWorkplace ? 'required' : 'nullable', 'string', 'max:255'],
             'workplace_address' => [$requiresWorkplace ? 'required' : 'nullable', 'string', 'max:255'],

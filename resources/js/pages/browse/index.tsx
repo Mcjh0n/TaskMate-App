@@ -1,4 +1,4 @@
-import { formatDate, formatAmount } from '@/lib/format';
+import { formatDate } from '@/lib/format';
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import { ApplicationStatusBadge } from '@/components/application-status-badge';
@@ -11,7 +11,7 @@ type Listing = {
     title: string;
     descriptionPreview: string;
     category: string;
-    budget: string;
+    budgetDisplay: string;
     workMode: string;
     deadline: string | null;
     workplaceName: string | null;
@@ -100,7 +100,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                 <p className="line-clamp-3 text-sm text-muted-foreground">{task.descriptionPreview}</p>
 
                                 <div className="rounded-lg bg-muted/40 p-3">
-                                    <p className="text-xl font-semibold">₱{formatAmount(task.budget)}</p>
+                                    <p className="text-xl font-semibold">{task.budgetDisplay}</p>
                                     <p className="mt-1 text-sm">{task.workMode}</p>
                                     {task.deadline && <p className="mt-1 text-sm">Deadline: {formatDate(task.deadline)}</p>}
                                     {(task.workplaceName || task.workplaceAddress) && <p className="mt-1 text-sm">Workplace: {[task.workplaceName, task.workplaceAddress].filter(Boolean).join(' · ')}</p>}

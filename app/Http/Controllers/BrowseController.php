@@ -30,10 +30,14 @@ class BrowseController extends Controller
             ->when($filters['category'] ?? null, fn ($query, string $category) => $query->where('category', $category))
             ->when($filters['work_mode'] ?? null, fn ($query, string $mode) => $query->where('work_mode', $mode))
             ->when($filters['complexity'] ?? null, fn ($query, string $complexity) => $query->where('complexity', $complexity))
-            ->when(isset($filters['min_budget']), fn ($query) => $query->where('budget', '>=', $filters['min_budget']))
-            ->when(isset($filters['max_budget']), fn ($query) => $query->where('budget', '<=', $filters['max_budget']))
-            ->when(($filters['sort'] ?? 'newest') === 'budget_high', fn ($query) => $query->orderByDesc('budget'))
-            ->when(($filters['sort'] ?? 'newest') === 'budget_low', fn ($query) => $query->orderBy('budget'))
+            ->when(isset($filters['min_budget']), fn ($query) => $query->where(fn ($query) => $query
+                ->where(fn ($query) => $query->whereNotNull('budget')->where('budget', '>=', $filters['min_budget']))
+                ->orWhere(fn ($query) => $query->whereNull('budget')->where('budget_max', '>=', $filters['min_budget']))))
+            ->when(isset($filters['max_budget']), fn ($query) => $query->where(fn ($query) => $query
+                ->where(fn ($query) => $query->whereNotNull('budget')->where('budget', '<=', $filters['max_budget']))
+                ->orWhere(fn ($query) => $query->whereNull('budget')->where('budget_min', '<=', $filters['max_budget']))))
+            ->when(($filters['sort'] ?? 'newest') === 'budget_high', fn ($query) => $query->orderByRaw('COALESCE(budget, budget_max) DESC'))
+            ->when(($filters['sort'] ?? 'newest') === 'budget_low', fn ($query) => $query->orderByRaw('COALESCE(budget, budget_min) ASC'))
             ->when(($filters['sort'] ?? 'newest') === 'newest', fn ($query) => $query->latest())
             ->paginate((int) config('taskmate.browse.per_page', 12))
             ->withQueryString()
@@ -110,6 +114,9 @@ class BrowseController extends Controller
             'descriptionPreview' => Str::limit(strip_tags($task->description), 180),
             'category' => config('taskmate.categories.'.$task->category, $task->category),
             'budget' => $task->budget,
+            'budgetMin' => $task->budget_min,
+            'budgetMax' => $task->budget_max,
+            'budgetDisplay' => $task->budgetDisplay(),
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
             'deadline' => $task->deadline?->toDateString(),
             'workplaceName' => $task->workplace_name,
@@ -133,6 +140,9 @@ class BrowseController extends Controller
             'estimatedDurationHours' => $task->estimated_duration_hours,
             'skillRequirements' => $task->skill_requirements,
             'budget' => $task->budget,
+            'budgetMin' => $task->budget_min,
+            'budgetMax' => $task->budget_max,
+            'budgetDisplay' => $task->budgetDisplay(),
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
             'workplaceName' => $task->workplace_name,
             'workplaceAddress' => $task->workplace_address,

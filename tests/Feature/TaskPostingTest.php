@@ -25,6 +25,7 @@ class TaskPostingTest extends TestCase
             'estimated_duration_hours' => 4,
             'skill_requirements' => 'Organized and reliable.',
             'complexity' => 'low',
+            'budget_mode' => 'single',
             'budget' => 1500,
             'work_mode' => 'onsite',
             'workplace_name' => 'Synthetic Student Center',
@@ -75,7 +76,7 @@ class TaskPostingTest extends TestCase
     public function test_task_fields_and_guideline_confirmation_are_validated(): void
     {
         $poster = $this->verifiedPoster();
-        $this->actingAs($poster)->post(route('tasks.store'), [])->assertSessionHasErrors([
+        $this->actingAs($poster)->post(route('tasks.store'), ['budget_mode' => 'single'])->assertSessionHasErrors([
             'title', 'category', 'description', 'budget', 'work_mode', 'guidelines_confirmed',
         ]);
         $this->assertDatabaseCount('tasks', 0);
@@ -88,6 +89,7 @@ class TaskPostingTest extends TestCase
             'title' => 'Synthetic campus event help',
             'category' => 'event_support',
             'description' => 'Help prepare the event space and leave the area ready for attendees.',
+            'budget_mode' => 'single',
             'budget' => 1200,
             'work_mode' => 'remote',
             'guidelines_confirmed' => '1',
@@ -124,6 +126,7 @@ class TaskPostingTest extends TestCase
             'title' => 'A simpler task edit',
             'category' => 'event_support',
             'description' => 'A clear description with the essential task information.',
+            'budget_mode' => 'single',
             'budget' => 1500,
             'work_mode' => 'onsite',
             'workplace_name' => 'Synthetic Student Center',
@@ -168,6 +171,30 @@ class TaskPostingTest extends TestCase
         $editableTask = Task::factory()->create(['poster_id' => $poster->id, 'status' => TaskStatus::PendingReview]);
         $this->put(route('tasks.update', $editableTask), $this->taskData(['budget' => '100.123']))->assertSessionHasErrors('budget');
         $this->put(route('tasks.update', $editableTask), $this->taskData(['budget' => '1000000']))->assertSessionHasErrors('budget');
+    }
+
+    public function test_task_can_store_and_display_a_budget_range(): void
+    {
+        $poster = $this->verifiedPoster();
+        $this->actingAs($poster)->post(route('tasks.store'), $this->taskData([
+            'budget_mode' => 'range',
+            'budget' => '',
+            'budget_min' => '400.00',
+            'budget_max' => '500.00',
+        ]))->assertRedirect()->assertSessionHasNoErrors();
+
+        $task = $poster->tasks()->latest('id')->firstOrFail();
+        $this->assertNull($task->budget);
+        $this->assertSame('400.00', $task->budget_min);
+        $this->assertSame('500.00', $task->budget_max);
+        $this->assertSame('₱400.00–₱500.00', $task->budgetDisplay());
+
+        $this->actingAs($poster)->put(route('tasks.update', $task), $this->taskData([
+            'budget_mode' => 'range',
+            'budget' => '',
+            'budget_min' => '400',
+            'budget_max' => '350',
+        ]))->assertSessionHasErrors('budget_max');
     }
 
     public function test_remote_task_discards_workplace_details_and_untrusted_status_fields(): void

@@ -36,6 +36,8 @@ class Task extends Model
         'skill_requirements',
         'complexity',
         'budget',
+        'budget_min',
+        'budget_max',
         'work_mode',
         'workplace_name',
         'workplace_address',
@@ -54,6 +56,8 @@ class Task extends Model
             'status' => TaskStatus::class,
             'estimated_duration_hours' => 'decimal:1',
             'budget' => 'decimal:2',
+            'budget_min' => 'decimal:2',
+            'budget_max' => 'decimal:2',
             'deadline' => 'date',
             'hazard_exposure' => 'boolean',
             'private_meeting_required' => 'boolean',
@@ -67,6 +71,21 @@ class Task extends Model
     public function poster(): BelongsTo
     {
         return $this->belongsTo(User::class, 'poster_id');
+    }
+
+    public function budgetDisplay(): string
+    {
+        $format = fn ($amount): string => '₱'.number_format((float) $amount, 2, '.', ',');
+
+        if ($this->budget !== null) {
+            return $format($this->budget);
+        }
+
+        if ($this->budget_min !== null && $this->budget_max !== null) {
+            return $format($this->budget_min).'–'.$format($this->budget_max);
+        }
+
+        return 'Budget not provided';
     }
 
     public function reviewer(): BelongsTo

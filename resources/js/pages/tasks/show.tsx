@@ -18,7 +18,7 @@ type Applicant = {
     message: string; proposedAmount: string | null; status: string; statusLabel: string; appliedAt: string | null; conversationId: number | null; messageBlockedReason: string | null;
 };
 type Task = {
-    id: number; title: string; category: string; budget: string; workMode: string; status: string; description: string;
+    id: number; title: string; category: string; budget: string | null; budgetMin: string | null; budgetMax: string | null; budgetDisplay: string; workMode: string; status: string; description: string;
     requiredActivities: string | null; deliverables: string | null; estimatedDurationHours: string | null; skillRequirements: string | null;
     workplaceName: string | null; workplaceAddress: string | null;
     deadline: string | null; reviewNote: string | null; removalReason?: string | null; createdAt: string | null;
@@ -51,7 +51,7 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, canRes
                     {task.deadline && <p>Deadline: {formatDate(task.deadline)}</p>}
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Compensation</h2><p>Estimated budget: ₱{formatAmount(task.budget)}</p>
+                    <h2 className="text-lg font-semibold">Compensation</h2><p>Estimated budget: {task.budgetDisplay}</p>
                     <p className="text-sm text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p>
                 </section>
                 {task.reviewNote && <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">Review note: {task.reviewNote}</div>}

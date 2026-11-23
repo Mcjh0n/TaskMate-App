@@ -33,7 +33,9 @@ class TaskController extends Controller
     public function store(StoreTaskRequest $request, TaskSubmissionWorkflow $submission, OffPlatformScanner $scanner): RedirectResponse
     {
         $task = DB::transaction(function () use ($request, $submission, $scanner): Task {
-            $task = $request->user()->tasks()->make($request->safe()->except('guidelines_confirmed'));
+            $validated = $request->safe()->except(['guidelines_confirmed', 'budget_mode', 'budget', 'budget_min', 'budget_max']);
+            $task = $request->user()->tasks()->make($validated);
+            $this->applyBudget($task, $request->validated());
             $task->guidelines_confirmed_at = now();
             $task->save();
             foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
@@ -149,7 +151,9 @@ class TaskController extends Controller
             abort(403, 'This task has active applicants or is assigned. Cancel it and post a new task to change its details.');
         }
         DB::transaction(function () use ($request, $task, $submission, $scanner): void {
-            $task->fill($request->safe()->except('guidelines_confirmed'));
+            $validated = $request->safe()->except(['guidelines_confirmed', 'budget_mode', 'budget', 'budget_min', 'budget_max']);
+            $task->fill($validated);
+            $this->applyBudget($task, $request->validated());
             $task->guidelines_confirmed_at = now();
             $task->save();
             foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
@@ -192,6 +196,20 @@ class TaskController extends Controller
         ];
     }
 
+    private function applyBudget(Task $task, array $validated): void
+    {
+        if ($validated['budget_mode'] === 'range') {
+            $task->budget = null;
+            $task->budget_min = $validated['budget_min'];
+            $task->budget_max = $validated['budget_max'];
+            return;
+        }
+
+        $task->budget = $validated['budget'];
+        $task->budget_min = null;
+        $task->budget_max = null;
+    }
+
     private function optionsFor(array $options): array
     {
         return collect($options)->map(fn (string $label, string $value) => compact('value', 'label'))->values()->all();
@@ -204,6 +222,9 @@ class TaskController extends Controller
             'title' => $task->title,
             'category' => config('taskmate.categories.'.$task->category, $task->category),
             'budget' => $task->budget,
+            'budgetMin' => $task->budget_min,
+            'budgetMax' => $task->budget_max,
+            'budgetDisplay' => $task->budgetDisplay(),
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
             'status' => $task->status->value,
             'statusLabel' => $task->status->label(),
@@ -229,6 +250,10 @@ class TaskController extends Controller
             'workplaceAddress' => $task->workplace_address,
             'deadline' => $task->deadline?->toDateString(),
             'guidelinesConfirmedAt' => $task->guidelines_confirmed_at?->toDateTimeString(),
+            'budgetMin' => $task->budget_min,
+            'budgetMax' => $task->budget_max,
+            'budgetMode' => $task->budget !== null ? 'single' : 'range',
+            'budgetDisplay' => $task->budgetDisplay(),
         ];
     }
 }

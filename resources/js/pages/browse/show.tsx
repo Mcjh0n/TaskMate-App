@@ -15,7 +15,7 @@ import { ProblemReportForm } from '@/components/problem-report-form';
 
 type Task = {
     id: number; title: string; category: string; description: string; requiredActivities: string | null; deliverables: string | null;
-    estimatedDurationHours: string | null; skillRequirements: string | null; budget: string; workMode: string;
+    estimatedDurationHours: string | null; skillRequirements: string | null; budget: string | null; budgetMin: string | null; budgetMax: string | null; budgetDisplay: string; workMode: string;
     workplaceName: string | null; workplaceAddress: string | null; deadline: string | null;
 };
 type Poster = { displayName: string; accountType: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; memberSince: string | null; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
@@ -33,7 +33,7 @@ export default function BrowseTaskDetail({ task, poster, application, conversati
                 <section aria-label="Task summary" className="grid gap-3 sm:grid-cols-2">
                     <div className="rounded-xl border bg-muted/30 p-5 sm:col-span-2">
                         <p className="text-sm text-muted-foreground">Estimated budget</p>
-                        <p className="mt-1 text-2xl font-semibold">₱{formatAmount(task.budget)}</p>
+                        <p className="mt-1 text-2xl font-semibold">{task.budgetDisplay}</p>
                         <p className="mt-3 text-sm text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p>
                     </div>
                     <div className="rounded-xl border p-4"><p className="text-sm text-muted-foreground">Work mode</p><p className="mt-1 font-medium">{task.workMode}</p></div>

@@ -7,7 +7,7 @@ import agreements from '@/routes/agreements';
 import tasks from '@/routes/tasks';
 
 type Props = {
-    task: { id: number; title: string; budget: string; workMode: string; workplaceName: string | null; workplaceAddress: string | null };
+    task: { id: number; title: string; budget: string | null; budgetDisplay: string; workMode: string; workplaceName: string | null; workplaceAddress: string | null };
     workerName: string;
     defaults: { deliverables: string; finalAmount: string; startDate: string; dueDate: string; workMode: string; workplaceName: string | null; workplaceAddress: string | null };
     termsMaxLength: number;

@@ -26,6 +26,7 @@ class TaskReviewWorkflowTest extends TestCase
             'title' => 'A synthetic campus task',
             'category' => 'event_support',
             'description' => 'Prepare materials for a synthetic campus event.',
+            'budget_mode' => 'single',
             'budget' => 1000,
             'work_mode' => 'remote',
             'guidelines_confirmed' => '1',

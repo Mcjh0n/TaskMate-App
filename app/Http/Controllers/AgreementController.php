@@ -39,7 +39,7 @@ class AgreementController extends Controller
             'workerName' => $accepted->applicant->name,
             'defaults' => [
                 'deliverables' => $task->deliverables,
-                'finalAmount' => $accepted->proposed_amount ?? $task->budget,
+                'finalAmount' => $accepted->proposed_amount ?? $task->budget ?? $task->budget_min,
                 'startDate' => today()->addDay()->toDateString(),
                 'dueDate' => $defaultDueDate,
                 'workplaceName' => $task->workplace_name,
@@ -60,7 +60,7 @@ class AgreementController extends Controller
     {
         Gate::authorize('view', $agreement);
         $agreement->load([
-            'task:id,title,budget,status,work_mode,workplace_name,workplace_address',
+            'task:id,title,budget,budget_min,budget_max,status,work_mode,workplace_name,workplace_address',
             'poster:id,name,user_type,organization_name',
             'student:id,name,user_type,affiliation',
             'currentVersion.proposer:id,name',
@@ -124,7 +124,7 @@ class AgreementController extends Controller
     public function adminShow(Agreement $agreement): Response
     {
         $agreement->load([
-            'task:id,title,budget,status,work_mode,workplace_name,workplace_address',
+            'task:id,title,budget,budget_min,budget_max,status,work_mode,workplace_name,workplace_address',
             'poster:id,name,user_type,organization_name', 'student:id,name,user_type,affiliation',
             'currentVersion.proposer:id,name', 'currentVersion.confirmations.user:id,name',
             'versions.proposer:id,name', 'versions.confirmations.user:id,name', 'messages.user:id,name', 'task.completion',
@@ -173,7 +173,7 @@ class AgreementController extends Controller
                 'cancelledBy' => $agreement->cancelled_by,
                 'cancellationReason' => $agreement->cancellation_reason,
                 'recordReference' => $agreement->status === AgreementStatus::Agreed ? $agreement->currentVersion?->content_hash : null,
-                'task' => ['id' => $task->id, 'title' => $task->title, 'budget' => $task->budget, 'status' => $task->status->value],
+                'task' => ['id' => $task->id, 'title' => $task->title, 'budget' => $task->budget, 'budgetDisplay' => $task->budgetDisplay(), 'status' => $task->status->value],
                 'poster' => ['id' => $agreement->poster_id, 'name' => $agreement->poster->isOrganization() ? $agreement->poster->organization_name : $agreement->poster->name],
                 'student' => ['id' => $agreement->student_id, 'name' => $agreement->student->name],
                 'currentVersion' => $agreement->currentVersion ? $version($agreement->currentVersion) : null,
@@ -272,6 +272,6 @@ class AgreementController extends Controller
 
     private function taskSummary(Task $task): array
     {
-        return ['id' => $task->id, 'title' => $task->title, 'budget' => $task->budget, 'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode), 'workplaceName' => $task->workplace_name, 'workplaceAddress' => $task->workplace_address];
+        return ['id' => $task->id, 'title' => $task->title, 'budget' => $task->budget, 'budgetDisplay' => $task->budgetDisplay(), 'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode), 'workplaceName' => $task->workplace_name, 'workplaceAddress' => $task->workplace_address];
     }
 }

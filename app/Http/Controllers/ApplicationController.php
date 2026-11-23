@@ -56,6 +56,7 @@ class ApplicationController extends Controller
                     ? $application->task->poster->organization_name
                     : $application->task->poster->name,
                 'budget' => $application->task->budget,
+                'budgetDisplay' => $application->task->budgetDisplay(),
                 'status' => $application->status->value,
                 'statusLabel' => $application->status->label(),
                 'taskStatus' => $application->task->status->label(),

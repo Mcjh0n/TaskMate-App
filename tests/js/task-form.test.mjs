@@ -55,7 +55,7 @@ test('task form keeps only the essentials and required workplace details', () =>
         resetWarning: false,
     }));
 
-    for (const text of ['Task title', 'Category', 'What needs to be done?', 'Estimated budget (PHP)', 'Work mode', 'Deadline (optional)', 'I confirm that this task follows the platform rules.']) {
+    for (const text of ['Task title', 'Category', 'What needs to be done?', 'Estimated budget format', 'Single amount', 'Budget range', 'Estimated amount (PHP)', 'Work mode', 'Deadline (optional)', 'I confirm that this task follows the platform rules.']) {
         assert.match(markup, new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
     }
     assert.match(markup, /type="text" inputMode="decimal" maxLength="9"/);
