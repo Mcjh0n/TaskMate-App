@@ -3,21 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AgreementStatus;
-use App\Enums\TaskStatus;
-use App\Http\Requests\CancelAgreementRequest;
-use App\Http\Requests\ConfirmAgreementRequest;
-use App\Http\Requests\SendBackAgreementRequest;
-use App\Http\Requests\StoreAgreementVersionRequest;
-use App\Http\Requests\SendAgreementRequest;
-use App\Models\Agreement;
-use App\Models\AgreementVersion;
-use App\Models\Task;
 use App\Enums\PaymentEventType;
 use App\Enums\PaymentStatus;
 use App\Enums\ReportStatus;
-use App\Services\ReportWorkflow;
+use App\Enums\TaskStatus;
+use App\Http\Requests\CancelAgreementRequest;
+use App\Http\Requests\ConfirmAgreementRequest;
+use App\Http\Requests\SendAgreementRequest;
+use App\Http\Requests\SendBackAgreementRequest;
+use App\Http\Requests\StoreAgreementVersionRequest;
+use App\Models\Agreement;
+use App\Models\AgreementVersion;
+use App\Models\Task;
+use App\Models\User;
 use App\Services\AgreementWorkflow;
 use App\Services\RatingVisibility;
+use App\Services\ReportWorkflow;
 use App\Services\SanctionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -44,6 +45,7 @@ class AgreementController extends Controller
     {
         $agreement = $task->agreement()->firstOrFail();
         $workflow->sendDraft($agreement, $request->user());
+
         return redirect()->route('agreements.show', $agreement)->with('status', 'The agreement was sent to the applicant for review.');
     }
 
@@ -81,6 +83,7 @@ class AgreementController extends Controller
     public function revise(StoreAgreementVersionRequest $request, Agreement $agreement, AgreementWorkflow $workflow): RedirectResponse
     {
         $workflow->revise($agreement, $request->user(), $request->validated());
+
         return back()->with('status', 'A new agreement version was sent. Both parties need to confirm this version.');
     }
 
@@ -88,6 +91,7 @@ class AgreementController extends Controller
     {
         $workflow->confirm($agreement, $request->user(), (int) $request->validated('version_id'));
         $agreement->refresh();
+
         return back()->with('status', $agreement->status === AgreementStatus::Agreed
             ? 'Both parties confirmed the agreement. The terms are now locked and work may begin.'
             : 'Your confirmation was recorded for this version.');
@@ -97,6 +101,7 @@ class AgreementController extends Controller
     {
         $data = $request->validated();
         $workflow->sendBack($agreement, $request->user(), (int) $data['version_id'], $data['body']);
+
         return back()->with('status', 'Your comment was sent. Submit a new version to change the proposed terms.');
     }
 
@@ -128,7 +133,7 @@ class AgreementController extends Controller
         ]);
     }
 
-    private function present(Agreement $agreement, ?\App\Models\User $viewer = null): array
+    private function present(Agreement $agreement, ?User $viewer = null): array
     {
         $version = fn (AgreementVersion $item): array => [
             'id' => $item->id,
@@ -176,7 +181,7 @@ class AgreementController extends Controller
         ];
     }
 
-    private function ratingData(Agreement $agreement, \App\Models\User $viewer): array
+    private function ratingData(Agreement $agreement, User $viewer): array
     {
         $visibility = app(RatingVisibility::class);
         $own = $agreement->ratings()->where('rater_id', $viewer->id)->with('scores')->first();
@@ -184,6 +189,7 @@ class AgreementController extends Controller
         $other = $agreement->ratings()->where('rater_id', $otherId)->with('scores')->first();
         $otherVisible = $other && $visibility->isVisibleToOthers($other) ? $other : null;
         $until = $agreement->task->completion?->completed_at?->copy()->addDays((int) config('taskmate.ratings.window_days', 30));
+
         return [
             'canRate' => auth()->user()->can('rate', $agreement),
             'rateUrl' => route('agreements.rate', $agreement),
@@ -204,7 +210,7 @@ class AgreementController extends Controller
         ];
     }
 
-    private function completionPaymentData(Agreement $agreement, ?\App\Models\User $viewer = null): array
+    private function completionPaymentData(Agreement $agreement, ?User $viewer = null): array
     {
         $completion = $agreement->completion;
         $events = $agreement->paymentEvents;
@@ -260,5 +266,4 @@ class AgreementController extends Controller
             'paymentMethods' => collect(config('taskmate.payment_status.methods', []))->map(fn (string $label, string $value) => compact('value', 'label'))->values(),
         ];
     }
-
 }

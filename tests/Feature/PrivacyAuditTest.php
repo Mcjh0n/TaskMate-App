@@ -2,12 +2,15 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
+use App\Models\Application;
+use App\Models\Conversation;
+use App\Models\ConversationMessage;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -24,10 +27,13 @@ class PrivacyAuditTest extends TestCase
             $key = $route->getName() ?: implode('|', $route->methods()).' '.$route->uri();
             $actual[$key] = array_values(array_filter($route->gatherMiddleware(), fn ($middleware) => $middleware !== 'web'));
         }
-        ksort($actual); ksort($expected);
+        ksort($actual);
+        ksort($expected);
         $this->assertSame(array_keys($expected), array_keys($actual), 'Every route needs a reviewed entry in tests/Fixtures/web-route-access.php.');
         foreach ($actual as $key => $middleware) {
-            $declared = $expected[$key]['middleware']; sort($middleware); sort($declared);
+            $declared = $expected[$key]['middleware'];
+            sort($middleware);
+            sort($declared);
             $this->assertSame($declared, $middleware, "Review the access middleware for route {$key}.");
             $actorOutcomes = $expected[$key]['actors'];
             $this->assertSame($actors, array_keys($actorOutcomes), "List an expected outcome for every actor on {$key}.");
@@ -35,9 +41,13 @@ class PrivacyAuditTest extends TestCase
             $this->assertEmpty(array_diff(array_values($actorOutcomes), ['allowed', 'redirect', 'forbidden']), "Use an explicit outcome for every actor on {$key}.");
             if (in_array('admin', $middleware, true)) {
                 $this->assertSame('allowed', $actorOutcomes['admin']);
-                foreach (array_diff($actors, ['admin', 'guest', 'banned']) as $actor) $this->assertSame('forbidden', $actorOutcomes[$actor]);
+                foreach (array_diff($actors, ['admin', 'guest', 'banned']) as $actor) {
+                    $this->assertSame('forbidden', $actorOutcomes[$actor]);
+                }
             }
-            if (in_array('can.apply', $middleware, true)) $this->assertSame('allowed', $actorOutcomes['verified_student']);
+            if (in_array('can.apply', $middleware, true)) {
+                $this->assertSame('allowed', $actorOutcomes['verified_student']);
+            }
             if (in_array('can.post', $middleware, true)) {
                 $this->assertSame('allowed', $actorOutcomes['verified_student']);
                 $this->assertSame('allowed', $actorOutcomes['verified_faculty_staff']);
@@ -72,7 +82,8 @@ class PrivacyAuditTest extends TestCase
     public function test_admin_user_index_does_not_include_email_but_detail_is_the_raw_identity_view(): void
     {
         $admin = User::factory()->verified()->create();
-        $admin->is_admin = true; $admin->save();
+        $admin->is_admin = true;
+        $admin->save();
         $subject = User::factory()->create(['email' => 'subject@example.test', 'id_number' => 'FAKE-ADMIN-VIEW']);
         $this->actingAs($admin)->get('/admin/users')->assertInertia(fn (Assert $page) => $page
             ->component('admin/users/index')->missing('users.data.0.email'));
@@ -85,8 +96,10 @@ class PrivacyAuditTest extends TestCase
         $forbidden = ['is_admin', 'verification_status', 'status', 'outcome', 'priority', 'reviewed_by', 'reviewed_at', 'locked_at', 'content_hash', 'is_hidden', 'hidden_by', 'removed_by', 'issued_by', 'lifted_by', 'risk_level', 'risk_score', 'decision_source'];
         foreach (glob(app_path('Models/*.php')) as $file) {
             $class = 'App\\Models\\'.basename($file, '.php');
-            if (! class_exists($class) || ! is_subclass_of($class, Model::class)) continue;
-            $model = new $class();
+            if (! class_exists($class) || ! is_subclass_of($class, Model::class)) {
+                continue;
+            }
+            $model = new $class;
             $this->assertFalse($model->getFillable() === [] && $model->getGuarded() === [], "{$class} is unguarded.");
             $this->assertEmpty(array_intersect($forbidden, $model->getFillable()), "{$class} mass-assigns protected fields.");
         }
@@ -103,7 +116,9 @@ class PrivacyAuditTest extends TestCase
 
     public function test_static_information_pages_are_public_and_application_pages_require_authentication(): void
     {
-        foreach (['/how-it-works', '/task-guidelines', '/safety-and-limits', '/privacy'] as $path) $this->get($path)->assertOk();
+        foreach (['/how-it-works', '/task-guidelines', '/safety-and-limits', '/privacy'] as $path) {
+            $this->get($path)->assertOk();
+        }
         $this->get('/browse')->assertRedirect(route('login'));
     }
 
@@ -170,11 +185,19 @@ class PrivacyAuditTest extends TestCase
         $poster = User::factory()->verified()->facultyStaff()->create(['email' => 'poster.private@example.test', 'id_number' => 'FAKE-POSTER-ID']);
         $student = User::factory()->verified()->create(['email' => 'student.private@example.test', 'id_number' => 'FAKE-STUDENT-ID']);
         $task = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
-        $application = \App\Models\Application::factory()->for($task)->for($student, 'applicant')->create();
-        $conversation = new \App\Models\Conversation;
-        $conversation->application_id = $application->id; $conversation->task_id = $task->id; $conversation->poster_id = $poster->id; $conversation->applicant_id = $student->id; $conversation->save();
-        $message = new \App\Models\ConversationMessage;
-        $message->conversation_id = $conversation->id; $message->sender_id = $poster->id; $message->body = 'Private synthetic message.'; $message->created_at = now(); $message->save();
+        $application = Application::factory()->for($task)->for($student, 'applicant')->create();
+        $conversation = new Conversation;
+        $conversation->application_id = $application->id;
+        $conversation->task_id = $task->id;
+        $conversation->poster_id = $poster->id;
+        $conversation->applicant_id = $student->id;
+        $conversation->save();
+        $message = new ConversationMessage;
+        $message->conversation_id = $conversation->id;
+        $message->sender_id = $poster->id;
+        $message->body = 'Private synthetic message.';
+        $message->created_at = now();
+        $message->save();
 
         $this->actingAs($student)->get(route('messages.show', $conversation))->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('messages/show')

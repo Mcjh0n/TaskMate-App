@@ -14,7 +14,18 @@ class ConversationRead extends Model
 
     protected $guarded = ['*'];
 
-    public function conversation(): BelongsTo { return $this->belongsTo(Conversation::class); }
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function lastReadMessage(): BelongsTo { return $this->belongsTo(ConversationMessage::class, 'last_read_message_id'); }
+    public function conversation(): BelongsTo
+    {
+        return $this->belongsTo(Conversation::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function lastReadMessage(): BelongsTo
+    {
+        return $this->belongsTo(ConversationMessage::class, 'last_read_message_id');
+    }
 }

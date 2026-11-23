@@ -11,7 +11,12 @@ class AcknowledgeWarningRequest extends FormRequest
     public function authorize(): bool
     {
         $sanction = $this->route('sanction');
+
         return $sanction instanceof UserSanction && $sanction->user_id === $this->user()?->id && $sanction->type === SanctionType::Warning && ! $sanction->acknowledged_at;
     }
-    public function rules(): array { return []; }
+
+    public function rules(): array
+    {
+        return [];
+    }
 }

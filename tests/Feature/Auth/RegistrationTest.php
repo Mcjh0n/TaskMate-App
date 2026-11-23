@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Enums\TeamRole;
 use App\Enums\UserType;
 use App\Enums\VerificationStatus;
-use App\Enums\TeamRole;
 use App\Models\Team;
 use App\Models\TeamInvitation;
 use App\Models\User;

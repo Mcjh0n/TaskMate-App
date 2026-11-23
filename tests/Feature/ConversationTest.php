@@ -2,23 +2,23 @@
 
 namespace Tests\Feature;
 
-use App\Enums\ApplicationStatus;
 use App\Enums\AgreementStatus;
+use App\Enums\ApplicationStatus;
 use App\Enums\ReportStatus;
+use App\Enums\SanctionType;
 use App\Enums\TaskStatus;
-use App\Models\Application;
 use App\Models\Agreement;
+use App\Models\Application;
 use App\Models\ContentFlag;
 use App\Models\Conversation;
-use App\Models\ConversationEvent;
 use App\Models\ConversationMessage;
 use App\Models\Report;
 use App\Models\Task;
 use App\Models\User;
+use App\Models\UserSanction;
 use App\Services\ConversationWorkflow;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
@@ -151,8 +151,8 @@ class ConversationTest extends TestCase
     public function test_suspended_participant_can_read_but_cannot_send_and_unverified_users_are_blocked(): void
     {
         [$poster, $applicant, , , $conversation] = $this->conversation();
-        $suspension = \App\Models\UserSanction::factory()->for($applicant)->create([
-            'type' => \App\Enums\SanctionType::Suspension,
+        $suspension = UserSanction::factory()->for($applicant)->create([
+            'type' => SanctionType::Suspension,
             'starts_at' => now()->subDay(),
             'ends_at' => now()->addDay(),
         ]);
@@ -268,6 +268,7 @@ class ConversationTest extends TestCase
         ]);
         $application = Application::factory()->for($task)->for($applicant, 'applicant')->create();
         $conversation = app(ConversationWorkflow::class)->createForApplication($application);
+
         return [$poster, $applicant, $task, $application, $conversation];
     }
 }

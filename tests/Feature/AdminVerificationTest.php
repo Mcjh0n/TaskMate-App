@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\TaskStatus;
 use App\Enums\UserType;
 use App\Enums\VerificationStatus;
 use App\Models\AdminAction;
@@ -76,7 +77,7 @@ class AdminVerificationTest extends TestCase
         Task::factory()->create([
             'poster_id' => $poster->id,
             'title' => 'Synthetic approved task',
-            'status' => \App\Enums\TaskStatus::Approved,
+            'status' => TaskStatus::Approved,
         ]);
 
         $this->actingAs($admin)->get('/admin')->assertOk()->assertInertia(fn (Assert $page) => $page

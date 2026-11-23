@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class TaskCompletionFactory extends Factory
 {
     protected $model = TaskCompletion::class;
+
     public function definition(): array
     {
         return [

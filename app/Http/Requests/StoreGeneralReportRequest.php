@@ -16,6 +16,7 @@ class StoreGeneralReportRequest extends FormRequest
     public function rules(): array
     {
         $allowed = array_values(array_filter(array_column(ReportType::cases(), 'value'), fn (string $type) => $type !== ReportType::NonPayment->value));
+
         return [
             'type' => ['required', Rule::in($allowed)],
             'description' => ['required', 'string', 'max:'.(int) config('taskmate.reports.description_max_length', 3000)],
@@ -28,11 +29,15 @@ class StoreGeneralReportRequest extends FormRequest
     {
         return [function ($validator): void {
             foreach ((array) $this->file('evidence', []) as $index => $file) {
-                if (! $file) continue;
+                if (! $file) {
+                    continue;
+                }
                 $mime = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file->getRealPath());
                 $extension = strtolower($file->getClientOriginalExtension());
                 $extensions = ['image/jpeg' => ['jpg', 'jpeg'], 'image/png' => ['png'], 'application/pdf' => ['pdf']];
-                if (! isset($extensions[$mime]) || ! in_array($extension, $extensions[$mime], true)) $validator->errors()->add("evidence.{$index}", 'The file content must match an allowed image or PDF format.');
+                if (! isset($extensions[$mime]) || ! in_array($extension, $extensions[$mime], true)) {
+                    $validator->errors()->add("evidence.{$index}", 'The file content must match an allowed image or PDF format.');
+                }
             }
         }];
     }

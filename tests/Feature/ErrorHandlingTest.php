@@ -19,8 +19,7 @@ class ErrorHandlingTest extends TestCase
 
         $this->get('/__test/exception-log')->assertStatus(500);
 
-        Log::shouldHaveReceived('error')->once()->withArgs(fn (string $message, array $context): bool =>
-            $message === 'Logged exception marker'
+        Log::shouldHaveReceived('error')->once()->withArgs(fn (string $message, array $context): bool => $message === 'Logged exception marker'
             && ($context['exception'] ?? null) instanceof RuntimeException
             && $context['exception']->getTraceAsString() !== ''
         );

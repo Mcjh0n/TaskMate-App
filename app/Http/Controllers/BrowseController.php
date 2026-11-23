@@ -4,12 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Enums\TaskStatus;
 use App\Http\Requests\BrowseTasksRequest;
+use App\Models\Application;
 use App\Models\Task;
+use App\Services\RatingSummary;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\RatingSummary;
-use Illuminate\Support\Str;
 
 class BrowseController extends Controller
 {
@@ -81,7 +82,7 @@ class BrowseController extends Controller
         ]);
     }
 
-    public function applicationTask(Request $request, \App\Models\Application $application, RatingSummary $ratingSummaries): Response
+    public function applicationTask(Request $request, Application $application, RatingSummary $ratingSummaries): Response
     {
         abort_unless($application->applicant_id === $request->user()->id, 404);
         $task = $application->task()->with('poster:id,name,user_type,verification_status,affiliation,organization_name,created_at')->firstOrFail();

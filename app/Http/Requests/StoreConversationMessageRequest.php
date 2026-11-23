@@ -11,12 +11,15 @@ class StoreConversationMessageRequest extends FormRequest
     public function authorize(): bool
     {
         $conversation = $this->route('conversation');
+
         return $conversation instanceof Conversation && Gate::allows('send', $conversation);
     }
 
     protected function prepareForValidation(): void
     {
-        if (is_string($this->input('body'))) $this->merge(['body' => trim($this->input('body'))]);
+        if (is_string($this->input('body'))) {
+            $this->merge(['body' => trim($this->input('body'))]);
+        }
     }
 
     public function rules(): array

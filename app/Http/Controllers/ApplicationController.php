@@ -2,24 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AgreementStatus;
 use App\Enums\ApplicationStatus;
 use App\Enums\TaskStatus;
 use App\Http\Requests\StoreApplicationRequest;
 use App\Models\Application;
 use App\Models\Task;
+use App\Services\AgreementWorkflow;
+use App\Services\ConversationWorkflow;
+use App\Services\OffPlatformScanner;
+use App\Services\TaskMateNotifications;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Validation\ValidationException;
-use App\Services\RatingWorkflow;
-use App\Services\RatingSummary;
-use App\Services\OffPlatformScanner;
-use App\Services\TaskMateNotifications;
-use App\Services\ConversationWorkflow;
-use App\Services\AgreementWorkflow;
 
 class ApplicationController extends Controller
 {
@@ -64,7 +63,7 @@ class ApplicationController extends Controller
                 'taskApproved' => $application->task->status === TaskStatus::Approved,
                 'otherApplicantAccepted' => $application->status === ApplicationStatus::Pending
                     && $application->task->applications()->where('status', ApplicationStatus::Accepted->value)->exists(),
-                'agreementId' => $application->agreement?->status === \App\Enums\AgreementStatus::Draft ? null : $application->agreement?->id,
+                'agreementId' => $application->agreement?->status === AgreementStatus::Draft ? null : $application->agreement?->id,
                 'agreementStatus' => $application->agreement?->status->value,
                 'agreementStatusLabel' => $application->agreement?->status->label(),
                 'paymentStatus' => $application->agreement?->paymentStatus()->value,
@@ -111,6 +110,7 @@ class ApplicationController extends Controller
             $task->status = TaskStatus::Assigned;
             $task->save();
             $alerts->send($application->applicant()->firstOrFail(), 'application.accepted', route('applications.mine', [], false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $request->user()->id);
+
             return $agreements->createDraft($task, $request->user(), $application);
         });
 

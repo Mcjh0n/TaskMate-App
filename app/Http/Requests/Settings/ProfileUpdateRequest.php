@@ -6,6 +6,7 @@ use App\Concerns\ProfileValidationRules;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class ProfileUpdateRequest extends FormRequest
@@ -17,11 +18,12 @@ class ProfileUpdateRequest extends FormRequest
     {
         $user = $this->user();
         $rules = $this->profileRules($user->id);
-        $rules['email'] = ['sometimes', 'nullable', 'string', 'lowercase', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users')->ignore($user->id)];
+        $rules['email'] = ['sometimes', 'nullable', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->ignore($user->id)];
         $rules['affiliation'] = $user->isOrganization() ? ['prohibited'] : ['required', 'string', 'max:255'];
         foreach (['organization_name', 'position', 'supporting_info'] as $field) {
             $rules[$field] = $user->isOrganization() ? ['required', 'string', 'max:'.($field === 'supporting_info' ? 1000 : 255)] : ['prohibited'];
         }
+
         return $rules;
     }
 
@@ -29,6 +31,7 @@ class ProfileUpdateRequest extends FormRequest
     {
         if ($this->input('email') === '') {
             $this->request->remove('email');
+
             return;
         }
         if (config('fortify.lowercase_usernames') && is_string($this->input('email'))) {

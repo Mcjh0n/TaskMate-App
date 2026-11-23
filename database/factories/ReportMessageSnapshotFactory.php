@@ -11,11 +11,13 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class ReportMessageSnapshotFactory extends Factory
 {
     protected $model = ReportMessageSnapshot::class;
+
     public function definition(): array
     {
         $message = ConversationMessage::factory()->create();
         $conversation = $message->conversation()->firstOrFail();
         $report = Report::factory()->create(['task_id' => $conversation->task_id]);
+
         return [
             'report_id' => $report->id,
             'message_id' => $message->id,

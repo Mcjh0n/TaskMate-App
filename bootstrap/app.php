@@ -1,5 +1,12 @@
 <?php
 
+use App\Http\Middleware\EnforceTaskMateRateLimits;
+use App\Http\Middleware\EnsureAccountActive;
+use App\Http\Middleware\EnsureAccountVerified;
+use App\Http\Middleware\EnsureAdmin;
+use App\Http\Middleware\EnsureCanApply;
+use App\Http\Middleware\EnsureCanBrowse;
+use App\Http\Middleware\EnsureCanPost;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\SetTeamUrlDefaults;
@@ -9,6 +16,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,8 +28,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [
-            \App\Http\Middleware\EnsureAccountActive::class,
-            \App\Http\Middleware\EnforceTaskMateRateLimits::class,
+            EnsureAccountActive::class,
+            EnforceTaskMateRateLimits::class,
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
@@ -29,12 +37,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'admin' => \App\Http\Middleware\EnsureAdmin::class,
-            'account.verified' => \App\Http\Middleware\EnsureAccountVerified::class,
-            'can.post' => \App\Http\Middleware\EnsureCanPost::class,
-            'can.apply' => \App\Http\Middleware\EnsureCanApply::class,
-            'can.browse' => \App\Http\Middleware\EnsureCanBrowse::class,
-            'account.active' => \App\Http\Middleware\EnsureAccountActive::class,
+            'admin' => EnsureAdmin::class,
+            'account.verified' => EnsureAccountVerified::class,
+            'can.post' => EnsureCanPost::class,
+            'can.apply' => EnsureCanApply::class,
+            'can.browse' => EnsureCanBrowse::class,
+            'account.active' => EnsureAccountActive::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -42,11 +50,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
-        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $exception) {
+        $exceptions->respond(function (Response $response, Throwable $exception) {
             $request = request();
             $status = $response->getStatusCode();
-            if ($status >= 500 && app()->environment('local') && config('app.debug')) return $response;
-            if ($request->expectsJson() || ! in_array($status, [403, 404, 419, 429, 500], true)) return $response;
+            if ($status >= 500 && app()->environment('local') && config('app.debug')) {
+                return $response;
+            }
+            if ($request->expectsJson() || ! in_array($status, [403, 404, 419, 429, 500], true)) {
+                return $response;
+            }
+
             return Inertia::render('errors/status', ['status' => $status])->toResponse($request)->setStatusCode($status);
         });
-})->create();
+    })->create();

@@ -4,16 +4,15 @@ namespace Tests\Feature;
 
 use App\Enums\AgreementStatus;
 use App\Enums\ApplicationStatus;
+use App\Enums\RatingDirection;
 use App\Enums\TaskStatus;
 use App\Models\Agreement;
-use App\Models\AgreementConfirmation;
 use App\Models\AgreementVersion;
 use App\Models\Application;
-use App\Models\Task;
-use App\Models\User;
-use App\Enums\RatingDirection;
 use App\Models\Rating;
 use App\Models\Report;
+use App\Models\Task;
+use App\Models\User;
 use App\Services\AgreementContentHasher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -55,6 +54,7 @@ class AgreementWorkflowTest extends TestCase
         $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertRedirect();
         $agreement = Agreement::query()->where('task_id', $pair['task']->id)->firstOrFail();
         $this->post(route('agreements.store', $pair['task']))->assertRedirect();
+
         return Agreement::query()->where('task_id', $pair['task']->id)->firstOrFail()->load('currentVersion');
     }
 

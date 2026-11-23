@@ -19,29 +19,29 @@ use App\Http\Responses\TwoFactorLoginResponse;
 /* @chisel-email-verification */
 use App\Http\Responses\VerifyEmailResponse;
 /* @end-chisel-email-verification */
+use App\Models\TeamInvitation;
+use App\Models\User;
+use App\Services\SanctionService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
-use Inertia\Inertia;
-use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 /* @chisel-registration */
-use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+use Illuminate\Support\ServiceProvider;
 /* @end-chisel-registration */
 /* @chisel-2fa */
-use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
+use Illuminate\Support\Str;
 /* @end-chisel-2fa */
 /* @chisel-email-verification */
-use Laravel\Fortify\Contracts\VerifyEmailResponse as VerifyEmailResponseContract;
+use Illuminate\Validation\ValidationException;
 /* @end-chisel-email-verification */
+use Inertia\Inertia;
+use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
+use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
+use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
+use Laravel\Fortify\Contracts\VerifyEmailResponse as VerifyEmailResponseContract;
 use Laravel\Fortify\Features;
 use Laravel\Fortify\Fortify;
-use App\Models\User;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use App\Services\SanctionService;
-use App\Models\TeamInvitation;
 /* @chisel-passkeys */
 use Laravel\Passkeys\Contracts\PasskeyLoginResponse as PasskeyLoginResponseContract;
 
@@ -76,10 +76,13 @@ class FortifyServiceProvider extends ServiceProvider
     {
         Fortify::authenticateUsing(function (Request $request) {
             $user = User::query()->where(Fortify::username(), $request->input(Fortify::username()))->first();
-            if (! $user || ! Hash::check((string) $request->input('password'), $user->password)) return null;
+            if (! $user || ! Hash::check((string) $request->input('password'), $user->password)) {
+                return null;
+            }
             if (app(SanctionService::class)->banned($user)) {
                 throw ValidationException::withMessages(['email' => 'Your account is banned. '.config('taskmate.moderation.sanction_notice_contact')]);
             }
+
             return $user;
         });
         $this->configureActions();
@@ -153,6 +156,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         RateLimiter::for('login', function (Request $request) {
             $limit = config('taskmate.rate_limits.login');
+
             return Limit::perSecond($limit['max_attempts'], $limit['decay_seconds'])
                 ->by(Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip()));
         });
@@ -186,5 +190,4 @@ class FortifyServiceProvider extends ServiceProvider
 
         return $invitation ? ['code' => $invitation->code, 'teamName' => $invitation->team->name] : null;
     }
-
 }

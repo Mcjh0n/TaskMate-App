@@ -19,6 +19,13 @@ class TaskCompletion extends Model
         return ['delivered_at' => 'datetime', 'completed_at' => 'datetime'];
     }
 
-    public function agreement(): BelongsTo { return $this->belongsTo(Agreement::class); }
-    public function completedBy(): BelongsTo { return $this->belongsTo(User::class, 'completed_by'); }
+    public function agreement(): BelongsTo
+    {
+        return $this->belongsTo(Agreement::class);
+    }
+
+    public function completedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'completed_by');
+    }
 }

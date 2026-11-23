@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Enums\VerificationStatus;
 use App\Http\Requests\UpdateVerificationDetailsRequest;
 use App\Models\User;
+use App\Services\TaskMateNotifications;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\TaskMateNotifications;
 
 class VerificationDetailsController extends Controller
 {

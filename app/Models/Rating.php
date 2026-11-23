@@ -37,10 +37,33 @@ class Rating extends Model
         static::deleting(fn () => throw new LogicException('Submitted ratings cannot be deleted.'));
     }
 
-    public function agreement(): BelongsTo { return $this->belongsTo(Agreement::class); }
-    public function task(): BelongsTo { return $this->belongsTo(Task::class); }
-    public function rater(): BelongsTo { return $this->belongsTo(User::class, 'rater_id'); }
-    public function ratee(): BelongsTo { return $this->belongsTo(User::class, 'ratee_id'); }
-    public function scores(): HasMany { return $this->hasMany(RatingScore::class); }
-    public function adminActions(): MorphMany { return $this->morphMany(AdminAction::class, 'subject'); }
+    public function agreement(): BelongsTo
+    {
+        return $this->belongsTo(Agreement::class);
+    }
+
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class);
+    }
+
+    public function rater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'rater_id');
+    }
+
+    public function ratee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ratee_id');
+    }
+
+    public function scores(): HasMany
+    {
+        return $this->hasMany(RatingScore::class);
+    }
+
+    public function adminActions(): MorphMany
+    {
+        return $this->morphMany(AdminAction::class, 'subject');
+    }
 }

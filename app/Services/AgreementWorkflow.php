@@ -12,7 +12,6 @@ use App\Models\AgreementVersion;
 use App\Models\Application;
 use App\Models\Task;
 use App\Models\User;
-use App\Services\TaskMateNotifications;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -99,6 +98,7 @@ class AgreementWorkflow
             $version = $this->addVersion($agreement, $user, $task, $data, $data['comment'] ?? null, (int) $agreement->versions()->max('version_number') + 1);
             $otherParty = User::query()->findOrFail($user->id === $agreement->poster_id ? $agreement->student_id : $agreement->poster_id);
             $this->alerts->send($otherParty, 'agreement.revised', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $user->id);
+
             return $version;
         });
     }
@@ -136,7 +136,9 @@ class AgreementWorkflow
                     ->update(['status' => ApplicationStatus::Declined->value, 'responded_at' => $now, 'updated_at' => $now]);
                 $task->status = TaskStatus::InProgress;
                 $task->save();
-                foreach ($waiting as $application) $this->alerts->send($application->applicant, 'application.declined', route('applications.mine', [], false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $user->id);
+                foreach ($waiting as $application) {
+                    $this->alerts->send($application->applicant, 'application.declined', route('applications.mine', [], false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $user->id);
+                }
                 $parties = User::query()->whereKey([$agreement->poster_id, $agreement->student_id])->get();
                 if ($version->proposed_by !== $user->id) {
                     $proposer = User::query()->findOrFail($version->proposed_by);
@@ -227,7 +229,9 @@ class AgreementWorkflow
         ]);
         $version->save();
         $this->scanner->flag($version, $user, 'terms', $version->terms);
-        if ($version->comment) $this->scanner->flag($version, $user, 'comment', $version->comment);
+        if ($version->comment) {
+            $this->scanner->flag($version, $user, 'comment', $version->comment);
+        }
 
         $agreement->current_version_id = $version->id;
         $agreement->save();

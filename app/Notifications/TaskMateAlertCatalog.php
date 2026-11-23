@@ -78,6 +78,7 @@ class TaskMateAlertCatalog
             'rating.waiting', 'rating.visible', 'report.under_review', 'report.resolved', 'report.dismissed', 'report.reply', 'report.filed', 'report.new', 'report.priority',
             'sanction.warning', 'sanction.suspension', 'sanction.lifted', 'flag.new', 'conversation.message',
         ];
+
         return collect($events)->mapWithKeys(fn (string $event) => [$event => self::get($event, ['outcome' => 'supported'])])->all();
     }
 }

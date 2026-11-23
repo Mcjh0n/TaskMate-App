@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Models\ContentFlag;
-use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
-use App\Models\Task;
-use App\Models\Application;
 use App\Models\AgreementMessage;
 use App\Models\AgreementVersion;
+use App\Models\Application;
+use App\Models\ContentFlag;
 use App\Models\ConversationMessage;
+use App\Models\Task;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Model;
 
 class OffPlatformScanner
 {
@@ -27,13 +27,16 @@ class OffPlatformScanner
                 }
             }
         }
+
         return $matches;
     }
 
     public function flag(Model $subject, User $author, string $field, string $text): array
     {
         $groups = [];
-        foreach ($this->scan($text) as $match) $groups[$match['category']][] = $match['label'];
+        foreach ($this->scan($text) as $match) {
+            $groups[$match['category']][] = $match['label'];
+        }
         $created = [];
         foreach ($groups as $category => $labels) {
             $relation = $subject->morphMany(ContentFlag::class, 'flaggable');
@@ -60,11 +63,14 @@ class OffPlatformScanner
                     $subject instanceof ConversationMessage => $subject->conversation()->value('task_id'),
                     default => 0,
                 };
-                if ($related['task_id'] === 0) unset($related['task_id']);
+                if ($related['task_id'] === 0) {
+                    unset($related['task_id']);
+                }
                 $this->alerts->admins('flag.new', route('admin.flags.show', $flag->id, false), $related, actorId: $author->id);
             }
             $created[] = $flag;
         }
+
         return $created;
     }
 }

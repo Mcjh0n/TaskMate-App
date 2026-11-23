@@ -7,6 +7,15 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class ReportNotReceivedRequest extends FormRequest
 {
-    public function authorize(): bool { $agreement = $this->route('agreement'); return $agreement instanceof Agreement && ($this->user()?->can('respondPayment', $agreement) ?? false); }
-    public function rules(): array { return []; }
+    public function authorize(): bool
+    {
+        $agreement = $this->route('agreement');
+
+        return $agreement instanceof Agreement && ($this->user()?->can('respondPayment', $agreement) ?? false);
+    }
+
+    public function rules(): array
+    {
+        return [];
+    }
 }

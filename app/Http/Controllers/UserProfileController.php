@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Agreement;
 use App\Models\User;
 use App\Services\RatingSummary;
 use App\Services\RatingVisibility;
@@ -14,10 +15,11 @@ class UserProfileController extends Controller
     public function show(User $user, Request $request, RatingSummary $summaries): Response
     {
         abort_unless($request->user()->isAdmin() || $request->user()->isVerified(), 403);
-        $hasAgreement = \App\Models\Agreement::query()->where(fn ($query) => $query
+        $hasAgreement = Agreement::query()->where(fn ($query) => $query
             ->where(fn ($pair) => $pair->where('poster_id', $request->user()->id)->where('student_id', $user->id))
             ->orWhere(fn ($pair) => $pair->where('poster_id', $user->id)->where('student_id', $request->user()->id)))->exists();
         $ratings = app(RatingVisibility::class)->visibleQuery()->where('ratee_id', $user->id)->with(['task:id,title', 'rater:id,name,user_type,organization_name'])->latest()->limit(10)->get();
+
         return Inertia::render('users/show', [
             'profile' => [
                 'id' => $user->id,

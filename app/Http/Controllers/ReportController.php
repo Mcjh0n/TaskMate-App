@@ -2,16 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\PaymentEventType;
-use App\Enums\ReportStatus;
 use App\Http\Requests\StoreNonPaymentReportRequest;
 use App\Http\Requests\StoreReportStatementRequest;
 use App\Models\Agreement;
 use App\Models\Report;
 use App\Models\ReportEvidence;
-use App\Models\Task;
+use App\Models\User;
 use App\Services\ReportWorkflow;
-use App\Enums\TaskStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -25,6 +22,7 @@ class ReportController extends Controller
     {
         $data = $request->validated();
         $report = $workflow->createNonPayment($agreement, $request->user(), $data['description'], $data['evidence'] ?? []);
+
         return redirect()->route('reports.show', $report)->with('status', 'Your non-payment report was submitted for review.');
     }
 
@@ -105,7 +103,7 @@ class ReportController extends Controller
     public function mine(Request $request): Response
     {
         $replyable = collect(config('taskmate.reports.types', []))->filter(fn ($settings) => $settings['respondent_can_reply'] ?? false)->keys()->all();
-        $reports = \App\Models\Report::query()
+        $reports = Report::query()
             ->where(fn ($query) => $query->where('reporter_id', $request->user()->id)->orWhere(fn ($respondent) => $respondent->where('reported_user_id', $request->user()->id)->whereIn('type', $replyable)))
             ->with(['task:id,title', 'reporter:id,name', 'reportedUser:id,name'])
             ->latest()
@@ -128,6 +126,7 @@ class ReportController extends Controller
     {
         $data = $request->validated();
         $workflow->addRespondentStatement($report, $request->user(), $data['body'], $data['evidence'] ?? []);
+
         return back()->with('status', 'Your response was added to the report.');
     }
 
@@ -145,7 +144,7 @@ class ReportController extends Controller
         ]);
     }
 
-    private function typeLabel(\App\Models\User $user): string
+    private function typeLabel(User $user): string
     {
         return config('taskmate.user_types.'.$user->user_type->value, $user->user_type->value);
     }

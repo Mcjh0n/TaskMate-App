@@ -7,7 +7,13 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class MarkPaidRequest extends FormRequest
 {
-    public function authorize(): bool { $agreement = $this->route('agreement'); return $agreement instanceof Agreement && ($this->user()?->can('markPaid', $agreement) ?? false); }
+    public function authorize(): bool
+    {
+        $agreement = $this->route('agreement');
+
+        return $agreement instanceof Agreement && ($this->user()?->can('markPaid', $agreement) ?? false);
+    }
+
     public function rules(): array
     {
         return [

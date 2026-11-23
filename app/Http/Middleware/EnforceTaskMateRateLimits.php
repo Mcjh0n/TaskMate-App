@@ -20,6 +20,7 @@ class EnforceTaskMateRateLimits
                     ->header('Retry-After', (string) RateLimiter::availableIn($key));
             }
             RateLimiter::hit($key, 60);
+
             return $next($request);
         }
         $bucket = match (true) {

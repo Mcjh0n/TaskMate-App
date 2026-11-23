@@ -21,7 +21,9 @@ class PaymentWorkflow
         return DB::transaction(function () use ($agreement, $poster, $data): PaymentEvent {
             $agreement = Agreement::query()->lockForUpdate()->findOrFail($agreement->id);
             $this->assertLocked($agreement);
-            if ($poster->id !== $agreement->poster_id) abort(403);
+            if ($poster->id !== $agreement->poster_id) {
+                abort(403);
+            }
             $task = Task::query()->lockForUpdate()->findOrFail($agreement->task_id);
             if (! in_array($task->status, [TaskStatus::InProgress, TaskStatus::Completed], true)) {
                 throw ValidationException::withMessages(['payment' => 'Payment can only be recorded after the agreement is locked.']);
@@ -37,7 +39,9 @@ class PaymentWorkflow
         return DB::transaction(function () use ($agreement, $student, $amount): PaymentEvent {
             $agreement = Agreement::query()->lockForUpdate()->findOrFail($agreement->id);
             $this->assertLocked($agreement);
-            if ($student->id !== $agreement->student_id) abort(403);
+            if ($student->id !== $agreement->student_id) {
+                abort(403);
+            }
             $this->assertLatestMarkedPaid($agreement);
             $this->assertNotSettled($agreement);
 
@@ -50,7 +54,9 @@ class PaymentWorkflow
         return DB::transaction(function () use ($agreement, $student): PaymentEvent {
             $agreement = Agreement::query()->lockForUpdate()->findOrFail($agreement->id);
             $this->assertLocked($agreement);
-            if ($student->id !== $agreement->student_id) abort(403);
+            if ($student->id !== $agreement->student_id) {
+                abort(403);
+            }
             $this->assertLatestMarkedPaid($agreement);
             $this->assertNotSettled($agreement);
 
@@ -79,6 +85,7 @@ class PaymentWorkflow
             PaymentEventType::ReportedNotReceived => 'payment.not_received',
         };
         $this->alerts->send($recipient, $alertEvent, route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $actor->id);
+
         return $payment;
     }
 

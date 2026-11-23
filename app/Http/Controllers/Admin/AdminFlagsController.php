@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminFlagDecisionRequest;
 use App\Models\AdminAction;
 use App\Models\ContentFlag;
+use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use App\Models\Report;
 use Illuminate\Http\RedirectResponse;
@@ -31,6 +32,7 @@ class AdminFlagsController extends Controller
                 'field' => $flag->field, 'author' => $flag->sourceUser->name, 'status' => $flag->status->value, 'createdAt' => $flag->created_at?->toDateTimeString(),
                 'context' => class_basename($flag->flaggable_type).' #'.$flag->flaggable_id,
             ]);
+
         return Inertia::render('admin/flags/index', ['flags' => $flags, 'filters' => $filters, 'categories' => collect(config('taskmate.offplatform.category_labels', []))->map(fn ($label, $value) => compact('value', 'label'))->values()]);
     }
 
@@ -46,13 +48,16 @@ class AdminFlagsController extends Controller
             default => $subject->{$flag->field} ?? '',
         };
         $isMessage = $subject instanceof ConversationMessage;
-        if ($isMessage) $subject->load(['sender:id,name,user_type,organization_name', 'conversation.task:id,title']);
+        if ($isMessage) {
+            $subject->load(['sender:id,name,user_type,organization_name', 'conversation.task:id,title']);
+        }
         $relatedReport = $isMessage ? Report::query()->where('subject_type', $subject->getMorphClass())->where('subject_id', $subject->id)->first() : null;
+
         return Inertia::render('admin/flags/show', [
             'flag' => [
                 'id' => $flag->id, 'category' => $flag->category, 'categoryLabel' => config('taskmate.offplatform.category_labels.'.$flag->category, $flag->category),
                 'matched' => $flag->matched, 'field' => $flag->field, 'content' => $field, 'status' => $flag->status->value, 'note' => $flag->review_note, 'createdAt' => $flag->created_at?->toDateTimeString(),
-                'author' => ['id' => $flag->sourceUser->id, 'name' => $isMessage ? \App\Models\Conversation::displayName($subject->sender) : ($flag->sourceUser->isOrganization() ? $flag->sourceUser->organization_name : $flag->sourceUser->name)],
+                'author' => ['id' => $flag->sourceUser->id, 'name' => $isMessage ? Conversation::displayName($subject->sender) : ($flag->sourceUser->isOrganization() ? $flag->sourceUser->organization_name : $flag->sourceUser->name)],
                 'task' => $isMessage ? ['id' => $subject->conversation->task->id, 'title' => $subject->conversation->task->title] : null,
                 'relatedReportUrl' => $relatedReport ? route('admin.reports.show', $relatedReport) : null,
                 'sanctions' => $flag->sourceUser->sanctions->map(fn ($s) => ['type' => $s->type->value, 'reason' => $s->reason, 'active' => ! $s->lifted_at && ($s->ends_at === null || $s->ends_at->isFuture())])->values(),
@@ -73,6 +78,7 @@ class AdminFlagsController extends Controller
             $entry = new AdminAction(['admin_id' => $request->user()->id, 'action' => 'content_flag_'.$decision, 'note' => $request->validated('note'), 'metadata' => ['category' => $flag->category]]);
             $flag->adminActions()->save($entry);
         });
+
         return back()->with('status', 'The content flag review was recorded.');
     }
 }

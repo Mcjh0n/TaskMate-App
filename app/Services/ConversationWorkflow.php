@@ -26,6 +26,7 @@ class ConversationWorkflow
         $conversation->poster_id = $application->task->poster_id;
         $conversation->applicant_id = $application->applicant_id;
         $conversation->save();
+
         return $conversation;
     }
 
@@ -63,9 +64,13 @@ class ConversationWorkflow
 
     public function markRead(Conversation $conversation, User $user, ?int $lastMessageId = null): void
     {
-        if (! $this->isParticipant($conversation, $user)) return;
+        if (! $this->isParticipant($conversation, $user)) {
+            return;
+        }
         $latestId = $lastMessageId ?? $conversation->messages()->max('id');
-        if (! $latestId) return;
+        if (! $latestId) {
+            return;
+        }
         $read = ConversationRead::query()->where('conversation_id', $conversation->id)->where('user_id', $user->id)->first();
         if (! $read) {
             $read = new ConversationRead;
@@ -73,6 +78,7 @@ class ConversationWorkflow
             $read->user_id = $user->id;
             $read->last_read_message_id = $latestId;
             $read->save();
+
             return;
         }
         if ((int) ($read->last_read_message_id ?? 0) < $latestId) {
@@ -119,7 +125,10 @@ class ConversationWorkflow
 
     public function unreadCount(User $user): int
     {
-        if ($user->isAdmin()) return 0;
+        if ($user->isAdmin()) {
+            return 0;
+        }
+
         return ConversationMessage::query()->where('sender_id', '!=', $user->id)
             ->whereHas('conversation', fn ($query) => $query->where(fn ($parties) => $parties->where('poster_id', $user->id)->orWhere('applicant_id', $user->id)))
             ->whereRaw('conversation_messages.id > COALESCE((SELECT last_read_message_id FROM conversation_reads WHERE conversation_reads.conversation_id = conversation_messages.conversation_id AND conversation_reads.user_id = ?), 0)', [$user->id])

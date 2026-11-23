@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\SanctionType;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserSanction;
-use App\Enums\SanctionType;
 use App\Notifications\TaskMateAlert;
 use App\Notifications\TaskMateAlertCatalog;
 use App\Services\TaskMateNotifications;
@@ -94,7 +94,9 @@ class NotificationsTest extends TestCase
         $user = $this->student();
         config(['taskmate.notifications.throttle_per_minute' => 120]);
         $this->actingAs($user);
-        for ($i = 0; $i < 24; $i++) $this->getJson(route('notifications.summary'))->assertOk();
+        for ($i = 0; $i < 24; $i++) {
+            $this->getJson(route('notifications.summary'))->assertOk();
+        }
 
         config(['taskmate.notifications.throttle_per_minute' => 2]);
         $limitedUser = $this->student();
@@ -122,7 +124,9 @@ class NotificationsTest extends TestCase
         $forbidden = ['email', 'id_number', 'supporting_info', 'risk_level', 'risk_score', 'screening', 'admin note', 'internal note', 'rating score', 'reporter identity', 'evidence content'];
         foreach (TaskMateAlertCatalog::all() as $event => $copy) {
             $text = strtolower($event.' '.$copy['title'].' '.$copy['body']);
-            foreach ($forbidden as $term) $this->assertStringNotContainsString($term, $text, "Unsafe notification copy for {$event}.");
+            foreach ($forbidden as $term) {
+                $this->assertStringNotContainsString($term, $text, "Unsafe notification copy for {$event}.");
+            }
             $this->assertDoesNotMatchRegularExpression('/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i', $text, "Email-like data in {$event}.");
         }
     }
@@ -143,8 +147,10 @@ class NotificationsTest extends TestCase
 
     public function test_admin_notifications_are_independent_per_admin(): void
     {
-        $first = $this->poster(); $first->forceFill(['is_admin' => true])->save();
-        $second = $this->poster(); $second->forceFill(['is_admin' => true])->save();
+        $first = $this->poster();
+        $first->forceFill(['is_admin' => true])->save();
+        $second = $this->poster();
+        $second->forceFill(['is_admin' => true])->save();
         app(TaskMateNotifications::class)->admins('flag.new', '/admin/flags', ['flag_id' => 10]);
         $firstNotification = $first->notifications()->firstOrFail();
         $secondNotification = $second->notifications()->firstOrFail();

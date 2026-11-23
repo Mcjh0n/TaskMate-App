@@ -14,13 +14,27 @@ class ReportStatement extends Model
     use HasFactory;
 
     public $timestamps = false;
+
     protected $guarded = ['id', 'report_id', 'user_id', 'role', 'created_at'];
-    protected function casts(): array { return ['created_at' => 'datetime']; }
+
+    protected function casts(): array
+    {
+        return ['created_at' => 'datetime'];
+    }
+
     protected static function booted(): void
     {
         static::updating(fn () => throw new LogicException('Report statements are insert-only.'));
         static::deleting(fn () => throw new LogicException('Report statements cannot be deleted.'));
     }
-    public function report(): BelongsTo { return $this->belongsTo(Report::class); }
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
+
+    public function report(): BelongsTo
+    {
+        return $this->belongsTo(Report::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }

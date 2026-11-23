@@ -2,10 +2,9 @@
 
 namespace App\Policies;
 
-use App\Enums\ApplicationStatus;
 use App\Enums\AgreementStatus;
+use App\Enums\ApplicationStatus;
 use App\Enums\TaskStatus;
-use App\Enums\PaymentEventType;
 use App\Models\Agreement;
 use App\Models\Task;
 use App\Models\User;

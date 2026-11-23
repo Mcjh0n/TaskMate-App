@@ -15,6 +15,7 @@ class PaymentEvent extends Model
     use HasFactory;
 
     public $timestamps = false;
+
     protected $guarded = ['id', 'agreement_id', 'actor_id', 'event', 'amount', 'paid_on', 'method', 'created_at'];
 
     protected function casts(): array
@@ -28,6 +29,13 @@ class PaymentEvent extends Model
         static::deleting(fn () => throw new LogicException('Payment event records cannot be deleted.'));
     }
 
-    public function agreement(): BelongsTo { return $this->belongsTo(Agreement::class); }
-    public function actor(): BelongsTo { return $this->belongsTo(User::class, 'actor_id'); }
+    public function agreement(): BelongsTo
+    {
+        return $this->belongsTo(Agreement::class);
+    }
+
+    public function actor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'actor_id');
+    }
 }

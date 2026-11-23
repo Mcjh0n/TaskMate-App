@@ -14,6 +14,7 @@ class ConversationReadFactory extends Factory
     public function definition(): array
     {
         $conversation = Conversation::factory()->create();
+
         return ['conversation_id' => $conversation->id, 'user_id' => $conversation->poster_id, 'last_read_message_id' => null];
     }
 }

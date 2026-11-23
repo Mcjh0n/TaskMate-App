@@ -5,12 +5,14 @@ namespace Tests\Feature;
 use App\Enums\AgreementStatus;
 use App\Enums\TaskStatus;
 use App\Models\Agreement;
-use App\Models\Application;
 use App\Models\AgreementVersion;
+use App\Models\Application;
+use App\Models\PaymentEvent;
 use App\Models\Rating;
-use App\Models\TaskScreening;
+use App\Models\Report;
 use App\Models\Task;
 use App\Models\TaskCompletion;
+use App\Models\TaskScreening;
 use App\Models\User;
 use App\Models\UserSanction;
 use Database\Seeders\DemoScenarioSeeder;
@@ -113,10 +115,10 @@ class DemoScenarioSeederTest extends TestCase
             'agreements' => Agreement::query()->whereHas('task', fn ($query) => $query->where('title', 'like', 'Synthetic scenario: %'))->count(),
             'agreement_versions' => AgreementVersion::query()->whereHas('agreement.task', fn ($query) => $query->where('title', 'like', 'Synthetic scenario: %'))->count(),
             'completions' => TaskCompletion::query()->whereHas('agreement.task', fn ($query) => $query->where('title', 'like', 'Synthetic scenario: %'))->count(),
-            'payment_events' => \App\Models\PaymentEvent::query()->whereHas('agreement.task', fn ($query) => $query->where('title', 'like', 'Synthetic scenario: %'))->count(),
+            'payment_events' => PaymentEvent::query()->whereHas('agreement.task', fn ($query) => $query->where('title', 'like', 'Synthetic scenario: %'))->count(),
             'ratings' => Rating::query()->whereHas('agreement.task', fn ($query) => $query->where('title', 'like', 'Synthetic scenario: %'))->count(),
             'screenings' => TaskScreening::query()->whereHas('task', fn ($query) => $query->where('title', 'like', 'Synthetic scenario: %'))->count(),
-            'reports' => \App\Models\Report::query()->where('description', 'like', 'Synthetic % report scenario.')->count(),
+            'reports' => Report::query()->where('description', 'like', 'Synthetic % report scenario.')->count(),
             'sanctions' => UserSanction::query()->where('reason', 'like', 'Synthetic % scenario.')->count(),
         ];
     }

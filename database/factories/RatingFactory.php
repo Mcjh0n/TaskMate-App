@@ -29,7 +29,9 @@ class RatingFactory extends Factory
     {
         return $this->afterMaking(function (Rating $rating): void {
             $agreement = Agreement::find($rating->agreement_id);
-            if (! $agreement) return;
+            if (! $agreement) {
+                return;
+            }
             $rating->task_id = $agreement->task_id;
             $rating->rater_id = $agreement->poster_id;
             $rating->ratee_id = $agreement->student_id;

@@ -11,6 +11,7 @@ class ModerateRatingRequest extends FormRequest
     public function authorize(): bool
     {
         $rating = $this->route('rating');
+
         return $rating instanceof Rating && $this->user()?->can('moderate', $rating);
     }
 

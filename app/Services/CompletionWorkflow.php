@@ -36,6 +36,7 @@ class CompletionWorkflow
             $completion->save();
             $poster = User::query()->findOrFail($agreement->poster_id);
             $this->alerts->send($poster, 'completion.delivered', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $student->id);
+
             return $completion;
         });
     }
@@ -65,6 +66,7 @@ class CompletionWorkflow
             $worker = User::query()->findOrFail($agreement->student_id);
             $this->alerts->send($worker, 'completion.recorded', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $poster->id);
             $this->alerts->send([$worker, $poster], 'rating.waiting', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $poster->id);
+
             return $completion;
         });
     }

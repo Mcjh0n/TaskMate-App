@@ -7,11 +7,9 @@ use App\Enums\RatingDirection;
 use App\Enums\TaskStatus;
 use App\Models\Agreement;
 use App\Models\Rating;
-use App\Models\RatingScore;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 
 class RatingWorkflow
 {
@@ -42,6 +40,7 @@ class RatingWorkflow
                 $task = $agreement->task()->firstOrFail();
                 $this->alerts->send($parties, 'rating.visible', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $rater->id);
             }
+
             return $rating;
         });
     }
@@ -49,6 +48,7 @@ class RatingWorkflow
     public function pendingFor(User $user): array
     {
         $visibility = app(RatingVisibility::class);
+
         return Agreement::query()->with(['task.completion', 'currentVersion', 'paymentEvents'])
             ->where('status', AgreementStatus::Agreed->value)
             ->whereHas('task', fn ($q) => $q->where('status', TaskStatus::Completed->value))

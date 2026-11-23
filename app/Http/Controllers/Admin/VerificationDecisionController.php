@@ -6,9 +6,9 @@ use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\VerificationDecisionRequest;
 use App\Models\User;
+use App\Services\TaskMateNotifications;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use App\Services\TaskMateNotifications;
 
 class VerificationDecisionController extends Controller
 {
@@ -47,7 +47,9 @@ class VerificationDecisionController extends Controller
                 VerificationStatus::MoreInfoRequested => 'account.more_info_requested',
                 default => null,
             };
-            if ($event) $alerts->send($user, $event, '/notifications', ['user_id' => $user->id], actorId: $request->user()->id);
+            if ($event) {
+                $alerts->send($user, $event, '/notifications', ['user_id' => $user->id], actorId: $request->user()->id);
+            }
         });
 
         return to_route('admin.users.show', $user)->with('status', 'The account verification decision was saved.');

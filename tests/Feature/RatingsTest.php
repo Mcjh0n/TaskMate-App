@@ -7,11 +7,13 @@ use App\Enums\RatingDirection;
 use App\Enums\TaskStatus;
 use App\Models\Agreement;
 use App\Models\AgreementVersion;
+use App\Models\Application;
 use App\Models\Rating;
 use App\Models\Task;
 use App\Models\TaskCompletion;
 use App\Models\User;
 use App\Services\RatingSummary;
+use App\Services\RatingVisibility;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -35,7 +37,7 @@ class RatingsTest extends TestCase
         $task->save();
         $agreement = new Agreement;
         $agreement->task_id = $task->id;
-        $agreement->application_id = \App\Models\Application::factory()->accepted()->create(['task_id' => $task->id, 'applicant_id' => $student->id])->id;
+        $agreement->application_id = Application::factory()->accepted()->create(['task_id' => $task->id, 'applicant_id' => $student->id])->id;
         $agreement->poster_id = $poster->id;
         $agreement->student_id = $student->id;
         $agreement->status = AgreementStatus::Agreed;
@@ -63,6 +65,7 @@ class RatingsTest extends TestCase
         $completion->completed_at = $options['completed_at'] ?? now();
         $completion->completed_by = $poster->id;
         $completion->save();
+
         return compact('poster', 'student', 'outsider', 'admin', 'task', 'agreement', 'version');
     }
 
@@ -80,7 +83,7 @@ class RatingsTest extends TestCase
         $pair = $this->completedPair();
         $this->actingAs($pair['outsider'])->post(route('agreements.rate.store', $pair['agreement']), $this->payload())->assertForbidden();
         $this->actingAs($pair['admin'])->post(route('agreements.rate.store', $pair['agreement']), $this->payload())->assertForbidden();
-        $this->assertTrue(Gate::forUser($pair['poster'])->allows('rate', $pair['agreement']), json_encode(['task' => $pair['task']->fresh()->status->value, 'agreement' => $pair['agreement']->fresh()->status->value, 'window' => app(\App\Services\RatingVisibility::class)->windowClosed($pair['agreement']), 'poster' => [$pair['poster']->id, $pair['agreement']->poster_id]]));
+        $this->assertTrue(Gate::forUser($pair['poster'])->allows('rate', $pair['agreement']), json_encode(['task' => $pair['task']->fresh()->status->value, 'agreement' => $pair['agreement']->fresh()->status->value, 'window' => app(RatingVisibility::class)->windowClosed($pair['agreement']), 'poster' => [$pair['poster']->id, $pair['agreement']->poster_id]]));
         $payload = $this->payload(['direction' => 'student_to_poster', 'ratee_id' => $pair['poster']->id, 'is_hidden' => true, 'hidden_by' => $pair['admin']->id]);
         $this->actingAs($pair['poster'])->post(route('agreements.rate.store', $pair['agreement']), $payload)->assertRedirect(route('agreements.show', $pair['agreement']));
         $rating = Rating::firstOrFail();
@@ -142,7 +145,9 @@ class RatingsTest extends TestCase
         $rating->direction = RatingDirection::PosterToStudent;
         $rating->overall_experience = 4;
         $rating->save();
-        foreach (array_keys(config('taskmate.ratings.dimensions.poster_to_student')) as $dimension) $rating->scores()->create(['dimension' => $dimension, 'score' => 4]);
+        foreach (array_keys(config('taskmate.ratings.dimensions.poster_to_student')) as $dimension) {
+            $rating->scores()->create(['dimension' => $dimension, 'score' => 4]);
+        }
         $summary = app(RatingSummary::class)->forUser($pair['student']);
         $this->assertSame(1, $summary['count']);
         $this->assertNull($summary['average']);
@@ -194,8 +199,19 @@ class RatingsTest extends TestCase
         $this->actingAs($pair['poster'])->post(route('agreements.rate.store', $pair['agreement']), $this->payload());
         $rating = Rating::firstOrFail();
         $score = $rating->scores()->firstOrFail();
-        try { $rating->comment = 'Changed'; $rating->save(); $this->fail('Rating content changed.'); } catch (LogicException) { $this->assertTrue(true); }
-        try { $score->delete(); $this->fail('Rating score was deleted.'); } catch (LogicException) { $this->assertTrue(true); }
+        try {
+            $rating->comment = 'Changed';
+            $rating->save();
+            $this->fail('Rating content changed.');
+        } catch (LogicException) {
+            $this->assertTrue(true);
+        }
+        try {
+            $score->delete();
+            $this->fail('Rating score was deleted.');
+        } catch (LogicException) {
+            $this->assertTrue(true);
+        }
         $this->actingAs($pair['admin'])->post("/admin/ratings/{$rating->id}/moderate", ['action' => 'hide', 'reason' => 'Synthetic moderation reason'])->assertRedirect();
         $this->assertTrue($rating->fresh()->is_hidden);
         $this->assertDatabaseHas('admin_actions', ['subject_type' => Rating::class, 'subject_id' => $rating->id, 'action' => 'rating_hidden']);

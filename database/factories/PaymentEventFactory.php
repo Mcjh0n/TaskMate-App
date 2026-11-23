@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class PaymentEventFactory extends Factory
 {
     protected $model = PaymentEvent::class;
+
     public function definition(): array
     {
         return [

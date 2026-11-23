@@ -15,5 +15,8 @@ enum ReportType: string
     case IncompleteWork = 'incomplete_work';
     case Other = 'other';
 
-    public function label(): string { return config('taskmate.reports.types.'.$this->value.'.label', str($this->value)->replace('_', ' ')->title()->toString()); }
+    public function label(): string
+    {
+        return config('taskmate.reports.types.'.$this->value.'.label', str($this->value)->replace('_', ' ')->title()->toString());
+    }
 }

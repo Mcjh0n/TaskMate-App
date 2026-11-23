@@ -74,6 +74,7 @@ class ConversationController extends Controller
     public function send(StoreConversationMessageRequest $request, Conversation $conversation, ConversationWorkflow $workflow): RedirectResponse
     {
         $workflow->send($conversation, $request->user(), $request->validated('body'));
+
         return back();
     }
 
@@ -84,7 +85,10 @@ class ConversationController extends Controller
         $messages = $conversation->messages()->with(['sender:id,name,user_type,organization_name', 'contentFlags'])
             ->when(isset($cursor['after_id']), fn ($query) => $query->where('id', '>', (int) $cursor['after_id']))
             ->orderBy('id')->limit(100)->get();
-        if ($messages->isNotEmpty()) $workflow->markRead($conversation, $request->user(), $messages->last()->id);
+        if ($messages->isNotEmpty()) {
+            $workflow->markRead($conversation, $request->user(), $messages->last()->id);
+        }
+
         return response()->json(['messages' => $messages->map(fn ($message) => $this->messageItem($message, $request->user()))->values()]);
     }
 
@@ -92,6 +96,7 @@ class ConversationController extends Controller
     {
         Gate::authorize('close', $conversation);
         $workflow->close($conversation, $request->user());
+
         return back()->with('status', 'The conversation is now read-only. You can reopen it later.');
     }
 
@@ -99,6 +104,7 @@ class ConversationController extends Controller
     {
         Gate::authorize('reopen', $conversation);
         $workflow->reopen($conversation, $request->user());
+
         return back()->with('status', 'The conversation was reopened.');
     }
 
@@ -122,6 +128,7 @@ class ConversationController extends Controller
     private function messageItem(ConversationMessage $message, User $viewer): array
     {
         $sender = $message->sender;
+
         return [
             'id' => $message->id,
             'senderId' => $sender->id,

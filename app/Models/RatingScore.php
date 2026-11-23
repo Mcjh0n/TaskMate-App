@@ -9,6 +9,7 @@ use LogicException;
 class RatingScore extends Model
 {
     public $timestamps = false;
+
     protected $fillable = ['dimension', 'score'];
 
     protected static function booted(): void
@@ -17,5 +18,8 @@ class RatingScore extends Model
         static::deleting(fn () => throw new LogicException('Rating scores cannot be deleted.'));
     }
 
-    public function rating(): BelongsTo { return $this->belongsTo(Rating::class); }
+    public function rating(): BelongsTo
+    {
+        return $this->belongsTo(Rating::class);
+    }
 }

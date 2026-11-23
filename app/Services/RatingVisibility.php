@@ -45,10 +45,15 @@ class RatingVisibility
 
     public function isVisibleToOthers(Rating $rating): bool
     {
-        if ($rating->is_hidden) return false;
-        if (config('taskmate.ratings.visibility', 'after_both') === 'immediate') return true;
+        if ($rating->is_hidden) {
+            return false;
+        }
+        if (config('taskmate.ratings.visibility', 'after_both') === 'immediate') {
+            return true;
+        }
         $agreement = $rating->agreement;
         $completedAt = $agreement->task->completion?->completed_at;
+
         return $this->bothSubmitted($agreement)
             || ($completedAt !== null && $completedAt->copy()->addDays((int) config('taskmate.ratings.window_days', 30))->isPast());
     }
@@ -56,6 +61,7 @@ class RatingVisibility
     public function windowClosed(Agreement $agreement): bool
     {
         $completedAt = $agreement->task->completion?->completed_at;
+
         return $completedAt !== null && $completedAt->copy()->addDays((int) config('taskmate.ratings.window_days', 30))->isPast();
     }
 }

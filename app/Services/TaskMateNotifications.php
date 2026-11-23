@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\Conversation;
+use App\Models\User;
 use App\Notifications\TaskMateAlert;
 use App\Notifications\TaskMateAlertCatalog;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +45,9 @@ class TaskMateNotifications
 
     public function conversationMessage(User $recipient, Conversation $conversation, string $taskTitle, int $actorId): void
     {
-        if ($recipient->id === $actorId) return;
+        if ($recipient->id === $actorId) {
+            return;
+        }
         $copy = TaskMateAlertCatalog::get('conversation.message', ['task_title' => $taskTitle]);
         $payload = [
             'event' => 'conversation.message',
@@ -58,7 +60,9 @@ class TaskMateNotifications
         $recipientId = $recipient->id;
         DB::afterCommit(function () use ($recipientId, $payload): void {
             $user = User::query()->find($recipientId);
-            if (! $user) return;
+            if (! $user) {
+                return;
+            }
             $existing = $user->unreadNotifications()
                 ->where('data->event', 'conversation.message')
                 ->where('data->conversation_id', $payload['conversation_id'])
@@ -69,9 +73,12 @@ class TaskMateNotifications
                 $existing->data = $data;
                 $existing->created_at = now();
                 $existing->save();
+
                 return;
             }
-            if (! $user->isVerified()) $payload['url'] = route('notifications.index', [], false);
+            if (! $user->isVerified()) {
+                $payload['url'] = route('notifications.index', [], false);
+            }
             $user->notify(new TaskMateAlert($payload));
         });
     }
@@ -80,6 +87,7 @@ class TaskMateNotifications
     {
         $path = parse_url($url, PHP_URL_PATH);
         abort_unless(is_string($path) && str_starts_with($path, '/') && ! str_starts_with($path, '//'), 500, 'Notification targets must be local paths.');
+
         return $url;
     }
 }

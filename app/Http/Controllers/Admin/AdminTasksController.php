@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\PaymentEventType;
+use App\Enums\PaymentStatus;
 use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminTaskIndexRequest;
 use App\Models\AdminAction;
+use App\Models\Agreement;
 use App\Models\Task;
-use App\Enums\PaymentEventType;
-use App\Enums\PaymentStatus;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -116,7 +117,7 @@ class AdminTasksController extends Controller
         return collect($options)->map(fn (string $label, string $value) => compact('value', 'label'))->values()->all();
     }
 
-    private function completionPayment(\App\Models\Agreement $agreement): array
+    private function completionPayment(Agreement $agreement): array
     {
         $completion = $agreement->completion;
         $agreedAmount = (float) $agreement->currentVersion->final_amount;

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\ConversationWorkflow;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Validation\Rule;
-use App\Services\ConversationWorkflow;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,7 +17,9 @@ class NotificationController extends Controller
     {
         $filters = $request->validate(['filter' => ['nullable', Rule::in(['all', 'unread'])]]);
         $query = $request->user()->notifications()->latest('created_at');
-        if (($filters['filter'] ?? 'all') === 'unread') $query->whereNull('read_at');
+        if (($filters['filter'] ?? 'all') === 'unread') {
+            $query->whereNull('read_at');
+        }
         $alerts = $query->paginate((int) config('taskmate.notifications.per_page', 20))->withQueryString()
             ->through(fn (DatabaseNotification $notification) => $this->item($notification));
 
@@ -31,6 +33,7 @@ class NotificationController extends Controller
     public function summary(Request $request, ConversationWorkflow $conversations): JsonResponse
     {
         $user = $request->user();
+
         return response()->json([
             'unreadCount' => $user->unreadNotifications()->count(),
             'unreadMessages' => $conversations->unreadCount($user),
@@ -41,6 +44,7 @@ class NotificationController extends Controller
     public function markAllRead(Request $request): RedirectResponse
     {
         $request->user()->unreadNotifications()->update(['read_at' => now()]);
+
         return back()->with('status', 'All alerts were marked as read.');
     }
 
@@ -52,12 +56,14 @@ class NotificationController extends Controller
         if (! is_string($target) || ! str_starts_with($target, '/') || str_starts_with($target, '//')) {
             $target = route('notifications.index', [], false);
         }
+
         return redirect($target);
     }
 
     private function item(DatabaseNotification $notification): array
     {
         $data = $notification->data;
+
         return [
             'id' => $notification->id,
             'event' => $data['event'] ?? 'activity',

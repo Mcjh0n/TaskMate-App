@@ -11,9 +11,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class UserSanctionFactory extends Factory
 {
     protected $model = UserSanction::class;
+
     public function definition(): array
     {
         $issuer = User::factory()->facultyStaff()->verified();
+
         return [
             'user_id' => User::factory()->verified(),
             'type' => SanctionType::Warning,

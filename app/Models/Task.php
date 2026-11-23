@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use App\Enums\TaskStatus;
 use App\Enums\AgreementStatus;
+use App\Enums\TaskStatus;
 use Database\Factories\TaskFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 
@@ -130,7 +131,7 @@ class Task extends Model
         return $this->agreements()->whereIn('status', [AgreementStatus::Draft->value, AgreementStatus::Negotiating->value, AgreementStatus::Agreed->value])->exists();
     }
 
-    public function completion(): \Illuminate\Database\Eloquent\Relations\HasOneThrough
+    public function completion(): HasOneThrough
     {
         return $this->hasOneThrough(TaskCompletion::class, Agreement::class);
     }

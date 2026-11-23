@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\ReportType;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
 use Illuminate\Foundation\Http\FormRequest;
@@ -15,6 +14,7 @@ class StoreConversationMessageReportRequest extends FormRequest
     {
         $conversation = $this->route('conversation');
         $message = $this->route('message');
+
         return $conversation instanceof Conversation && $message instanceof ConversationMessage
             && Gate::allows('reportMessage', [$conversation, $message]);
     }
@@ -23,6 +23,7 @@ class StoreConversationMessageReportRequest extends FormRequest
     {
         $relevant = ['harassment', 'unsafe_behavior', 'off_platform_transaction', 'rule_bypass_request', 'misleading_description', 'fraudulent_post', 'other'];
         $types = array_values(array_intersect($relevant, array_keys((array) config('taskmate.reports.types', []))));
+
         return [
             'type' => ['required', Rule::in($types)],
             'description' => ['required', 'string', 'max:'.(int) config('taskmate.reports.description_max_length', 3000)],
@@ -35,7 +36,9 @@ class StoreConversationMessageReportRequest extends FormRequest
     {
         return [function ($validator): void {
             foreach ((array) $this->file('evidence', []) as $index => $file) {
-                if (! $file) continue;
+                if (! $file) {
+                    continue;
+                }
                 $mime = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file->getRealPath());
                 $extension = strtolower($file->getClientOriginalExtension());
                 $extensions = ['image/jpeg' => ['jpg', 'jpeg'], 'image/png' => ['png'], 'application/pdf' => ['pdf']];

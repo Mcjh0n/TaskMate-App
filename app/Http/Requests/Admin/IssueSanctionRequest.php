@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Report;
-use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -13,11 +12,16 @@ class IssueSanctionRequest extends FormRequest
     public function authorize(): bool
     {
         $target = $this->route('user');
-        if (! $target instanceof User || ! $this->user()?->isAdmin() || $target->isAdmin() || $target->id === $this->user()->id) return false;
+        if (! $target instanceof User || ! $this->user()?->isAdmin() || $target->isAdmin() || $target->id === $this->user()->id) {
+            return false;
+        }
         if ($reportId = $this->input('report_id')) {
             $report = Report::find($reportId);
-            if (! $report || ! $this->user()->can('review', $report)) return false;
+            if (! $report || ! $this->user()->can('review', $report)) {
+                return false;
+            }
         }
+
         return true;
     }
 

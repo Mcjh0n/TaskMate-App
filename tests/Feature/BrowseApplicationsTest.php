@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\AgreementStatus;
 use App\Enums\ApplicationStatus;
 use App\Enums\TaskStatus;
 use App\Enums\UserType;
@@ -116,14 +117,14 @@ class BrowseApplicationsTest extends TestCase
 
         $this->actingAs($student)->get(route('browse.index', ['search' => 'Needle', 'sort' => 'budget_high']))
             ->assertOk()->assertInertia(fn ($page) => $page->component('browse/index')->has('tasks.data', 3)
-                ->where('tasks.data.0.id', $expensive->id)
-                ->where('tasks.data.0.descriptionPreview', 'Help prepare general learning materials.')
-                ->where('tasks.data.0.workplaceName', 'Synthetic Learning Center')
-                ->where('tasks.data.0.workplaceAddress', 'Synthetic campus location')
-                ->where('tasks.data.0.estimatedDurationDays', $expensive->estimated_duration_days)
-                ->where('tasks.data.0.posterType', 'CMU Faculty / Staff')
-                ->where('tasks.data.0.deliverablesPreview', $expensive->deliverables)
-                ->missing('tasks.data.0.deadline'));
+            ->where('tasks.data.0.id', $expensive->id)
+            ->where('tasks.data.0.descriptionPreview', 'Help prepare general learning materials.')
+            ->where('tasks.data.0.workplaceName', 'Synthetic Learning Center')
+            ->where('tasks.data.0.workplaceAddress', 'Synthetic campus location')
+            ->where('tasks.data.0.estimatedDurationDays', $expensive->estimated_duration_days)
+            ->where('tasks.data.0.posterType', 'CMU Faculty / Staff')
+            ->where('tasks.data.0.deliverablesPreview', $expensive->deliverables)
+            ->missing('tasks.data.0.deadline'));
         $this->get(route('browse.index'))->assertInertia(fn ($page) => $page->has('tasks.data', 4)->where('tasks.data.0.id', $pastDate->id));
         $this->get(route('browse.index', ['search' => 'learning']))->assertInertia(fn ($page) => $page->has('tasks.data', 4));
         $this->get(route('browse.index', ['category' => 'tutoring_and_academic_support']))->assertInertia(fn ($page) => $page->has('tasks.data', 4));
@@ -250,7 +251,7 @@ class BrowseApplicationsTest extends TestCase
         $this->assertSame(TaskStatus::Assigned, $task->fresh()->status);
         $agreement = $task->agreements()->with('currentVersion')->first();
         $this->assertNotNull($agreement);
-        $this->assertSame(\App\Enums\AgreementStatus::Draft, $agreement->status);
+        $this->assertSame(AgreementStatus::Draft, $agreement->status);
         $this->assertSame('1800.00', $agreement->currentVersion->final_amount);
         $this->assertSame(0, $agreement->currentVersion->confirmations()->count());
         $this->actingAs($student)->get(route('applications.mine'))->assertInertia(fn ($page) => $page
@@ -300,7 +301,7 @@ class BrowseApplicationsTest extends TestCase
         $this->assertSame(TaskStatus::Cancelled, $anotherTask->fresh()->status);
         $this->assertSame(ApplicationStatus::Cancelled, $accepted->fresh()->status);
         $this->assertSame(ApplicationStatus::Declined, $otherPending->fresh()->status);
-        $this->assertSame(\App\Enums\AgreementStatus::Cancelled, $anotherTask->fresh()->agreement->status);
+        $this->assertSame(AgreementStatus::Cancelled, $anotherTask->fresh()->agreement->status);
     }
 
     public function test_task_edit_is_refused_for_pending_or_accepted_applications_and_assigned_tasks(): void

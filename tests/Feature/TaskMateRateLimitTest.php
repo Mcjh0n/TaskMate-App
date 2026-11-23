@@ -56,7 +56,7 @@ class TaskMateRateLimitTest extends TestCase
         config(['taskmate.rate_limits.evidence_download.max_attempts' => 1]);
         Storage::fake('evidence');
         $report = Report::factory()->create();
-        $evidence = new ReportEvidence();
+        $evidence = new ReportEvidence;
         $evidence->report_id = $report->id;
         $evidence->uploaded_by = $report->reporter_id;
         $evidence->original_name = 'synthetic.pdf';

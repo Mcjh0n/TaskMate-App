@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class ReportEvidenceFactory extends Factory
 {
     protected $model = ReportEvidence::class;
+
     public function definition(): array
     {
         return [

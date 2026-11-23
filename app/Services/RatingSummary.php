@@ -14,6 +14,7 @@ class RatingSummary
         if ($ratings->count() >= $minimum) {
             $summary['average'] = round($ratings->avg('overall_experience'), 1);
         }
+
         return $summary;
     }
 }

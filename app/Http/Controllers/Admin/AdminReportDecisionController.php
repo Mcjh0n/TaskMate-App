@@ -7,10 +7,10 @@ use App\Enums\ReportStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminReportDecisionRequest;
 use App\Models\Report;
+use App\Models\User;
+use App\Services\TaskMateNotifications;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
-use App\Services\TaskMateNotifications;
-use App\Models\User;
 
 class AdminReportDecisionController extends Controller
 {

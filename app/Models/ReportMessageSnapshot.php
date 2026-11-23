@@ -26,7 +26,18 @@ class ReportMessageSnapshot extends Model
         static::deleting(fn () => throw new LogicException('Reported message snapshots are permanent.'));
     }
 
-    public function report(): BelongsTo { return $this->belongsTo(Report::class); }
-    public function message(): BelongsTo { return $this->belongsTo(ConversationMessage::class); }
-    public function sender(): BelongsTo { return $this->belongsTo(User::class, 'sender_id'); }
+    public function report(): BelongsTo
+    {
+        return $this->belongsTo(Report::class);
+    }
+
+    public function message(): BelongsTo
+    {
+        return $this->belongsTo(ConversationMessage::class);
+    }
+
+    public function sender(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sender_id');
+    }
 }

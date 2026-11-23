@@ -12,6 +12,7 @@ class AdminReportDecisionRequest extends FormRequest
     public function authorize(): bool
     {
         $report = $this->route('report');
+
         return $report instanceof Report && ($this->user()?->can('review', $report) ?? false);
     }
 
@@ -20,6 +21,7 @@ class AdminReportDecisionRequest extends FormRequest
         $decision = $this->input('decision');
         $resolving = $decision === 'resolve';
         $requiresNote = in_array($decision, ['resolve', 'dismiss', 'escalate'], true);
+
         return [
             'decision' => ['required', Rule::in(['start_review', 'escalate', 'resolve', 'dismiss'])],
             'outcome' => [$resolving ? 'required' : 'nullable', Rule::in(array_column(ReportOutcome::cases(), 'value'))],
@@ -28,5 +30,8 @@ class AdminReportDecisionRequest extends FormRequest
         ];
     }
 
-    public function messages(): array { return ['note.required' => 'Add a note for this report decision.']; }
+    public function messages(): array
+    {
+        return ['note.required' => 'Add a note for this report decision.'];
+    }
 }

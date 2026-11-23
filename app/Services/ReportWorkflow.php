@@ -7,15 +7,14 @@ use App\Enums\PaymentEventType;
 use App\Enums\PaymentStatus;
 use App\Enums\ReportStatus;
 use App\Enums\ReportType;
-use App\Models\Application;
-use App\Models\Task;
 use App\Models\Agreement;
+use App\Models\ConversationMessage;
 use App\Models\PaymentEvent;
 use App\Models\Report;
 use App\Models\ReportEvidence;
-use App\Models\ReportStatement;
-use App\Models\ConversationMessage;
 use App\Models\ReportMessageSnapshot;
+use App\Models\ReportStatement;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -47,7 +46,9 @@ class ReportWorkflow
                 $duplicate = $reporter->filedReports()->where('reported_user_id', $reportedUser->id)
                     ->where('task_id', $task?->id)->where('type', $type->value)
                     ->whereIn('status', [ReportStatus::Open->value, ReportStatus::UnderReview->value])->exists();
-                if ($duplicate) throw ValidationException::withMessages(['report' => 'You already have an open report of this type about this person and task.']);
+                if ($duplicate) {
+                    throw ValidationException::withMessages(['report' => 'You already have an open report of this type about this person and task.']);
+                }
                 $report = new Report;
                 $report->reporter_id = $reporter->id;
                 $report->reported_user_id = $reportedUser->id;
@@ -57,20 +58,27 @@ class ReportWorkflow
                 $report->priority = config('taskmate.reports.types.'.$type->value.'.priority', 'normal');
                 $report->description = $description;
                 $report->status = ReportStatus::Open;
-                if ($reportedMessage) $report->subject()->associate($reportedMessage);
+                if ($reportedMessage) {
+                    $report->subject()->associate($reportedMessage);
+                }
                 $report->save();
                 $this->storeEvidence($report, $reporter, $files, $storedPaths);
-                if ($reportedMessage) $this->snapshotMessageContext($report, $reportedMessage);
+                if ($reportedMessage) {
+                    $this->snapshotMessageContext($report, $reportedMessage);
+                }
                 $ids = array_filter(['report_id' => $report->id, 'task_id' => $task?->id, 'agreement_id' => $agreement?->id], fn ($id) => is_int($id));
                 if (config('taskmate.reports.types.'.$type->value.'.respondent_can_reply', false)) {
                     $this->alerts->send($reportedUser, 'report.filed', route('reports.show', $report->id, false), $ids, actorId: $reporter->id);
                 }
                 $adminEvent = $report->priority === 'high' ? 'report.priority' : 'report.new';
                 $this->alerts->admins($adminEvent, route('admin.reports.show', $report->id, false), $ids, actorId: $reporter->id);
+
                 return $report;
             });
         } catch (Throwable $exception) {
-            foreach ($storedPaths as $path) Storage::disk('evidence')->delete($path);
+            foreach ($storedPaths as $path) {
+                Storage::disk('evidence')->delete($path);
+            }
             throw $exception;
         }
     }
@@ -109,9 +117,13 @@ class ReportWorkflow
         $studentReportedNotReceived = $latest?->event === PaymentEventType::ReportedNotReceived
             && $hasPriorPaidEvent
             && $latest->actor_id === $agreement->student_id;
-        if ($studentReportedNotReceived) return true;
+        if ($studentReportedNotReceived) {
+            return true;
+        }
 
-        if ($hasPriorPaidEvent) return false;
+        if ($hasPriorPaidEvent) {
+            return false;
+        }
 
         $waitDays = (int) config('taskmate.reports.non_payment_wait_days', 3);
         $completionDate = $agreement->completion?->completed_at;
@@ -165,7 +177,9 @@ class ReportWorkflow
                 return $report;
             });
         } catch (Throwable $exception) {
-            foreach ($storedPaths as $path) Storage::disk('evidence')->delete($path);
+            foreach ($storedPaths as $path) {
+                Storage::disk('evidence')->delete($path);
+            }
             throw $exception;
         }
     }
@@ -177,8 +191,12 @@ class ReportWorkflow
         try {
             return DB::transaction(function () use ($report, $poster, $body, $files, &$storedPaths): ReportStatement {
                 $report = Report::query()->lockForUpdate()->findOrFail($report->id);
-                if (! $poster->can('reply', $report) && $report->reporter_id !== $poster->id) abort(403);
-                if (! in_array($report->status, [ReportStatus::Open, ReportStatus::UnderReview], true)) abort(403);
+                if (! $poster->can('reply', $report) && $report->reporter_id !== $poster->id) {
+                    abort(403);
+                }
+                if (! in_array($report->status, [ReportStatus::Open, ReportStatus::UnderReview], true)) {
+                    abort(403);
+                }
                 if ($report->evidence()->count() + count($files) > (int) config('taskmate.reports.evidence_max_files', 5)) {
                     throw ValidationException::withMessages(['evidence' => 'The evidence file limit for this report has been reached.']);
                 }
@@ -193,10 +211,13 @@ class ReportWorkflow
                 if ($statement->role === 'respondent') {
                     $this->alerts->send($report->reporter()->firstOrFail(), 'report.reply', route('reports.show', $report->id, false), ['report_id' => $report->id, 'task_id' => $report->task_id], actorId: $poster->id);
                 }
+
                 return $statement;
             });
         } catch (Throwable $exception) {
-            foreach ($storedPaths as $path) Storage::disk('evidence')->delete($path);
+            foreach ($storedPaths as $path) {
+                Storage::disk('evidence')->delete($path);
+            }
             throw $exception;
         }
     }
@@ -206,7 +227,9 @@ class ReportWorkflow
     {
         foreach ($files as $file) {
             $path = Storage::disk('evidence')->putFile('reports/'.$report->id, $file);
-            if (! $path) throw new \RuntimeException('Evidence could not be stored.');
+            if (! $path) {
+                throw new \RuntimeException('Evidence could not be stored.');
+            }
             $storedPaths[] = $path;
             $evidence = new ReportEvidence;
             $evidence->report_id = $report->id;

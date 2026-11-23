@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\TaskStatus;
-use App\Enums\ApplicationStatus;
 use App\Enums\AgreementStatus;
-use App\Models\Agreement;
+use App\Enums\ApplicationStatus;
+use App\Enums\TaskStatus;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Models\Agreement;
 use App\Models\Task;
+use App\Services\OffPlatformScanner;
+use App\Services\RatingSummary;
+use App\Services\SanctionService;
+use App\Services\TaskMateNotifications;
+use App\Services\TaskSubmissionWorkflow;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
-use App\Services\RatingSummary;
-use App\Services\OffPlatformScanner;
-use App\Services\SanctionService;
-use App\Services\TaskMateNotifications;
-use App\Services\TaskSubmissionWorkflow;
 
 class TaskController extends Controller
 {
@@ -41,7 +41,9 @@ class TaskController extends Controller
             $task->guidelines_confirmed_at = now();
             $task->save();
             foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
-                if ($task->{$field}) $scanner->flag($task, $request->user(), $field, $task->{$field});
+                if ($task->{$field}) {
+                    $scanner->flag($task, $request->user(), $field, $task->{$field});
+                }
             }
 
             $submission->submitForReview($task);
@@ -159,7 +161,9 @@ class TaskController extends Controller
             $task->guidelines_confirmed_at = now();
             $task->save();
             foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
-                if ($task->{$field}) $scanner->flag($task, $request->user(), $field, $task->{$field});
+                if ($task->{$field}) {
+                    $scanner->flag($task, $request->user(), $field, $task->{$field});
+                }
             }
 
             $submission->submitForReview($task);
@@ -190,8 +194,12 @@ class TaskController extends Controller
             }
             $lockedTask->status = TaskStatus::Cancelled;
             $lockedTask->save();
-            foreach ($pending as $application) $alerts->send($application->applicant, 'application.declined', route('applications.mine', [], false), ['task_id' => $lockedTask->id, 'application_id' => $application->id], ['task_title' => $lockedTask->title], $request->user()->id);
-            foreach ($accepted as $application) $alerts->send($application->applicant, 'application.cancelled', route('applications.mine', [], false), ['task_id' => $lockedTask->id, 'application_id' => $application->id], ['task_title' => $lockedTask->title], $request->user()->id);
+            foreach ($pending as $application) {
+                $alerts->send($application->applicant, 'application.declined', route('applications.mine', [], false), ['task_id' => $lockedTask->id, 'application_id' => $application->id], ['task_title' => $lockedTask->title], $request->user()->id);
+            }
+            foreach ($accepted as $application) {
+                $alerts->send($application->applicant, 'application.cancelled', route('applications.mine', [], false), ['task_id' => $lockedTask->id, 'application_id' => $application->id], ['task_title' => $lockedTask->title], $request->user()->id);
+            }
         });
 
         return redirect()->route('tasks.mine')->with('status', 'Your task was cancelled.');
@@ -212,6 +220,7 @@ class TaskController extends Controller
             $task->budget = null;
             $task->budget_min = $validated['budget_min'];
             $task->budget_max = $validated['budget_max'];
+
             return;
         }
 

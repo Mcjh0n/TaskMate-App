@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\PaymentEventType;
-use App\Enums\ReportOutcome;
 use App\Enums\ReportStatus;
 use App\Enums\ReportType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminReportIndexRequest;
 use App\Models\Report;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -117,12 +115,12 @@ class AdminReportsController extends Controller
         ]);
     }
 
-    private function typeLabel(\App\Models\User $user): string
+    private function typeLabel(User $user): string
     {
         return config('taskmate.user_types.'.$user->user_type->value, $user->user_type->value);
     }
 
-    private function sanctions(\App\Models\User $user): array
+    private function sanctions(User $user): array
     {
         return $user->sanctions->map(fn ($sanction) => ['type' => $sanction->type->value, 'reason' => $sanction->reason, 'active' => ! $sanction->lifted_at && $sanction->starts_at?->isPast() && ($sanction->ends_at === null || $sanction->ends_at->isFuture())])->values()->all();
     }

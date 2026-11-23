@@ -25,6 +25,7 @@ class SanctionsController extends Controller
             'acknowledged' => (bool) $item->acknowledged_at,
             'active' => $item->lifted_at === null && $item->starts_at?->isPast() && ($item->ends_at === null || $item->ends_at->isFuture()),
         ])->values();
+
         return Inertia::render('sanctions/index', [
             'sanctions' => $items,
             'activeSuspension' => $service->suspended($user) ? ['reason' => $service->suspended($user)->reason, 'endsAt' => $service->suspended($user)->ends_at?->toDateTimeString()] : null,
@@ -37,6 +38,7 @@ class SanctionsController extends Controller
     {
         $sanction->acknowledged_at = now();
         $sanction->save();
+
         return back()->with('status', 'You acknowledged the warning.');
     }
 }

@@ -16,13 +16,14 @@ use App\Models\Application;
 use App\Models\PaymentEvent;
 use App\Models\Report;
 use App\Models\Task;
+use App\Models\TaskCompletion;
 use App\Models\User;
 use App\Services\AgreementContentHasher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use LogicException;
 use Inertia\Testing\AssertableInertia as Assert;
+use LogicException;
 use Tests\TestCase;
 
 class CompletionPaymentReportsTest extends TestCase
@@ -107,6 +108,7 @@ class CompletionPaymentReportsTest extends TestCase
         $event->amount = $amount;
         $event->created_at = now();
         $event->save();
+
         return $event;
     }
 
@@ -219,7 +221,7 @@ class CompletionPaymentReportsTest extends TestCase
         $this->assertDatabaseHas('payment_events', ['agreement_id' => $pair['agreement']->id, 'event' => PaymentEventType::ReportedNotReceived->value]);
 
         $second = $this->lockedAgreement(['due_date' => today()->addDays(10)->toDateString()]);
-        $completion = new \App\Models\TaskCompletion;
+        $completion = new TaskCompletion;
         $completion->agreement_id = $second['agreement']->id;
         $completion->completed_at = now()->subDays(3);
         $completion->completed_by = $second['poster']->id;

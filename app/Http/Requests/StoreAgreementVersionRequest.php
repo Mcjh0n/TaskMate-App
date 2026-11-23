@@ -10,6 +10,7 @@ class StoreAgreementVersionRequest extends FormRequest
     public function authorize(): bool
     {
         $agreement = $this->route('agreement');
+
         return $agreement instanceof Agreement && ($this->user()?->can('revise', $agreement) ?? false);
     }
 

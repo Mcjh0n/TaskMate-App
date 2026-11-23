@@ -16,7 +16,10 @@ class UserSanction extends Model
 
     protected $guarded = ['*'];
 
-    protected function casts(): array { return ['type' => SanctionType::class, 'starts_at' => 'datetime', 'ends_at' => 'datetime', 'acknowledged_at' => 'datetime', 'lifted_at' => 'datetime']; }
+    protected function casts(): array
+    {
+        return ['type' => SanctionType::class, 'starts_at' => 'datetime', 'ends_at' => 'datetime', 'acknowledged_at' => 'datetime', 'lifted_at' => 'datetime'];
+    }
 
     protected static function booted(): void
     {
@@ -28,9 +31,28 @@ class UserSanction extends Model
         static::deleting(fn () => throw new LogicException('Sanction records cannot be deleted.'));
     }
 
-    public function user(): BelongsTo { return $this->belongsTo(User::class); }
-    public function issuer(): BelongsTo { return $this->belongsTo(User::class, 'issued_by'); }
-    public function report(): BelongsTo { return $this->belongsTo(Report::class); }
-    public function flag(): BelongsTo { return $this->belongsTo(ContentFlag::class, 'flag_id'); }
-    public function liftedBy(): BelongsTo { return $this->belongsTo(User::class, 'lifted_by'); }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function issuer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'issued_by');
+    }
+
+    public function report(): BelongsTo
+    {
+        return $this->belongsTo(Report::class);
+    }
+
+    public function flag(): BelongsTo
+    {
+        return $this->belongsTo(ContentFlag::class, 'flag_id');
+    }
+
+    public function liftedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'lifted_by');
+    }
 }

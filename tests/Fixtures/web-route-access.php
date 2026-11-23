@@ -138,4 +138,4 @@ return [
     'messages.close' => ['middleware' => ['auth', 'account.verified', 'account.active'], 'actors' => ['guest' => 'redirect', 'unverified' => 'redirect', 'verified_student' => 'allowed', 'verified_faculty_staff' => 'allowed', 'verified_organization' => 'allowed', 'admin' => 'forbidden', 'suspended' => 'forbidden', 'banned' => 'redirect']],
     'messages.reopen' => ['middleware' => ['auth', 'account.verified', 'account.active'], 'actors' => ['guest' => 'redirect', 'unverified' => 'redirect', 'verified_student' => 'allowed', 'verified_faculty_staff' => 'allowed', 'verified_organization' => 'allowed', 'admin' => 'forbidden', 'suspended' => 'forbidden', 'banned' => 'redirect']],
     'messages.report' => ['middleware' => ['auth', 'account.verified', 'account.active'], 'actors' => ['guest' => 'redirect', 'unverified' => 'redirect', 'verified_student' => 'allowed', 'verified_faculty_staff' => 'allowed', 'verified_organization' => 'allowed', 'admin' => 'forbidden', 'suspended' => 'forbidden', 'banned' => 'redirect']],
- ];
+];

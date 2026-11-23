@@ -5,16 +5,15 @@ namespace Tests\Feature;
 use App\Enums\SanctionType;
 use App\Enums\TaskStatus;
 use App\Models\ContentFlag;
+use App\Models\Report;
 use App\Models\Task;
 use App\Models\User;
 use App\Models\UserSanction;
-use App\Models\Report;
-use App\Models\AdminAction;
 use App\Services\OffPlatformScanner;
 use App\Services\SanctionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Illuminate\Support\Carbon;
+use Tests\TestCase;
 
 class PhaseNineSafetyTest extends TestCase
 {

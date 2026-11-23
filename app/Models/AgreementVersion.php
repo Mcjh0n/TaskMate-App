@@ -28,8 +28,23 @@ class AgreementVersion extends Model
         static::deleting(fn () => throw new LogicException('Agreement versions cannot be deleted.'));
     }
 
-    public function agreement(): BelongsTo { return $this->belongsTo(Agreement::class); }
-    public function proposer(): BelongsTo { return $this->belongsTo(User::class, 'proposed_by'); }
-    public function confirmations(): HasMany { return $this->hasMany(AgreementConfirmation::class); }
-    public function contentFlags(): MorphMany { return $this->morphMany(ContentFlag::class, 'flaggable'); }
+    public function agreement(): BelongsTo
+    {
+        return $this->belongsTo(Agreement::class);
+    }
+
+    public function proposer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'proposed_by');
+    }
+
+    public function confirmations(): HasMany
+    {
+        return $this->hasMany(AgreementConfirmation::class);
+    }
+
+    public function contentFlags(): MorphMany
+    {
+        return $this->morphMany(ContentFlag::class, 'flaggable');
+    }
 }

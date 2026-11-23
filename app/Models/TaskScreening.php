@@ -3,14 +3,15 @@
 namespace App\Models;
 
 use Database\Factories\TaskScreeningFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use LogicException;
 
 class TaskScreening extends Model
 {
-    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<TaskScreeningFactory> */
-    use \Illuminate\Database\Eloquent\Factories\HasFactory;
+    /** @use HasFactory<TaskScreeningFactory> */
+    use HasFactory;
 
     public const UPDATED_AT = null;
 

@@ -29,18 +29,65 @@ class Agreement extends Model
         ];
     }
 
-    public function task(): BelongsTo { return $this->belongsTo(Task::class); }
-    public function application(): BelongsTo { return $this->belongsTo(Application::class); }
-    public function poster(): BelongsTo { return $this->belongsTo(User::class, 'poster_id'); }
-    public function student(): BelongsTo { return $this->belongsTo(User::class, 'student_id'); }
-    public function currentVersion(): BelongsTo { return $this->belongsTo(AgreementVersion::class, 'current_version_id'); }
-    public function versions(): HasMany { return $this->hasMany(AgreementVersion::class)->orderBy('version_number'); }
-    public function confirmations(): HasManyThrough { return $this->hasManyThrough(AgreementConfirmation::class, AgreementVersion::class); }
-    public function messages(): HasMany { return $this->hasMany(AgreementMessage::class)->orderBy('id'); }
-    public function completion(): HasOne { return $this->hasOne(TaskCompletion::class); }
-    public function paymentEvents(): HasMany { return $this->hasMany(PaymentEvent::class)->orderBy('id'); }
-    public function reports(): HasMany { return $this->hasMany(Report::class); }
-    public function ratings(): HasMany { return $this->hasMany(Rating::class); }
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class);
+    }
+
+    public function application(): BelongsTo
+    {
+        return $this->belongsTo(Application::class);
+    }
+
+    public function poster(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'poster_id');
+    }
+
+    public function student(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'student_id');
+    }
+
+    public function currentVersion(): BelongsTo
+    {
+        return $this->belongsTo(AgreementVersion::class, 'current_version_id');
+    }
+
+    public function versions(): HasMany
+    {
+        return $this->hasMany(AgreementVersion::class)->orderBy('version_number');
+    }
+
+    public function confirmations(): HasManyThrough
+    {
+        return $this->hasManyThrough(AgreementConfirmation::class, AgreementVersion::class);
+    }
+
+    public function messages(): HasMany
+    {
+        return $this->hasMany(AgreementMessage::class)->orderBy('id');
+    }
+
+    public function completion(): HasOne
+    {
+        return $this->hasOne(TaskCompletion::class);
+    }
+
+    public function paymentEvents(): HasMany
+    {
+        return $this->hasMany(PaymentEvent::class)->orderBy('id');
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(Rating::class);
+    }
 
     public function paymentStatus(): PaymentStatus
     {
@@ -57,6 +104,7 @@ class Agreement extends Model
     public function paymentIsSettled(): bool
     {
         $latest = $this->paymentEvents()->reorder()->latest('id')->first();
+
         return $latest?->event === PaymentEventType::ConfirmedReceived
             && $latest->amount !== null
             && (float) $latest->amount === (float) $this->currentVersion->final_amount;

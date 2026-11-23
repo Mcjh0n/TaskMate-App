@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Task;
 use App\Enums\ApplicationStatus;
 use App\Enums\TaskStatus;
+use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 

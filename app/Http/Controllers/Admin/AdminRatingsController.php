@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ModerateRatingRequest;
-use App\Models\AdminAction;
 use App\Models\Rating;
 use App\Services\RatingVisibility;
 use Illuminate\Http\RedirectResponse;
@@ -42,12 +41,14 @@ class AdminRatingsController extends Controller
                 'hidden' => $rating->is_hidden,
                 'date' => $rating->created_at?->toDateTimeString(),
             ]);
+
         return Inertia::render('admin/ratings/index', ['ratings' => $ratings, 'filters' => $filters]);
     }
 
     public function show(Rating $rating, RatingVisibility $visibility): Response
     {
         $rating->load(['scores', 'agreement.currentVersion', 'task:id,title', 'rater:id,name', 'ratee:id,name']);
+
         return Inertia::render('admin/ratings/show', [
             'rating' => [
                 'id' => $rating->id,
@@ -94,6 +95,7 @@ class AdminRatingsController extends Controller
                 'note' => $action === 'hide' ? $request->validated('reason') : null,
             ]);
         });
+
         return back()->with('status', 'The rating moderation change was recorded.');
     }
 }

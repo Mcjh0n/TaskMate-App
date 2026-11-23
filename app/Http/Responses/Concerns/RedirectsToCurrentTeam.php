@@ -19,9 +19,12 @@ trait RedirectsToCurrentTeam
         }
 
         $team = $user->currentTeam ?? $user->personalTeam();
-        if (! $team) return route('taskmate.dashboard', [], false);
+        if (! $team) {
+            return route('taskmate.dashboard', [], false);
+        }
 
         URL::defaults(['current_team' => $team->slug]);
+
         return "/{$team->slug}{$redirect}";
     }
 
@@ -29,7 +32,7 @@ trait RedirectsToCurrentTeam
     {
         $user = $request->user();
         abort_if(! $user, 403);
+
         return $user->isAdmin() ? route('admin.dashboard', [], false) : route('taskmate.dashboard', [], false);
     }
-
 }

@@ -2,13 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Task;
-use App\Models\Application;
-use App\Services\ConversationWorkflow;
-use App\Enums\TaskStatus;
 use App\Enums\ApplicationStatus;
+use App\Enums\TaskStatus;
+use App\Models\User;
+use App\Services\ConversationWorkflow;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class LocalTaskMateSeeder extends Seeder
 {
@@ -33,7 +32,9 @@ class LocalTaskMateSeeder extends Seeder
             $user->organization_name = $organizationName;
             $user->position = $position;
             $user->supporting_info = $supportingInfo;
-            if (! $user->exists) $user->password = \Illuminate\Support\Facades\Hash::make('password');
+            if (! $user->exists) {
+                $user->password = Hash::make('password');
+            }
             $user->email_verified_at ??= now();
 
             $user->is_admin = $isAdmin;
@@ -53,7 +54,9 @@ class LocalTaskMateSeeder extends Seeder
             $poster = $index % 3 === 0 ? $organization : $faculty;
             $title = 'Synthetic approved demo task '.$index;
             $task = $poster->tasks()->where('title', $title)->first();
-            if ($task && ! str_starts_with($task->description, 'Synthetic demonstration task for local testing only.')) continue;
+            if ($task && ! str_starts_with($task->description, 'Synthetic demonstration task for local testing only.')) {
+                continue;
+            }
             $task ??= $poster->tasks()->make(['title' => $title]);
             $task->poster()->associate($poster);
             $task->title = $title;
@@ -92,14 +95,18 @@ class LocalTaskMateSeeder extends Seeder
             if ($index <= 3) {
                 $applicant = $index === 3 ? $studentTwo : $studentOne;
                 $application = $task->applications()->firstOrNew(['applicant_id' => $applicant->id]);
-                if ($application->exists && ! str_starts_with($application->message, 'Synthetic application message ')) continue;
+                if ($application->exists && ! str_starts_with($application->message, 'Synthetic application message ')) {
+                    continue;
+                }
                 $application->task()->associate($task);
                 $application->applicant()->associate($applicant);
                 $application->message = 'Synthetic application message '.$index.' for local testing only.';
                 $application->proposed_amount = 1000 + ($index * 100);
                 $application->status = ApplicationStatus::Pending;
                 $application->save();
-                if (! $application->conversation()->exists()) app(ConversationWorkflow::class)->createForApplication($application);
+                if (! $application->conversation()->exists()) {
+                    app(ConversationWorkflow::class)->createForApplication($application);
+                }
             }
         }
     }
