@@ -125,7 +125,7 @@ class Task extends Model
 
     public function hasActiveAgreement(): bool
     {
-        return $this->agreements()->whereIn('status', [AgreementStatus::Negotiating->value, AgreementStatus::Agreed->value])->exists();
+        return $this->agreements()->whereIn('status', [AgreementStatus::Draft->value, AgreementStatus::Negotiating->value, AgreementStatus::Agreed->value])->exists();
     }
 
     public function completion(): \Illuminate\Database\Eloquent\Relations\HasOneThrough

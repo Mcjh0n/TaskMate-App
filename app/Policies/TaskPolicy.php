@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Enums\ApplicationStatus;
+use App\Enums\AgreementStatus;
 use App\Models\Task;
 use App\Models\User;
 
@@ -33,7 +34,7 @@ class TaskPolicy
     public function cancel(User $user, Task $task): bool
     {
         return $task->poster_id === $user->id
-            && ! $task->hasActiveAgreement()
+            && ! $task->agreements()->whereIn('status', [AgreementStatus::Negotiating->value, AgreementStatus::Agreed->value])->exists()
             && ! in_array($task->status, [\App\Enums\TaskStatus::Cancelled, \App\Enums\TaskStatus::Rejected, \App\Enums\TaskStatus::Removed], true);
     }
 }

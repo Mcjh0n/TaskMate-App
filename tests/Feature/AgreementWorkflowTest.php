@@ -53,7 +53,9 @@ class AgreementWorkflowTest extends TestCase
 
     private function createAgreement(array $pair): Agreement
     {
-        $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']), $this->proposalData())->assertRedirect();
+        $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertRedirect();
+        $agreement = Agreement::query()->where('task_id', $pair['task']->id)->firstOrFail();
+        $this->post(route('agreements.store', $pair['task']))->assertRedirect();
         return Agreement::query()->where('task_id', $pair['task']->id)->firstOrFail()->load('currentVersion');
     }
 
@@ -76,40 +78,76 @@ class AgreementWorkflowTest extends TestCase
         $this->assertDatabaseCount('agreements', 0);
     }
 
-    public function test_initial_proposal_uses_disclosed_workplace_and_work_mode_and_prefills_amount(): void
+    public function test_acceptance_prepares_agreement_and_poster_sends_the_prefilled_version(): void
     {
         $pair = $this->assignedTask();
-        $pair['task']->update(['work_mode' => 'hybrid', 'workplace_name' => 'Synthetic campus library', 'workplace_address' => 'Synthetic campus address']);
+        $pair['task']->update(['work_mode' => 'hybrid', 'workplace_name' => 'Synthetic campus library', 'workplace_address' => 'Synthetic campus address', 'deliverables' => 'Three edited poster designs']);
         $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))
-            ->assertOk()->assertInertia(fn (Assert $page) => $page->component('agreements/create')->where('defaults.finalAmount', '1250.00')->where('defaults.workMode', 'hybrid'));
+            ->assertRedirect();
+        $agreement = Agreement::query()->where('task_id', $pair['task']->id)->firstOrFail()->load('currentVersion');
+        $version = $agreement->currentVersion;
+        $this->assertSame(AgreementStatus::Draft, $agreement->status);
+        $this->assertSame('Three edited poster designs', $version->deliverables);
+        $this->assertSame('1250.00', $version->final_amount);
+        $this->assertSame($pair['task']->deadline->toDateString(), $version->due_date->toDateString());
+        $this->assertSame('hybrid', $version->work_mode);
+        $this->assertSame('Synthetic campus library', $version->workplace_name);
+        $this->assertSame('Synthetic campus address', $version->workplace_address);
+        $this->assertSame(0, $version->confirmations()->count());
+        $this->actingAs($pair['poster'])->get(route('agreements.show', $agreement))->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('agreement.status', 'draft')->where('agreement.currentVersion.deliverables', 'Three edited poster designs'));
+        $this->actingAs($pair['student'])->get(route('agreements.show', $agreement))->assertForbidden();
 
-        $data = $this->proposalData(['work_mode' => 'remote', 'workplace_name' => 'Forged place', 'workplace_address' => 'Forged address']);
-        $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']), $data)->assertRedirect();
-        $version = AgreementVersion::query()->firstOrFail();
+        $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']))->assertRedirect();
+        $agreement->refresh();
+        $version = $agreement->currentVersion()->firstOrFail();
+        $this->assertSame(AgreementStatus::Negotiating, $agreement->status);
         $this->assertSame('hybrid', $version->work_mode);
         $this->assertSame('Synthetic campus library', $version->workplace_name);
         $this->assertSame('Synthetic campus address', $version->workplace_address);
         $this->assertSame($pair['poster']->id, $version->confirmations()->sole()->user_id);
-        $this->assertSame('1400.00', $version->final_amount);
+        $this->assertSame('1250.00', $version->final_amount);
+        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'agreement.proposed']);
+        $this->actingAs($pair['student'])->get(route('agreements.show', $agreement))->assertOk()
+            ->assertInertia(fn (Assert $page) => $page->where('agreement.currentVersion.finalAmount', '1250.00'));
     }
 
     public function test_remote_agreement_keeps_workplace_fields_null_and_work_mode_fixed(): void
     {
         $pair = $this->assignedTask();
         $pair['task']->update(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null]);
-        $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']), $this->proposalData(['work_mode' => 'onsite', 'workplace_name' => 'Should be ignored']))->assertRedirect();
+        $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertRedirect();
+        $this->post(route('agreements.store', $pair['task']))->assertRedirect();
         $version = AgreementVersion::query()->firstOrFail();
         $this->assertSame('remote', $version->work_mode);
         $this->assertNull($version->workplace_name);
         $this->assertNull($version->workplace_address);
     }
 
-    public function test_invalid_proposal_fields_are_rejected(): void
+    public function test_applicant_amount_and_task_budget_are_used_without_a_second_manual_proposal_form(): void
     {
         $pair = $this->assignedTask();
-        $data = $this->proposalData(['terms' => str_repeat('x', 3001), 'final_amount' => 0, 'due_date' => today()->toDateString(), 'payment_arrangement' => '']);
-        $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']), $data)->assertSessionHasErrors(['terms', 'final_amount', 'due_date', 'payment_arrangement']);
-        $this->assertDatabaseCount('agreements', 0);
+        $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertRedirect();
+        $agreement = Agreement::query()->where('task_id', $pair['task']->id)->firstOrFail();
+        $this->assertSame('1250.00', $agreement->currentVersion->final_amount);
+        $this->assertSame($pair['task']->deadline->toDateString(), $agreement->currentVersion->due_date->toDateString());
+        $this->assertNotEmpty($agreement->currentVersion->terms);
+        $this->assertNotEmpty($agreement->currentVersion->payment_arrangement);
+        $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']), ['final_amount' => '1', 'terms' => 'forged'])->assertRedirect();
+        $agreement->refresh();
+        $this->assertSame('1250.00', $agreement->currentVersion->final_amount);
+        $this->assertNotSame('forged', $agreement->currentVersion->terms);
+    }
+
+    public function test_task_budget_is_used_when_applicant_did_not_suggest_an_amount(): void
+    {
+        $pair = $this->assignedTask();
+        $pair['task']->update(['budget' => 2400]);
+        $pair['application']->update(['proposed_amount' => null]);
+
+        $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertRedirect();
+        $agreement = Agreement::query()->where('task_id', $pair['task']->id)->with('currentVersion')->firstOrFail();
+        $this->assertSame('2400.00', $agreement->currentVersion->final_amount);
     }
 
     public function test_revision_is_insert_only_resets_confirmations_and_confirms_the_proposer(): void
@@ -236,8 +274,8 @@ class AgreementWorkflowTest extends TestCase
             $this->actingAs($pair['poster'])->post(route('tasks.applications.accept', [$pair['task'], $pending]))->assertRedirect();
             $this->assertSame(ApplicationStatus::Accepted, $pending->fresh()->status);
             $this->assertSame(TaskStatus::Assigned, $pair['task']->fresh()->status);
-            $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertOk();
-            $this->post(route('agreements.store', $pair['task']), $this->proposalData())->assertRedirect();
+            $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertRedirect();
+            $this->post(route('agreements.store', $pair['task']))->assertRedirect();
             $this->assertSame(2, Agreement::query()->where('task_id', $pair['task']->id)->count());
             $this->assertSame(AgreementStatus::Negotiating, Agreement::query()->where('task_id', $pair['task']->id)->latest('id')->firstOrFail()->status);
             $this->assertSame(AgreementStatus::Cancelled, $agreement->fresh()->status);
@@ -281,8 +319,8 @@ class AgreementWorkflowTest extends TestCase
             ->where('applicants.0.applicant.id', $worker->id));
         $this->post(route('tasks.applications.accept', [$task, $application]))->assertRedirect();
         $this->assertSame(TaskStatus::Assigned, $task->fresh()->status);
-        $this->get(route('agreements.create', $task))->assertOk();
-        $this->post(route('agreements.store', $task), $this->proposalData())->assertRedirect();
+        $this->get(route('agreements.create', $task))->assertRedirect();
+        $this->post(route('agreements.store', $task))->assertRedirect();
         $agreement = Agreement::query()->where('task_id', $task->id)->firstOrFail();
         $this->actingAs($worker)->post(route('agreements.confirm', $agreement), ['version_id' => $agreement->current_version_id])->assertRedirect();
         $this->assertSame(TaskStatus::InProgress, $task->fresh()->status);

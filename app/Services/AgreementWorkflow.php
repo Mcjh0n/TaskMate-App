@@ -20,12 +20,17 @@ class AgreementWorkflow
 {
     public function __construct(private readonly AgreementContentHasher $hasher, private readonly OffPlatformScanner $scanner, private readonly TaskMateNotifications $alerts) {}
 
-    public function create(Task $task, User $poster, array $data): Agreement
+    public function createDraft(Task $task, User $poster, Application $application): Agreement
     {
-        return DB::transaction(function () use ($task, $poster, $data): Agreement {
+        return DB::transaction(function () use ($task, $poster, $application): Agreement {
             $task = Task::query()->lockForUpdate()->findOrFail($task->id);
-            $accepted = $task->applications()->where('status', ApplicationStatus::Accepted->value)->lockForUpdate()->get();
-            if ($task->status !== TaskStatus::Assigned || $accepted->count() !== 1 || $task->hasActiveAgreement()) {
+            $application = Application::query()->lockForUpdate()->findOrFail($application->id);
+            if ($task->status !== TaskStatus::Assigned
+                || $application->task_id !== $task->id
+                || $application->applicant_id === $poster->id
+                || $application->status !== ApplicationStatus::Accepted
+                || $task->applications()->where('status', ApplicationStatus::Accepted->value)->count() !== 1
+                || $task->hasActiveAgreement()) {
                 throw ValidationException::withMessages(['agreement' => 'This task is not ready for an agreement.']);
             }
             if (in_array($task->work_mode, ['onsite', 'hybrid'], true)
@@ -33,17 +38,54 @@ class AgreementWorkflow
                 throw ValidationException::withMessages(['task' => 'The task must have complete workplace details before an agreement can be proposed.']);
             }
 
-            $application = $accepted->first();
             $agreement = new Agreement;
             $agreement->task_id = $task->id;
             $agreement->application_id = $application->id;
             $agreement->poster_id = $poster->id;
             $agreement->student_id = $application->applicant_id;
+            $agreement->status = AgreementStatus::Draft;
+            $agreement->save();
+
+            $dueDate = $task->deadline && $task->deadline->toDateString() > today()->toDateString()
+                ? $task->deadline->toDateString()
+                : today()->addDays(7)->toDateString();
+            $deliverables = trim((string) $task->deliverables) ?: trim($task->description);
+            $amount = $application->proposed_amount ?? $task->budget ?? $task->budget_min ?? $task->budget_max;
+            if ($amount === null) {
+                throw ValidationException::withMessages(['agreement' => 'A task budget is required before an agreement can be prepared.']);
+            }
+
+            $this->addVersion($agreement, $poster, $task, [
+                'deliverables' => $deliverables,
+                'terms' => 'Complete the work described in the task listing and provide the listed deliverables by the due date.',
+                'final_amount' => $amount,
+                'start_date' => null,
+                'due_date' => $dueDate,
+                'payment_arrangement' => 'The poster and worker will agree directly on the payment method and timing before payment.',
+            ], null, 1, false);
+
+            return $agreement;
+        });
+    }
+
+    public function sendDraft(Agreement $agreement, User $poster): Agreement
+    {
+        return DB::transaction(function () use ($agreement, $poster): Agreement {
+            $agreement = Agreement::query()->lockForUpdate()->findOrFail($agreement->id);
+            if ($agreement->poster_id !== $poster->id || $agreement->status !== AgreementStatus::Draft) {
+                throw ValidationException::withMessages(['agreement' => 'This agreement is no longer a draft you can send.']);
+            }
+            $version = AgreementVersion::query()->lockForUpdate()->findOrFail($agreement->current_version_id);
+            $task = Task::query()->lockForUpdate()->findOrFail($agreement->task_id);
+            if ($task->status !== TaskStatus::Assigned) {
+                throw ValidationException::withMessages(['agreement' => 'This task is no longer awaiting an agreement.']);
+            }
+            $this->confirmVersion($version, $poster);
             $agreement->status = AgreementStatus::Negotiating;
             $agreement->save();
 
-            $this->addVersion($agreement, $poster, $task, $data, null, 1);
-            $this->alerts->send($application->applicant()->firstOrFail(), 'agreement.proposed', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $poster->id);
+            $applicant = User::query()->findOrFail($agreement->student_id);
+            $this->alerts->send($applicant, 'agreement.proposed', route('agreements.show', $agreement->id, false), ['task_id' => $task->id, 'agreement_id' => $agreement->id], ['task_title' => $task->title], $poster->id);
 
             return $agreement;
         });
@@ -132,7 +174,9 @@ class AgreementWorkflow
     {
         DB::transaction(function () use ($agreement, $user, $reason): void {
             $agreement = Agreement::query()->lockForUpdate()->findOrFail($agreement->id);
-            $this->assertNegotiating($agreement);
+            if (! in_array($agreement->status, [AgreementStatus::Draft, AgreementStatus::Negotiating], true)) {
+                throw ValidationException::withMessages(['agreement' => 'This agreement can no longer be cancelled.']);
+            }
 
             $agreement->status = AgreementStatus::Cancelled;
             $agreement->cancelled_at = now();
@@ -154,7 +198,7 @@ class AgreementWorkflow
         });
     }
 
-    private function addVersion(Agreement $agreement, User $user, Task $task, array $data, ?string $comment, int $number): AgreementVersion
+    private function addVersion(Agreement $agreement, User $user, Task $task, array $data, ?string $comment, int $number, bool $confirmProposer = true): AgreementVersion
     {
         $version = new AgreementVersion;
         $version->agreement_id = $agreement->id;
@@ -188,7 +232,9 @@ class AgreementWorkflow
 
         $agreement->current_version_id = $version->id;
         $agreement->save();
-        $this->confirmVersion($version, $user);
+        if ($confirmProposer) {
+            $this->confirmVersion($version, $user);
+        }
 
         return $version;
     }

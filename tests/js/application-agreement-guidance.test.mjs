@@ -56,7 +56,7 @@ const AgreementDetails = loadPage('resources/js/components/agreement-details.tsx
     '@/components/ui/textarea': { Textarea: (props) => element('textarea', props) },
     '@/components/input-error': () => null,
     '@/components/agreement-status-badge': { AgreementStatusBadge: () => element('span', { children: 'Negotiating' }) },
-    '@/routes/agreements': { default: { confirm: { form: () => ({ action: '/agreements/1/confirm', method: 'post' }) }, revise: { form: () => ({ action: '/agreements/1/versions', method: 'post' }) }, sendBack: { form: () => ({ action: '/agreements/1/send-back', method: 'post' }) }, cancel: { form: () => ({ action: '/agreements/1/cancel', method: 'post' }) } } },
+    '@/routes/agreements': { default: { store: { form: (id) => ({ action: `/tasks/${id}/agreement`, method: 'post' }) }, confirm: { form: () => ({ action: '/agreements/1/confirm', method: 'post' }) }, revise: { form: () => ({ action: '/agreements/1/versions', method: 'post' }) }, sendBack: { form: () => ({ action: '/agreements/1/send-back', method: 'post' }) }, cancel: { form: () => ({ action: '/agreements/1/cancel', method: 'post' }) } } },
     '@/components/completion-payment-panel': { CompletionPaymentPanel: () => null },
     '@/components/star-rating': { StarRating: () => null },
     '@/components/rating-summary': { ratingNotice: 'Rating notice' },
@@ -67,11 +67,13 @@ test('my applications explains the status and next step for pending and accepted
         applications: { links: [], data: [
             { id: 1, taskId: 1, taskTitle: 'Synthetic pending task', posterName: 'Synthetic Poster', budget: '500.00', status: 'pending', statusLabel: 'Pending', taskStatus: 'Approved', taskApproved: true, otherApplicantAccepted: true, agreementId: null, agreementStatus: null, agreementStatusLabel: null, paymentStatus: null, paymentStatusLabel: null, appliedAt: null, needsRating: false, conversationId: null, messageBlockedReason: null },
             { id: 2, taskId: 2, taskTitle: 'Synthetic accepted task', posterName: 'Synthetic Poster', budget: '700.00', status: 'accepted', statusLabel: 'Accepted', taskStatus: 'Assigned', taskApproved: false, otherApplicantAccepted: false, agreementId: 3, agreementStatus: 'negotiating', agreementStatusLabel: 'Negotiating', paymentStatus: null, paymentStatusLabel: null, appliedAt: null, needsRating: false, conversationId: null, messageBlockedReason: null },
+            { id: 3, taskId: 3, taskTitle: 'Synthetic draft agreement task', posterName: 'Synthetic Poster', budget: '700.00', budgetDisplay: '₱700.00', status: 'accepted', statusLabel: 'Accepted', taskStatus: 'Assigned', taskApproved: false, otherApplicantAccepted: false, agreementId: null, agreementStatus: 'draft', agreementStatusLabel: 'Draft', paymentStatus: null, paymentStatusLabel: null, appliedAt: null, needsRating: false, conversationId: null, messageBlockedReason: null },
         ] },
     }));
 
     assert.match(markup, /Your application stays active until an agreement is confirmed/);
     assert.match(markup, /Review the agreement and confirm the same version before work begins/);
+    assert.match(markup, /The poster is reviewing the prepared agreement/);
     assert.match(markup, /View agreement/);
 });
 
@@ -89,11 +91,30 @@ test('agreement page clearly states that both people must confirm the same versi
 
     assert.match(markup, /Review the work, amount, dates, and payment arrangement/);
     assert.match(markup, /both people confirm the same version/);
-    assert.match(markup, /I agree to these terms/);
+    assert.match(markup, /I agree/);
     assert.match(markup, /Propose different terms/);
-    assert.match(markup, /Ask for a change/);
+    assert.match(markup, /Request a change/);
     for (const id of ['revise-deliverables', 'revise-terms', 'revise-final-amount', 'revise-start-date', 'revise-due-date', 'revise-payment-arrangement', 'revise-comment', 'send-back-body', 'cancel-reason']) {
         assert.match(markup, new RegExp(`for=\\"${id}\\"`), `Expected a visible or screen-reader label for ${id}.`);
         assert.match(markup, new RegExp(`id=\\"${id}\\"`), `Expected the field ${id} to match its label.`);
     }
+});
+
+test('poster sees a prefilled draft summary and can send it with one action', () => {
+    const markup = renderToStaticMarkup(React.createElement(AgreementDetails, {
+        agreement: {
+            id: 7, status: 'draft', statusLabel: 'Draft', lockedAt: null, cancelledAt: null, cancelledBy: null, cancellationReason: null, recordReference: null,
+            task: { id: 4, title: 'Synthetic task', budget: '500.00', budgetDisplay: '₱500.00', status: 'Assigned' },
+            poster: { id: 2, name: 'Synthetic Poster' }, student: { id: 3, name: 'Synthetic Worker' },
+            currentVersion: { id: 9, versionNumber: 1, proposerId: 2, proposerName: 'Synthetic Poster', deliverables: 'Prepared deliverables', terms: 'Prepared terms', finalAmount: '450.00', startDate: null, dueDate: '2026-12-01', workMode: 'Remote', workplaceName: null, workplaceAddress: null, paymentArrangement: 'Prepared arrangement', comment: null, createdAt: null, confirmations: [] },
+            versions: [], messages: [],
+        },
+        completionPayment: {}, viewerId: 2, actionsAllowed: true, notice: 'Agreement notice', termsMaxLength: 3000,
+    }));
+
+    assert.match(markup, /Send agreement/);
+    assert.match(markup, /Prepared deliverables/);
+    assert.match(markup, /₱450\.00/);
+    assert.match(markup, /Prepared arrangement/);
+    assert.match(markup, /same version before work begins/);
 });

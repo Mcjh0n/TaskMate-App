@@ -8,7 +8,7 @@ use App\Http\Requests\CancelAgreementRequest;
 use App\Http\Requests\ConfirmAgreementRequest;
 use App\Http\Requests\SendBackAgreementRequest;
 use App\Http\Requests\StoreAgreementVersionRequest;
-use App\Http\Requests\StoreInitialAgreementRequest;
+use App\Http\Requests\SendAgreementRequest;
 use App\Models\Agreement;
 use App\Models\AgreementVersion;
 use App\Models\Task;
@@ -27,33 +27,24 @@ use Inertia\Response;
 
 class AgreementController extends Controller
 {
-    public function create(Task $task, Request $request): Response
+    public function create(Task $task, Request $request, AgreementWorkflow $workflow): RedirectResponse
     {
-        Gate::authorize('create', [Agreement::class, $task]);
-        $accepted = $task->applications()->where('status', 'accepted')->firstOrFail();
-        $deadline = $task->deadline?->toDateString();
-        $defaultDueDate = $deadline && $deadline > today()->toDateString() ? $deadline : today()->addDays(7)->toDateString();
+        $agreement = $task->agreement;
+        if (! $agreement || $agreement->status === AgreementStatus::Cancelled) {
+            Gate::authorize('create', [Agreement::class, $task]);
+            $application = $task->applications()->where('status', 'accepted')->firstOrFail();
+            $agreement = $workflow->createDraft($task, $request->user(), $application);
+        }
+        Gate::authorize('view', $agreement);
 
-        return Inertia::render('agreements/create', [
-            'task' => $this->taskSummary($task),
-            'workerName' => $accepted->applicant->name,
-            'defaults' => [
-                'deliverables' => $task->deliverables,
-                'finalAmount' => $accepted->proposed_amount ?? $task->budget ?? $task->budget_min,
-                'startDate' => today()->addDay()->toDateString(),
-                'dueDate' => $defaultDueDate,
-                'workplaceName' => $task->workplace_name,
-                'workplaceAddress' => $task->workplace_address,
-                'workMode' => $task->work_mode,
-            ],
-            'termsMaxLength' => config('taskmate.agreement.terms_max_length', 3000),
-        ]);
+        return redirect()->route('agreements.show', $agreement);
     }
 
-    public function store(StoreInitialAgreementRequest $request, Task $task, AgreementWorkflow $workflow): RedirectResponse
+    public function store(SendAgreementRequest $request, Task $task, AgreementWorkflow $workflow): RedirectResponse
     {
-        $agreement = $workflow->create($task, $request->user(), $request->validated());
-        return redirect()->route('agreements.show', $agreement)->with('status', 'Your agreement proposal was sent.');
+        $agreement = $task->agreement()->firstOrFail();
+        $workflow->sendDraft($agreement, $request->user());
+        return redirect()->route('agreements.show', $agreement)->with('status', 'The agreement was sent to the applicant for review.');
     }
 
     public function show(Agreement $agreement, Request $request): Response
@@ -270,8 +261,4 @@ class AgreementController extends Controller
         ];
     }
 
-    private function taskSummary(Task $task): array
-    {
-        return ['id' => $task->id, 'title' => $task->title, 'budget' => $task->budget, 'budgetDisplay' => $task->budgetDisplay(), 'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode), 'workplaceName' => $task->workplace_name, 'workplaceAddress' => $task->workplace_address];
-    }
 }

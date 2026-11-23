@@ -230,7 +230,7 @@ class BrowseApplicationsTest extends TestCase
         $other = $this->student();
         $nonPoster = $this->poster();
         $task = $this->task($poster);
-        $first = Application::factory()->create(['task_id' => $task->id, 'applicant_id' => $student->id]);
+        $first = Application::factory()->create(['task_id' => $task->id, 'applicant_id' => $student->id, 'proposed_amount' => 1800]);
         $second = Application::factory()->create(['task_id' => $task->id, 'applicant_id' => $other->id]);
         $student->forceFill(['email' => 'private-student@example.test', 'id_number' => 'PRIVATE-ID'])->save();
 
@@ -244,8 +244,17 @@ class BrowseApplicationsTest extends TestCase
         $this->assertSame(ApplicationStatus::Pending, $second->fresh()->status);
         $this->assertNull($second->fresh()->responded_at);
         $this->assertSame(TaskStatus::Assigned, $task->fresh()->status);
+        $agreement = $task->agreements()->with('currentVersion')->first();
+        $this->assertNotNull($agreement);
+        $this->assertSame(\App\Enums\AgreementStatus::Draft, $agreement->status);
+        $this->assertSame('1800.00', $agreement->currentVersion->final_amount);
+        $this->assertSame(0, $agreement->currentVersion->confirmations()->count());
+        $this->actingAs($student)->get(route('applications.mine'))->assertInertia(fn ($page) => $page
+            ->where('applications.data.0.agreementStatus', 'draft')
+            ->where('applications.data.0.agreementId', null));
         $this->actingAs($other)->get(route('applications.mine'))->assertInertia(fn ($page) => $page
-            ->where('applications.data.0.otherApplicantAccepted', true));
+            ->where('applications.data.0.otherApplicantAccepted', true)
+            ->where('applications.data.0.agreementStatus', null));
         $this->post(route('tasks.applications.accept', [$task, $second]))->assertForbidden();
         $this->assertSame(ApplicationStatus::Pending, $second->fresh()->status);
         $this->get(route('tasks.edit', $task))->assertForbidden();
@@ -287,6 +296,7 @@ class BrowseApplicationsTest extends TestCase
         $this->assertSame(TaskStatus::Cancelled, $anotherTask->fresh()->status);
         $this->assertSame(ApplicationStatus::Cancelled, $accepted->fresh()->status);
         $this->assertSame(ApplicationStatus::Declined, $otherPending->fresh()->status);
+        $this->assertSame(\App\Enums\AgreementStatus::Cancelled, $anotherTask->fresh()->agreement->status);
     }
 
     public function test_task_edit_is_refused_for_pending_or_accepted_applications_and_assigned_tasks(): void

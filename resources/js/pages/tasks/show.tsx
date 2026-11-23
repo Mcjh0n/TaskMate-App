@@ -56,8 +56,8 @@ export default function ShowTask({ task, statusLabel, canEdit, canCancel, canRes
                 </section>
                 {task.reviewNote && <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">Review note: {task.reviewNote}</div>}
                 {task.removalReason && <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-950">This post was removed by an administrator. Reason: {task.removalReason}</div>}
-                {agreement && <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-5"><div><h2 className="font-semibold">Agreement</h2><p className="text-sm">Status: {agreement.statusLabel}</p><div className="mt-2"><PaymentStatusBadge status={agreement.paymentStatus} label={agreement.paymentStatusLabel} /></div></div><Button asChild><Link href={agreements.show(agreement.id)}>View agreement</Link></Button></section>}
-                {canProposeAgreement && <Button asChild><Link href={agreements.create(task.id)}>Propose agreement</Link></Button>}
+                {agreement && <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-5"><div><h2 className="font-semibold">Agreement</h2><p className="text-sm">Status: {agreement.statusLabel}</p><div className="mt-2"><PaymentStatusBadge status={agreement.paymentStatus} label={agreement.paymentStatusLabel} /></div></div><Button asChild><Link href={agreements.show(agreement.id)}>{agreement.status === 'draft' ? 'Review and send agreement' : 'View agreement'}</Link></Button></section>}
+                {canProposeAgreement && <Button asChild><Link href={agreements.create(task.id)}>Prepare agreement</Link></Button>}
                 {applicants.length > 0 && <section className="space-y-4 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Applicants ({applicants.length})</h2>
                     {applicants.map((application) => <article key={application.id} className="space-y-3 border-t pt-4">

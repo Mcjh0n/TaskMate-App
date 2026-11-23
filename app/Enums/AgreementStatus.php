@@ -4,6 +4,7 @@ namespace App\Enums;
 
 enum AgreementStatus: string
 {
+    case Draft = 'draft';
     case Negotiating = 'negotiating';
     case Agreed = 'agreed';
     case Cancelled = 'cancelled';
@@ -11,6 +12,7 @@ enum AgreementStatus: string
     public function label(): string
     {
         return match ($this) {
+            self::Draft => 'Draft',
             self::Negotiating => 'Negotiating',
             self::Agreed => 'Agreed',
             self::Cancelled => 'Cancelled',

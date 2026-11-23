@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Enums\TaskStatus;
 use App\Enums\ApplicationStatus;
+use App\Enums\AgreementStatus;
+use App\Models\Agreement;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
@@ -178,6 +180,14 @@ class TaskController extends Controller
                 ->update(['status' => ApplicationStatus::Declined->value, 'responded_at' => $now, 'updated_at' => $now]);
             $lockedTask->applications()->where('status', ApplicationStatus::Accepted->value)
                 ->update(['status' => ApplicationStatus::Cancelled->value, 'responded_at' => $now, 'updated_at' => $now]);
+            $draftAgreement = Agreement::query()->where('task_id', $lockedTask->id)->where('status', AgreementStatus::Draft->value)->latest('id')->first();
+            if ($draftAgreement) {
+                $draftAgreement->status = AgreementStatus::Cancelled;
+                $draftAgreement->cancelled_at = $now;
+                $draftAgreement->cancelled_by = $request->user()->id;
+                $draftAgreement->cancellation_reason = 'The poster cancelled the task before sending the agreement.';
+                $draftAgreement->save();
+            }
             $lockedTask->status = TaskStatus::Cancelled;
             $lockedTask->save();
             foreach ($pending as $application) $alerts->send($application->applicant, 'application.declined', route('applications.mine', [], false), ['task_id' => $lockedTask->id, 'application_id' => $application->id], ['task_title' => $lockedTask->title], $request->user()->id);

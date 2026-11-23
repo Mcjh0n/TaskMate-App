@@ -19,6 +19,7 @@ use App\Services\RatingSummary;
 use App\Services\OffPlatformScanner;
 use App\Services\TaskMateNotifications;
 use App\Services\ConversationWorkflow;
+use App\Services\AgreementWorkflow;
 
 class ApplicationController extends Controller
 {
@@ -63,7 +64,7 @@ class ApplicationController extends Controller
                 'taskApproved' => $application->task->status === TaskStatus::Approved,
                 'otherApplicantAccepted' => $application->status === ApplicationStatus::Pending
                     && $application->task->applications()->where('status', ApplicationStatus::Accepted->value)->exists(),
-                'agreementId' => $application->agreement?->id,
+                'agreementId' => $application->agreement?->status === \App\Enums\AgreementStatus::Draft ? null : $application->agreement?->id,
                 'agreementStatus' => $application->agreement?->status->value,
                 'agreementStatusLabel' => $application->agreement?->status->label(),
                 'paymentStatus' => $application->agreement?->paymentStatus()->value,
@@ -92,10 +93,10 @@ class ApplicationController extends Controller
         return back()->with('status', 'Your application was withdrawn.');
     }
 
-    public function accept(Request $request, Task $task, Application $application, TaskMateNotifications $alerts): RedirectResponse
+    public function accept(Request $request, Task $task, Application $application, TaskMateNotifications $alerts, AgreementWorkflow $agreements): RedirectResponse
     {
         abort_unless($application->task_id === $task->id, 404);
-        DB::transaction(function () use ($request, $task, $application, $alerts): void {
+        $agreement = DB::transaction(function () use ($request, $task, $application, $alerts, $agreements) {
             $task = Task::query()->lockForUpdate()->findOrFail($task->id);
             $application->refresh();
             Gate::authorize('respond', $application);
@@ -110,10 +111,10 @@ class ApplicationController extends Controller
             $task->status = TaskStatus::Assigned;
             $task->save();
             $alerts->send($application->applicant()->firstOrFail(), 'application.accepted', route('applications.mine', [], false), ['task_id' => $task->id, 'application_id' => $application->id], ['task_title' => $task->title], $request->user()->id);
-
+            return $agreements->createDraft($task, $request->user(), $application);
         });
 
-        return back()->with('status', 'The applicant was accepted.');
+        return redirect()->route('agreements.show', $agreement)->with('status', 'The applicant was accepted. Review the prepared agreement and send it when you are ready.');
     }
 
     public function decline(Request $request, Task $task, Application $application, TaskMateNotifications $alerts): RedirectResponse

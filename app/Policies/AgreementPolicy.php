@@ -23,7 +23,15 @@ class AgreementPolicy
 
     public function view(User $user, Agreement $agreement): bool
     {
-        return in_array($user->id, [$agreement->poster_id, $agreement->student_id], true);
+        return $user->id === $agreement->poster_id
+            || ($agreement->status !== AgreementStatus::Draft && $user->id === $agreement->student_id);
+    }
+
+    public function send(User $user, Agreement $agreement): bool
+    {
+        return $agreement->poster_id === $user->id
+            && $agreement->status === AgreementStatus::Draft
+            && $agreement->task()->where('status', TaskStatus::Assigned->value)->exists();
     }
 
     public function revise(User $user, Agreement $agreement): bool
@@ -43,7 +51,9 @@ class AgreementPolicy
 
     public function cancel(User $user, Agreement $agreement): bool
     {
-        return $this->isParty($user, $agreement) && $agreement->status === AgreementStatus::Negotiating;
+        return $agreement->status === AgreementStatus::Draft
+            ? $agreement->poster_id === $user->id
+            : $this->isParty($user, $agreement) && $agreement->status === AgreementStatus::Negotiating;
     }
 
     public function markDelivered(User $user, Agreement $agreement): bool
