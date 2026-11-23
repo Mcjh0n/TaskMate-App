@@ -25,11 +25,16 @@ class ProfileController extends Controller
             'status' => $request->session()->get('status'),
             'accountDetails' => $user->isOrganization()
                 ? [
+                    'email' => $user->email,
+                    'idNumber' => $user->id_number,
+                    'firstName' => $user->first_name,
+                    'middleName' => $user->middle_name,
+                    'lastName' => $user->last_name,
                     'organizationName' => $user->organization_name,
                     'position' => $user->position,
                     'supportingInfo' => $user->supporting_info,
                 ]
-                : ['affiliation' => $user->affiliation],
+                : ['email' => $user->email, 'idNumber' => $user->id_number, 'firstName' => $user->first_name, 'middleName' => $user->middle_name, 'lastName' => $user->last_name, 'affiliation' => $user->affiliation],
         ]);
     }
 
@@ -40,6 +45,11 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $validated = $request->validated();
+        $user->first_name = trim($validated['first_name']);
+        $user->middle_name = isset($validated['middle_name']) && trim($validated['middle_name']) !== '' ? trim($validated['middle_name']) : null;
+        $user->last_name = trim($validated['last_name']);
+        $user->name = trim(implode(' ', array_filter([$user->first_name, $user->middle_name, $user->last_name])));
+        unset($validated['first_name'], $validated['middle_name'], $validated['last_name']);
         $user->fill($validated);
 
         if ($user->isDirty('email')) {

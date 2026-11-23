@@ -39,7 +39,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Membership> $teamMemberships
  * @property-read Collection<int, Team> $teams
  */
-#[Fillable(['name', 'email', 'password', 'user_type', 'id_number', 'affiliation', 'organization_name', 'position', 'supporting_info'])]
+#[Fillable(['name', 'first_name', 'middle_name', 'last_name', 'email', 'password', 'user_type', 'id_number', 'affiliation', 'organization_name', 'position', 'supporting_info'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
@@ -82,6 +82,11 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     public function canApply(): bool
     {
         return ! $this->isAdmin() && $this->isStudent() && $this->isVerified();
+    }
+
+    public function canBrowse(): bool
+    {
+        return ! $this->isAdmin() && $this->isStudent();
     }
 
     public function adminActions(): MorphMany

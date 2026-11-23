@@ -47,11 +47,15 @@ class RegistrationTest extends TestCase
 
     public function test_students_can_register_with_cmu_email_and_student_details(): void
     {
-        $this->post(route('register.store'), $this->validStudent())->assertRedirect(route('dashboard'));
+        $this->post(route('register.store'), $this->validStudent())->assertSessionHasNoErrors()->assertRedirect();
 
         $user = User::query()->where('email', 'student@cmu.edu.ph')->firstOrFail();
         $this->assertSame(UserType::Student, $user->user_type);
-        $this->assertSame('FAKE-STU-101', $user->id_number);
+        $this->assertSame('1234567890', $user->id_number);
+        $this->assertSame('Synthetic Applicant', $user->name);
+        $this->assertSame('Synthetic', $user->first_name);
+        $this->assertNull($user->middle_name);
+        $this->assertSame('Applicant', $user->last_name);
         $this->assertSame('Synthetic College and Program', $user->affiliation);
         $this->assertSame(VerificationStatus::Pending, $user->verification_status);
         $this->assertFalse($user->is_admin);
@@ -64,7 +68,7 @@ class RegistrationTest extends TestCase
             'user_type' => 'faculty_staff',
             'id_number' => 'FAKE-EMP-101',
             'affiliation' => 'Synthetic CMU Office',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertSessionHasNoErrors()->assertRedirect();
 
         $this->assertDatabaseHas('users', [
             'email' => 'faculty@cmu.edu.ph',
@@ -82,7 +86,7 @@ class RegistrationTest extends TestCase
             'organization_name' => 'Synthetic Example Organization',
             'position' => 'Synthetic Coordinator',
             'supporting_info' => 'A synthetic organization used only for registration tests.',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect();
 
         $this->assertDatabaseHas('users', [
             'email' => 'representative@example.test',
@@ -105,6 +109,15 @@ class RegistrationTest extends TestCase
                 'affiliation' => 'Synthetic College or Office',
             ])->assertSessionHasErrors('email');
         }
+    }
+
+    public function test_student_id_must_be_exactly_ten_digits_but_employee_id_can_contain_letters(): void
+    {
+        foreach (['123456789', '12345678901', '12345A7890'] as $id) {
+            $this->from(route('register'))->post(route('register.store'), [...$this->validStudent(), 'email' => 'invalid-id-'.md5($id).'@cmu.edu.ph', 'id_number' => $id])->assertSessionHasErrors('id_number');
+        }
+
+        $this->post(route('register.store'), [...$this->baseRegistration('employee-format@cmu.edu.ph'), 'user_type' => 'faculty_staff', 'id_number' => 'EMP-ABC-01', 'affiliation' => 'Synthetic Office'])->assertRedirect();
     }
 
     public function test_registration_requires_fields_for_each_selected_account_type(): void
@@ -158,7 +171,7 @@ class RegistrationTest extends TestCase
             ...$this->validStudent(),
             'is_admin' => true,
             'verification_status' => 'verified',
-        ])->assertRedirect(route('dashboard'));
+        ])->assertRedirect();
 
         $user = User::query()->where('email', 'student@cmu.edu.ph')->firstOrFail();
         $this->assertFalse($user->is_admin);
@@ -184,6 +197,8 @@ class RegistrationTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page
                 ->where('auth.user.id', $user->id)
                 ->missing('auth.user.id_number')
+                ->where('accountDetails.email', $user->email)
+                ->where('accountDetails.idNumber', $user->id_number)
                 ->missing('auth.user.supporting_info')
                 ->missing('auth.user.verification_note'));
     }
@@ -214,7 +229,7 @@ class RegistrationTest extends TestCase
         return [
             ...$this->baseRegistration('student@cmu.edu.ph'),
             'user_type' => 'student',
-            'id_number' => 'FAKE-STU-101',
+            'id_number' => '1234567890',
             'affiliation' => 'Synthetic College and Program',
         ];
     }
@@ -223,7 +238,9 @@ class RegistrationTest extends TestCase
     private function baseRegistration(string $email): array
     {
         return [
-            'name' => 'Synthetic Test Applicant',
+            'first_name' => 'Synthetic',
+            'middle_name' => '',
+            'last_name' => 'Applicant',
             'email' => $email,
             'password' => 'password',
             'password_confirmation' => 'password',

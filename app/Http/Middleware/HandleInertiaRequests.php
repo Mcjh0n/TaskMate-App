@@ -50,6 +50,7 @@ class HandleInertiaRequests extends Middleware
                     'is_admin' => $user->is_admin,
                     'can_post_tasks' => ! $accountSuspended && $user->canPost(),
                     'can_apply_tasks' => ! $accountSuspended && $user->canApply(),
+                    'can_browse_tasks' => ! $accountSuspended && $user->canBrowse(),
                     'verification_status' => $user->verification_status?->value,
                     'created_at' => $user->created_at,
                     'updated_at' => $user->updated_at,

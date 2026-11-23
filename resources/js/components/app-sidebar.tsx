@@ -39,9 +39,11 @@ export function AppSidebar() {
             { title: 'My Tasks', href: myTasks().url, icon: BriefcaseBusiness },
         );
     }
+    if (page.props.auth.user?.can_browse_tasks) {
+        mainNavItems.push({ title: 'Browse Tasks', href: browse.index().url, icon: Search });
+    }
     if (page.props.auth.user?.can_apply_tasks) {
         mainNavItems.push(
-            { title: 'Browse Tasks', href: browse.index().url, icon: Search },
             { title: 'My Applications', href: applications.mine().url, icon: BriefcaseBusiness },
         );
     }

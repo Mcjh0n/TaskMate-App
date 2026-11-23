@@ -24,7 +24,7 @@ export default function Register({ passwordRules, institutionalEmailDomains }: P
     const affiliationLabel = userType === 'student' ? 'College and program' : 'College or office';
     const idLabel = userType === 'student' ? 'Student ID number' : 'Employee ID number';
     const accountTypeGuidance = {
-        student: 'After administrator approval, students can browse and apply. Students can also post tasks when student posting is enabled.',
+        student: 'Students can browse approved tasks right away. Administrator verification is required before applying. Students can also post tasks when student posting is enabled.',
         faculty_staff: 'After administrator approval, faculty and staff can post tasks. Faculty and staff accounts cannot apply to tasks.',
         organization: 'After administrator approval, organization representatives can post tasks. Organization accounts cannot browse or apply to tasks.',
     }[userType];
@@ -62,7 +62,7 @@ export default function Register({ passwordRules, institutionalEmailDomains }: P
                             <section className="space-y-2 rounded-lg border bg-muted/30 p-4 text-sm" aria-label="How account verification works">
                                 <h2 className="font-medium">How account review works</h2>
                                 <p>An administrator reviews the details you submit. You must also confirm your email address. Email confirmation and TaskMate account review are separate steps.</p>
-                                <p>Until your account is approved, you cannot browse, post, or apply. TaskMate does not ask for ID photos or other identity documents.</p>
+                                <p>Students can browse approved tasks before verification, but must be verified to apply. Posting also requires administrator approval. TaskMate does not ask for ID photos or other identity documents.</p>
                             </section>
 
                             <SafetyNotice />
@@ -92,8 +92,8 @@ export default function Register({ passwordRules, institutionalEmailDomains }: P
                                 <>
                                     <div className="grid gap-2">
                                         <Label htmlFor="id_number">{idLabel}</Label>
-                                        <Input id="id_number" name="id_number" required placeholder={idLabel} />
-                                        <p className="text-xs text-muted-foreground">Used for account review. Your ID number is visible only to you and administrators.</p>
+                                        <Input id="id_number" name="id_number" required placeholder={idLabel} inputMode={userType === 'student' ? 'numeric' : undefined} pattern={userType === 'student' ? '[0-9]{10}' : undefined} maxLength={userType === 'student' ? 10 : undefined} />
+                                        <p className="text-xs text-muted-foreground">Used for account review. Your ID number is visible only to you and administrators.{userType === 'student' ? ' Enter exactly 10 digits.' : ''}</p>
                                         <InputError message={errors.id_number} />
                                     </div>
                                     <div className="grid gap-2">
@@ -105,11 +105,11 @@ export default function Register({ passwordRules, institutionalEmailDomains }: P
                                 </>
                             )}
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">{userType === 'organization' ? 'Representative name' : 'Name'}</Label>
-                                <Input id="name" name="name" required autoFocus autoComplete="name" placeholder="Full name" />
-                                <InputError message={errors.name} />
-                            </div>
+                            <section className="grid gap-3 sm:grid-cols-3" aria-label="Your name">
+                                <div className="grid gap-2"><Label htmlFor="first_name">First name</Label><Input id="first_name" name="first_name" required autoFocus autoComplete="given-name" placeholder="First name" /><InputError message={errors.first_name} /></div>
+                                <div className="grid gap-2"><Label htmlFor="middle_name">Middle name (optional)</Label><Input id="middle_name" name="middle_name" autoComplete="additional-name" placeholder="Middle name" /><InputError message={errors.middle_name} /></div>
+                                <div className="grid gap-2"><Label htmlFor="last_name">Last name</Label><Input id="last_name" name="last_name" required autoComplete="family-name" placeholder="Last name" /><InputError message={errors.last_name} /></div>
+                            </section>
 
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>

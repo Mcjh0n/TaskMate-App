@@ -37,6 +37,7 @@ class CreateNewUser implements CreatesNewUsers
         }
 
         $profileRules = $this->profileRules();
+        unset($profileRules['name']);
         $profileRules['email'][] = function (string $attribute, mixed $value, \Closure $fail) use ($input): void {
             if (! in_array($input['user_type'] ?? null, [UserType::Student->value, UserType::FacultyStaff->value], true)) {
                 return;
@@ -52,9 +53,13 @@ class CreateNewUser implements CreatesNewUsers
 
         Validator::make($input, [
             ...$profileRules,
+            'name' => ['prohibited'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'middle_name' => ['nullable', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'password' => $this->passwordRules(),
             'user_type' => ['required', Rule::in(array_keys(config('taskmate.user_types', [])))],
-            'id_number' => ['required_if:user_type,student,faculty_staff', 'prohibited_unless:user_type,student,faculty_staff', 'nullable', 'string', 'max:255'],
+            'id_number' => ['required_if:user_type,student,faculty_staff', 'prohibited_unless:user_type,student,faculty_staff', 'nullable', 'string', 'max:255', Rule::when(($input['user_type'] ?? null) === UserType::Student->value, ['digits:10'])],
             'affiliation' => ['required_if:user_type,student,faculty_staff', 'prohibited_unless:user_type,student,faculty_staff', 'nullable', 'string', 'max:255'],
             'organization_name' => ['required_if:user_type,organization', 'prohibited_unless:user_type,organization', 'nullable', 'string', 'max:255'],
             'position' => ['required_if:user_type,organization', 'prohibited_unless:user_type,organization', 'nullable', 'string', 'max:255'],
@@ -63,7 +68,10 @@ class CreateNewUser implements CreatesNewUsers
 
         return DB::transaction(function () use ($input) {
             $user = new User;
-            $user->name = $input['name'];
+            $user->first_name = trim($input['first_name']);
+            $user->middle_name = isset($input['middle_name']) && trim($input['middle_name']) !== '' ? trim($input['middle_name']) : null;
+            $user->last_name = trim($input['last_name']);
+            $user->name = trim(implode(' ', array_filter([$user->first_name, $user->middle_name, $user->last_name])));
             $user->email = $input['email'];
             $user->password = $input['password'];
             $user->user_type = UserType::from($input['user_type']);

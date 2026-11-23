@@ -47,15 +47,15 @@ const Information = loadPage('resources/js/pages/public/info.tsx', {
 });
 
 test('landing page only shows actions available for the signed-in role', () => {
-    pageProps = { auth: { user: { is_admin: false, can_apply_tasks: true, can_post_tasks: true } } };
+    pageProps = { auth: { user: { is_admin: false, can_apply_tasks: true, can_post_tasks: true, can_browse_tasks: true } } };
     const student = renderToStaticMarkup(React.createElement(Welcome));
     assert.match(student, /href="\/browse"[^>]*>Browse tasks/);
     assert.match(student, /href="\/tasks\/create"[^>]*>Post a task/);
 
-    pageProps = { auth: { user: { is_admin: false, can_apply_tasks: false, can_post_tasks: false } } };
+    pageProps = { auth: { user: { is_admin: false, can_apply_tasks: false, can_post_tasks: false, can_browse_tasks: true } } };
     const unverified = renderToStaticMarkup(React.createElement(Welcome));
-    assert.match(unverified, /href="\/dashboard"[^>]*>Open dashboard/);
-    assert.doesNotMatch(unverified, /href="\/browse"|href="\/tasks\/create"/);
+    assert.match(unverified, /href="\/browse"[^>]*>Browse tasks/);
+    assert.doesNotMatch(unverified, /href="\/tasks\/create"/);
 });
 
 test('how-it-works page describes the main task flow and role limits', () => {

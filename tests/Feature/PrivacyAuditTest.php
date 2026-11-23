@@ -57,6 +57,16 @@ class PrivacyAuditTest extends TestCase
             ->missing('profile.email')
             ->missing('profile.idNumber')
             ->missing('profile.supportingInfo'));
+
+        $this->actingAs($student)->get('/dashboard')->assertInertia(fn (Assert $page) => $page
+            ->component('dashboard')
+            ->where('accountIdentity.email', $student->email)
+            ->where('accountIdentity.idNumber', $student->id_number));
+
+        $this->actingAs($student)->get('/settings/profile')->assertInertia(fn (Assert $page) => $page
+            ->component('settings/profile')
+            ->where('accountDetails.email', $student->email)
+            ->where('accountDetails.idNumber', $student->id_number));
     }
 
     public function test_admin_user_index_does_not_include_email_but_detail_is_the_raw_identity_view(): void
@@ -100,14 +110,14 @@ class PrivacyAuditTest extends TestCase
     public function test_registration_and_profile_forms_reject_file_uploads(): void
     {
         $this->from('/register')->post('/register', [
-            'name' => 'Synthetic Upload Attempt', 'email' => 'upload@cmu.edu.ph', 'password' => 'password',
-            'password_confirmation' => 'password', 'user_type' => 'student', 'id_number' => 'FAKE-UPLOAD-1',
+            'first_name' => 'Synthetic', 'last_name' => 'Upload', 'email' => 'upload@cmu.edu.ph', 'password' => 'password',
+            'password_confirmation' => 'password', 'user_type' => 'student', 'id_number' => '1234567890',
             'affiliation' => 'Synthetic College', 'identity_document' => UploadedFile::fake()->create('fake-id.pdf', 2, 'application/pdf'),
         ])->assertSessionHasErrors('documents');
 
         $owner = User::factory()->verified()->create();
         $this->actingAs($owner)->from('/settings/profile')->patch('/settings/profile', [
-            'name' => 'Synthetic Profile Owner', 'affiliation' => 'Synthetic College',
+            'first_name' => 'Synthetic', 'last_name' => 'Owner', 'email' => $owner->email, 'affiliation' => 'Synthetic College',
             'profile_photo' => UploadedFile::fake()->create('fake-photo.jpg', 2, 'image/jpeg'),
         ])->assertSessionHasErrors('profile');
     }

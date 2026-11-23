@@ -4,13 +4,13 @@ TaskMate is a prototype campus task marketplace for the Central Mindanao Univers
 
 ## Account types
 
-Students may browse and apply, and may post tasks while `students_can_post` is enabled. Master's and doctoral students use the ordinary Student account type. Faculty/staff may post tasks. Approved office or organization representatives may post tasks. Only students may apply; faculty/staff and organizations cannot apply.
+Students may browse approved tasks whether their verification is pending, rejected, or awaiting more information. Only verified students may apply. Student posting is enabled while `students_can_post` is true. Student registration requires a ten-digit numeric Student ID. Registration collects first, optional middle, and last names separately. Master's and doctoral students use the ordinary Student account type. Faculty/staff may post tasks and their employee ID format is unchanged. Approved office or organization representatives may post tasks. Faculty/staff and organizations cannot apply.
 
 **Prototype: use synthetic accounts and sample data only. Do not enter real identity or contact details.** TaskMate records agreements and payment status only. Payments move directly between users; TaskMate does not hold, process, recover, or guarantee payment. Verification, administrator review, and ratings do not guarantee safety.
 
 ## Proposed first-version journey
 
-The simplified first-version proposal focuses on account review, clear task posting and review, student browsing and applications, agreement confirmation before work, and recording completion and payment status. Ratings and reports support this journey but are optional; serious concerns belong in reports, not rating comments.
+The simplified first-version proposal focuses on account review, clear task posting and review, student browsing and applications, agreement confirmation before work, and recording completion and payment status. The task-posting budget limit is ₱999,999.99; this limit does not restrict application suggestions or later agreed/payment amounts. Ratings and reports support this journey but are optional; serious concerns belong in reports, not rating comments.
 
 The repository also contains extended features such as multi-dimension rating summaries, detailed report categories and escalation, sanctions, off-platform flag scanning, notifications, and conversations. Their place in the first-version demo is still for the team to decide. They have not been removed, and no stored records were dropped as part of the simplification work. See [the product simplification proposal](docs/product-simplification-plan.md) and [open decisions](docs/open-decisions.md).
 
@@ -35,6 +35,8 @@ npm run build
 The `.env` file is git-ignored. Keep `APP_DEBUG=false` outside local development; never expose stack traces or secrets in a shared environment. Review session cookie settings (`SESSION_SECURE_COOKIE`, `SESSION_HTTP_ONLY`, `SESSION_SAME_SITE`) for the deployment and use HTTPS. Web forms use Laravel CSRF protection. Password rules are defined in the starter authentication configuration; production requires at least 12 characters with mixed case, numbers, symbols, and a breach check.
 
 The project's `phpunit.xml` omits the redundant bootstrap path because this Windows PHP runtime reports spaced workspace paths as unreadable to PHPUnit. The normal `php artisan test` command uses Composer autoloading and is verified to work here.
+
+The signed-in user's email and ID number appear on their own dashboard and profile settings only. Existing full names are retained as saved; they are not split automatically. A user can replace the legacy name by entering the separate name fields in profile settings.
 
 ## Synthetic local accounts
 

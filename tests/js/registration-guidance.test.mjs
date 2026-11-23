@@ -59,7 +59,7 @@ test('registration explains account review and why requested student details are
 
     assert.match(markup, /How account review works/);
     assert.match(markup, /Email confirmation and TaskMate account review are separate steps/);
-    assert.match(markup, /browse, post, or apply/);
+    assert.match(markup, /Students can browse approved tasks before verification, but must be verified to apply/);
     assert.match(markup, /Student ID number/);
     assert.match(markup, /Your ID number is visible only to you and administrators/);
     assert.match(markup, /may appear on your profile/);

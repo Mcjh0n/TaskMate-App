@@ -69,8 +69,10 @@ class BrowseController extends Controller
             ] : null,
             'conversation' => $conversation ? ['id' => $conversation->id, 'sendBlockedReason' => $conversation->sendingBlockedReason($request->user())] : null,
             'canApply' => $application === null && $task->status === TaskStatus::Approved
+                && $request->user()->canApply()
                 && ($task->deadline === null || $task->deadline->toDateString() >= today()->toDateString())
                 && $task->poster_id !== $request->user()->id,
+            'applicantVerificationStatus' => $request->user()->verification_status->value,
             'problemReport' => ['action' => route('tasks.problem-reports.store', $task), 'types' => $this->problemReportTypes()],
             'offPlatformWarning' => $task->contentFlags()->where('source_user_id', '!=', $request->user()->id)->where('status', 'open')->exists(),
             'status' => $request->session()->get('status'),

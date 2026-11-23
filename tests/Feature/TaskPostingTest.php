@@ -149,13 +149,20 @@ class TaskPostingTest extends TestCase
         $this->post(route('tasks.store'), $this->taskData(['workplace_name' => '', 'workplace_address' => '']))->assertSessionHasErrors(['workplace_name', 'workplace_address']);
         $this->post(route('tasks.store'), $this->taskData(['work_mode' => 'hybrid', 'workplace_name' => '', 'workplace_address' => '']))->assertSessionHasErrors(['workplace_name', 'workplace_address']);
         $this->post(route('tasks.store'), $this->taskData(['budget' => 0]))->assertSessionHasErrors('budget');
-        $this->post(route('tasks.store'), $this->taskData(['budget' => 1000001]))->assertSessionHasErrors('budget');
+        $this->post(route('tasks.store'), $this->taskData(['budget' => 1000000]))->assertSessionHasErrors('budget');
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_hours' => 0.4]))->assertSessionHasErrors('estimated_duration_hours');
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_hours' => 501]))->assertSessionHasErrors('estimated_duration_hours');
         $this->post(route('tasks.store'), $this->taskData(['deadline' => now()->subDay()->toDateString()]))->assertSessionHasErrors('deadline');
         $this->post(route('tasks.store'), $this->taskData(['guidelines_confirmed' => '0']))->assertSessionHasErrors('guidelines_confirmed');
         $this->post(route('tasks.store'), $this->taskData(['complexity' => 'invented']))->assertSessionHasErrors('complexity');
         $this->post(route('tasks.store'), $this->taskData(['physical_demand' => 'invented']))->assertSessionHasErrors('physical_demand');
+    }
+
+    public function test_task_budget_accepts_the_six_digit_limit_with_cents(): void
+    {
+        $poster = $this->verifiedPoster();
+        $this->actingAs($poster)->post(route('tasks.store'), $this->taskData(['budget' => '999999.99']))->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('tasks', ['poster_id' => $poster->id, 'budget' => '999999.99']);
     }
 
     public function test_remote_task_discards_workplace_details_and_untrusted_status_fields(): void

@@ -133,9 +133,12 @@ Route::middleware(['auth', 'account.active'])->group(function () {
     Route::post('/my-sanctions/{sanction}/acknowledge', [SanctionsController::class, 'acknowledge'])->name('sanctions.acknowledge');
 });
 
-Route::middleware(['auth', 'account.active', 'account.verified', 'can.apply'])->group(function () {
+Route::middleware(['auth', 'account.active', 'can.browse'])->group(function () {
     Route::get('/browse', [BrowseController::class, 'index'])->name('browse.index');
     Route::get('/browse/{task}', [BrowseController::class, 'show'])->name('browse.show');
+});
+
+Route::middleware(['auth', 'account.active', 'account.verified', 'can.apply'])->group(function () {
     Route::post('/browse/{task}/apply', [ApplicationController::class, 'store'])->name('applications.store');
     Route::get('/my-applications', [ApplicationController::class, 'mine'])->name('applications.mine');
     Route::get('/my-applications/{application}/task', [BrowseController::class, 'applicationTask'])->name('applications.task');

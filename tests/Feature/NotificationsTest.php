@@ -35,8 +35,8 @@ class NotificationsTest extends TestCase
         $secondAdmin->forceFill(['is_admin' => true])->save();
 
         $this->post(route('register.store'), [
-            'name' => 'Synthetic New Account', 'email' => 'new-account@cmu.edu.ph',
-            'user_type' => 'student', 'id_number' => 'FAKE-NTF-01', 'affiliation' => 'Synthetic College',
+            'first_name' => 'Synthetic', 'last_name' => 'New Account', 'email' => 'new-account@cmu.edu.ph',
+            'user_type' => 'student', 'id_number' => '1234567890', 'affiliation' => 'Synthetic College',
             'password' => 'password', 'password_confirmation' => 'password',
         ])->assertRedirect();
 

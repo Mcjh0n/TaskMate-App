@@ -36,6 +36,7 @@ class ErrorHandlingTest extends TestCase
 
         $this->assertStringContainsString('Local debug marker', $response->getContent());
         $this->assertStringContainsString(RuntimeException::class, $response->getContent());
-        $this->assertStringNotContainsString('errors/status', $response->getContent());
+        $this->assertStringContainsString('<title>TaskMate</title>', $response->getContent());
+        $this->assertStringNotContainsString('<title>500 — TaskMate</title>', $response->getContent());
     }
 }

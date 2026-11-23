@@ -41,6 +41,10 @@ TaskMate records agreements and payment status only. Money moves directly betwee
 - Conversations are one-to-one per application and use task/application participant IDs, never account type, for authorization. Messages are append-only and private to the two participants. Admins have no conversation browse route; report pages expose only frozen message snapshots, and `/admin/flags` exposes only the single flagged message. Add every new conversation route to `tests/Fixtures/web-route-access.php` and every conversation page to the smoke and privacy tests.
 - Conversation polling uses `/messages/{conversation}/updates` while the thread tab is visible and the Phase 12 `notifications.poll_seconds` interval. `/notifications/summary` also reports the signed-in user's unread conversation count. Messages are never placed in notifications, logs, or error output.
 - Every new or resubmitted task remains `pending_review` until an administrator approves, rejects, or requests changes. No automated risk level, risk score, screening record, auto-approval, or system block is generated. Legacy task risk columns and `task_screenings` rows are preserved for data history, not used in the active workflow.
+- All student accounts may browse approved tasks regardless of verification status; only verified students may apply. Faculty/staff and organization accounts cannot browse or apply.
+- New student registrations require exactly ten numeric Student ID digits. Faculty/staff employee ID formats are not constrained by this rule. Names are captured as first, optional middle, and last; legacy full names are never automatically split and remain unchanged until the owner updates their profile.
+- A user's email and ID number are shown only on their own dashboard and settings page (and to administrators on the admin user detail page); never add them to shared Inertia props, public profiles, or another user's summaries.
+- Task posting budget is capped at ₱999,999.99 in both server validation and the form. This cap does not apply to application suggestions, agreement amounts, or payment event amounts.
 
 # STACK AND ENVIRONMENT
 

@@ -11,6 +11,7 @@ import verificationDetails from '@/routes/verification/details';
 
 type Props = {
     status?: string | null;
+    accountIdentity: { email: string; idNumber: string | null };
     studentsCanPost?: boolean;
     verificationNote?: string | null;
     verifiedAt?: string | null;
@@ -21,7 +22,7 @@ type Props = {
     recentAlerts?: { id: string; title: string; body: string; url: string; readAt: string | null; createdAt: string | null }[];
 };
 
-export default function Dashboard({ status, studentsCanPost = true, verificationNote, verifiedAt, ratingsWaiting = [], warningSanction, activeSuspension, sanctionContact, recentAlerts = [] }: Props) {
+export default function Dashboard({ status, accountIdentity, studentsCanPost = true, verificationNote, verifiedAt, ratingsWaiting = [], warningSanction, activeSuspension, sanctionContact, recentAlerts = [] }: Props) {
     const { auth } = usePage().props;
     const user = auth.user;
 
@@ -51,12 +52,13 @@ export default function Dashboard({ status, studentsCanPost = true, verification
                                 <p className="mt-2 text-sm text-muted-foreground">
                                     {user.verification_status === 'pending'
                                         ? user.user_type === 'student'
-                                            ? `Your account is awaiting administrator review. After approval, you can browse and apply${studentsCanPost ? ' and post tasks' : ''}.`
+                                            ? `Your account is awaiting administrator review. You can browse approved tasks now; verification is required before applying${studentsCanPost ? '. You can also post tasks after approval' : ''}.`
                                             : user.user_type === 'faculty_staff'
                                                 ? 'Your account is awaiting administrator review. After approval, you can post tasks. Faculty and staff accounts cannot apply to tasks.'
                                                 : 'Your organization details are awaiting administrator review. After approval, you can post tasks. Organization accounts cannot browse or apply to tasks.'
                                         : 'Update the submitted details requested by the administrator. Your account will return to pending review, and task actions remain unavailable until it is approved.'}
                                 </p>
+                                {user.user_type === 'student' && user.can_browse_tasks && <Link className="mt-4 inline-flex min-h-10 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground" href={browse.index().url}>Browse tasks</Link>}
                                 {['rejected', 'more_info_requested'].includes(user.verification_status) && (
                                     <Link className="mt-4 inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline" href={verificationDetails.edit()}>Update submitted details</Link>
                                 )}
@@ -65,7 +67,7 @@ export default function Dashboard({ status, studentsCanPost = true, verification
                             <>
                                 <p className="mt-2 text-sm text-muted-foreground">Find a suitable task, post work, or check the applications and tasks you already have.</p>
                                 <div className="mt-4 flex flex-wrap gap-3">
-                                    {user.can_apply_tasks && <Link className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground underline-offset-4 hover:underline" href={browse.index().url}>Browse tasks</Link>}
+                                    {user.can_browse_tasks && <Link className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground underline-offset-4 hover:underline" href={browse.index().url}>Browse tasks</Link>}
                                     {user.can_post_tasks && <Link className="inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline" href={createTask().url}>Post a task</Link>}
                                     {user.can_apply_tasks && <Link className="inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline" href={applications.mine().url}>My applications</Link>}
                                     {user.can_post_tasks && <Link className="inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline" href={myTasks().url}>My tasks</Link>}
@@ -83,7 +85,7 @@ export default function Dashboard({ status, studentsCanPost = true, verification
                     {user.verification_status === 'verified' ? (
                         <p role="status" className="text-sm text-green-900 dark:text-green-200">Your account is verified{verifiedAt ? ` as of ${formatDate(verifiedAt)}` : ''}.</p>
                     ) : user.verification_status === 'pending' ? (
-                        <p role="status" className="text-sm">Your account is awaiting administrator review. Browse, posting, and applications are unavailable until approval.</p>
+                        <p role="status" className="text-sm">Your account is awaiting administrator review. Students can browse approved tasks now, but verification is required to apply. Posting remains unavailable until approval.</p>
                     ) : (
                         <div role="status" className="text-sm">
                             <p>{user.verification_status === 'more_info_requested' ? 'The administrator needs more information before completing the review. Update the details below to return your account to review.' : 'Your account verification was rejected. Review the note and update your submitted details if you want another review.'}</p>
@@ -91,6 +93,8 @@ export default function Dashboard({ status, studentsCanPost = true, verification
                         </div>
                     )}
                 </section>
+
+                <section className="space-y-2 rounded-xl border p-5" aria-label="Your account details"><h2 className="text-lg font-semibold">Your account details</h2><p><strong>Email:</strong> {accountIdentity.email}</p>{accountIdentity.idNumber && <p><strong>ID number:</strong> {accountIdentity.idNumber}</p>}</section>
 
                 <SafetyNotice />
 

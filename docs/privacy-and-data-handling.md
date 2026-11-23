@@ -2,6 +2,8 @@
 
 **DRAFT — not approved policy.** Retention, deletion, consent, and protected-storage rules require decisions by the team and university. This prototype is for synthetic data only. Do not enter real personal data.
 
+Account owners may view their own email and ID number on the dashboard and profile settings page. Administrators may view submitted identity details on the admin user detail page. Other users and public profiles do not receive these fields. Registration stores first, optional middle, and last name separately while retaining a composed `users.name` for existing display conventions. Existing names are not inferred or rewritten during migration; an owner may enter split values when updating profile settings.
+
 ## Data inventory and workflow need
 
 | Table | Personal or identifying fields | Workflow need / recommendation |

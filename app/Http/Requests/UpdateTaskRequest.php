@@ -49,7 +49,7 @@ class UpdateTaskRequest extends FormRequest
             'estimated_duration_hours' => ['nullable', 'numeric', 'min:0.5', 'max:500'],
             'skill_requirements' => ['nullable', 'string', 'max:5000'],
             'complexity' => ['nullable', 'string', Rule::in(array_keys(config('taskmate.complexity_levels', [])))],
-            'budget' => ['required', 'numeric', 'min:1', 'max:1000000'],
+            'budget' => ['required', 'numeric', 'min:1', 'max:999999.99'],
             'work_mode' => ['required', 'string', Rule::in(array_keys(config('taskmate.work_modes', [])))],
             'workplace_name' => [$requiresWorkplace ? 'required' : 'nullable', 'string', 'max:255'],
             'workplace_address' => [$requiresWorkplace ? 'required' : 'nullable', 'string', 'max:255'],

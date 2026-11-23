@@ -29,6 +29,7 @@ class DashboardController extends Controller
             ]);
 
         return Inertia::render('dashboard', [
+            'accountIdentity' => ['email' => $request->user()->email, 'idNumber' => $request->user()->id_number],
             'pendingInvitations' => $pendingInvitations,
             'status' => $request->session()->get('status'),
             'studentsCanPost' => (bool) config('taskmate.students_can_post', true),

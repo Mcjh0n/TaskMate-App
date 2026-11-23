@@ -69,10 +69,11 @@ class BrowseApplicationsTest extends TestCase
         ], $overrides);
     }
 
-    public function test_only_verified_students_can_browse_and_apply(): void
+    public function test_all_student_verification_states_can_browse_but_only_verified_students_can_apply(): void
     {
         $this->get(route('browse.index'))->assertRedirect(route('login'));
-        $this->actingAs(User::factory()->create())->get(route('browse.index'))->assertRedirect();
+        $pendingStudent = User::factory()->create();
+        $this->actingAs($pendingStudent)->get(route('browse.index'))->assertOk();
         foreach ([
             User::factory()->facultyStaff()->verified()->create(),
             User::factory()->organization()->verified()->create(),
@@ -86,7 +87,14 @@ class BrowseApplicationsTest extends TestCase
         $this->actingAs($admin)->get(route('browse.index'))->assertForbidden();
         $adminOwnedTask = $this->task($admin);
         $this->post(route('applications.store', $adminOwnedTask), $this->applicationData())->assertForbidden();
-        $this->actingAs($this->student())->get(route('browse.index'))->assertOk();
+        $verifiedStudent = $this->student();
+        $this->actingAs($verifiedStudent)->get(route('browse.index'))->assertOk();
+        foreach ([VerificationStatus::Pending, VerificationStatus::Rejected, VerificationStatus::MoreInfoRequested] as $status) {
+            $student = $this->student(['verification_status' => $status]);
+            $task = $this->task($this->poster());
+            $this->actingAs($student)->get(route('browse.show', $task))->assertOk()->assertInertia(fn ($page) => $page->where('canApply', false)->where('applicantVerificationStatus', $status->value));
+            $this->actingAs($student)->post(route('applications.store', $task), $this->applicationData())->assertRedirect();
+        }
     }
 
     public function test_listing_only_shows_approved_non_expired_tasks_and_search_filters_and_sorts(): void
