@@ -19,8 +19,13 @@ type Props = {
     institutionalEmailDomains: string[];
 };
 
+export function sanitizeStudentId(value: string): string {
+    return value.replace(/[^0-9]/g, '').slice(0, 10);
+}
+
 export default function Register({ passwordRules, institutionalEmailDomains }: Props) {
     const [userType, setUserType] = useState<UserType>('student');
+    const [idNumber, setIdNumber] = useState('');
     const affiliationLabel = userType === 'student' ? 'College and program' : 'College or office';
     const idLabel = userType === 'student' ? 'Student ID number' : 'Employee ID number';
     const accountTypeGuidance = {
@@ -47,7 +52,7 @@ export default function Register({ passwordRules, institutionalEmailDomains }: P
                                     id="user_type"
                                     name="user_type"
                                     value={userType}
-                                    onChange={(event) => setUserType(event.target.value as UserType)}
+                                    onChange={(event) => { setUserType(event.target.value as UserType); setIdNumber(''); }}
                                     required
                                     className="border-input bg-background ring-offset-background focus-visible:ring-ring h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
                                 >
@@ -92,7 +97,7 @@ export default function Register({ passwordRules, institutionalEmailDomains }: P
                                 <>
                                     <div className="grid gap-2">
                                         <Label htmlFor="id_number">{idLabel}</Label>
-                                        <Input id="id_number" name="id_number" required placeholder={idLabel} inputMode={userType === 'student' ? 'numeric' : undefined} pattern={userType === 'student' ? '[0-9]{10}' : undefined} maxLength={userType === 'student' ? 10 : undefined} />
+                                        <Input id="id_number" name="id_number" required placeholder={idLabel} value={idNumber} onChange={(event) => setIdNumber(userType === 'student' ? sanitizeStudentId(event.target.value) : event.target.value)} inputMode={userType === 'student' ? 'numeric' : undefined} pattern={userType === 'student' ? '[0-9]{10}' : undefined} maxLength={userType === 'student' ? 10 : undefined} />
                                         <p className="text-xs text-muted-foreground">Used for account review. Your ID number is visible only to you and administrators.{userType === 'student' ? ' Enter exactly 10 digits.' : ''}</p>
                                         <InputError message={errors.id_number} />
                                     </div>
@@ -105,11 +110,7 @@ export default function Register({ passwordRules, institutionalEmailDomains }: P
                                 </>
                             )}
 
-                            <section className="grid gap-3 sm:grid-cols-3" aria-label="Your name">
-                                <div className="grid gap-2"><Label htmlFor="first_name">First name</Label><Input id="first_name" name="first_name" required autoFocus autoComplete="given-name" placeholder="First name" /><InputError message={errors.first_name} /></div>
-                                <div className="grid gap-2"><Label htmlFor="middle_name">Middle name (optional)</Label><Input id="middle_name" name="middle_name" autoComplete="additional-name" placeholder="Middle name" /><InputError message={errors.middle_name} /></div>
-                                <div className="grid gap-2"><Label htmlFor="last_name">Last name</Label><Input id="last_name" name="last_name" required autoComplete="family-name" placeholder="Last name" /><InputError message={errors.last_name} /></div>
-                            </section>
+                            <div className="grid gap-2"><Label htmlFor="name">Full name</Label><Input id="name" name="name" required autoFocus autoComplete="name" placeholder="Full name" /><InputError message={errors.name} /></div>
 
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>

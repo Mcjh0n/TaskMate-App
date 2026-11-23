@@ -53,9 +53,9 @@ class RegistrationTest extends TestCase
         $this->assertSame(UserType::Student, $user->user_type);
         $this->assertSame('1234567890', $user->id_number);
         $this->assertSame('Synthetic Applicant', $user->name);
-        $this->assertSame('Synthetic', $user->first_name);
+        $this->assertNull($user->first_name);
         $this->assertNull($user->middle_name);
-        $this->assertSame('Applicant', $user->last_name);
+        $this->assertNull($user->last_name);
         $this->assertSame('Synthetic College and Program', $user->affiliation);
         $this->assertSame(VerificationStatus::Pending, $user->verification_status);
         $this->assertFalse($user->is_admin);
@@ -238,9 +238,7 @@ class RegistrationTest extends TestCase
     private function baseRegistration(string $email): array
     {
         return [
-            'first_name' => 'Synthetic',
-            'middle_name' => '',
-            'last_name' => 'Applicant',
+            'name' => 'Synthetic Applicant',
             'email' => $email,
             'password' => 'password',
             'password_confirmation' => 'password',

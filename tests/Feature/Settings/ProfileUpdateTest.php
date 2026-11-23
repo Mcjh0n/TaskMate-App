@@ -28,7 +28,7 @@ class ProfileUpdateTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->patch(route('profile.update'), [
-                'first_name' => 'Test', 'middle_name' => '', 'last_name' => 'User',
+                'name' => 'Test User',
                 'email' => 'test@example.com',
                 'affiliation' => $user->affiliation,
             ]);
@@ -44,14 +44,14 @@ class ProfileUpdateTest extends TestCase
         $this->assertNull($user->email_verified_at);
     }
 
-    public function test_legacy_full_name_is_preserved_until_owner_enters_split_name_fields(): void
+    public function test_legacy_full_name_is_shown_and_can_be_updated_as_one_field(): void
     {
         $user = User::factory()->create(['name' => 'Legacy Full Name', 'first_name' => null, 'middle_name' => null, 'last_name' => null]);
-        $this->actingAs($user)->get(route('profile.edit'))->assertInertia(fn ($page) => $page->where('accountDetails.email', $user->email)->where('accountDetails.idNumber', $user->id_number)->where('accountDetails.firstName', null));
+        $this->actingAs($user)->get(route('profile.edit'))->assertInertia(fn ($page) => $page->where('accountDetails.email', $user->email)->where('accountDetails.idNumber', $user->id_number)->where('accountDetails.name', 'Legacy Full Name'));
         $this->assertSame('Legacy Full Name', $user->fresh()->name);
 
         $this->actingAs($user)->patch(route('profile.update'), [
-            'first_name' => 'New', 'middle_name' => 'Chosen', 'last_name' => 'Name',
+            'name' => 'New Chosen Name',
             'email' => $user->email, 'affiliation' => $user->affiliation,
         ])->assertSessionHasNoErrors();
         $this->assertSame('New Chosen Name', $user->fresh()->name);
@@ -64,7 +64,7 @@ class ProfileUpdateTest extends TestCase
         $this
             ->actingAs($user)
             ->patch(route('profile.update'), [
-                'first_name' => 'Test', 'middle_name' => '', 'last_name' => 'User',
+                'name' => 'Test User',
                 'email' => 'Test@Example.com',
                 'affiliation' => $user->affiliation,
             ])
@@ -92,7 +92,7 @@ class ProfileUpdateTest extends TestCase
             ->actingAs($user)
             ->from(route('profile.edit'))
             ->patch(route('profile.update'), [
-                'first_name' => 'Test', 'middle_name' => '', 'last_name' => 'User',
+                'name' => 'Test User',
                 'email' => 'Taken@Example.com',
                 'affiliation' => $user->affiliation,
             ]);
@@ -109,7 +109,7 @@ class ProfileUpdateTest extends TestCase
         $response = $this
             ->actingAs($user)
             ->patch(route('profile.update'), [
-                'first_name' => 'Test', 'middle_name' => '', 'last_name' => 'User',
+                'name' => 'Test User',
                 'email' => $user->email,
                 'affiliation' => $user->affiliation,
             ]);
@@ -129,7 +129,7 @@ class ProfileUpdateTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch(route('profile.update'), [
-            'first_name' => 'Updated Synthetic', 'middle_name' => '', 'last_name' => 'Student',
+            'name' => 'Updated Synthetic Student',
             'email' => $user->email,
             'affiliation' => 'Updated Synthetic College',
             'user_type' => 'organization',
@@ -154,7 +154,7 @@ class ProfileUpdateTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch(route('profile.update'), [
-            'first_name' => 'Synthetic', 'middle_name' => '', 'last_name' => 'Representative',
+            'name' => 'Synthetic Representative',
             'email' => $user->email,
             'organization_name' => 'Updated Synthetic Organization',
             'position' => 'Updated Synthetic Position',

@@ -4,7 +4,7 @@ TaskMate is a prototype campus task marketplace for the Central Mindanao Univers
 
 ## Account types
 
-Students may browse approved tasks whether their verification is pending, rejected, or awaiting more information. Only verified students may apply. Student posting is enabled while `students_can_post` is true. Student registration requires a ten-digit numeric Student ID. Registration collects first, optional middle, and last names separately. Master's and doctoral students use the ordinary Student account type. Faculty/staff may post tasks and their employee ID format is unchanged. Approved office or organization representatives may post tasks. Faculty/staff and organizations cannot apply.
+Students may browse approved tasks whether their verification is pending, rejected, or awaiting more information. Only verified students may apply. Student posting is enabled while `students_can_post` is true. Student registration requires a ten-digit numeric Student ID and collects one full name. Letters are removed from the Student ID as the user types or pastes; the server also enforces exactly ten digits. Master's and doctoral students use the ordinary Student account type. Faculty/staff may post tasks and their employee ID format is unchanged. Approved office or organization representatives may post tasks. Faculty/staff and organizations cannot apply.
 
 **Prototype: use synthetic accounts and sample data only. Do not enter real identity or contact details.** TaskMate records agreements and payment status only. Payments move directly between users; TaskMate does not hold, process, recover, or guarantee payment. Verification, administrator review, and ratings do not guarantee safety.
 
@@ -36,7 +36,7 @@ The `.env` file is git-ignored. Keep `APP_DEBUG=false` outside local development
 
 The project's `phpunit.xml` omits the redundant bootstrap path because this Windows PHP runtime reports spaced workspace paths as unreadable to PHPUnit. The normal `php artisan test` command uses Composer autoloading and is verified to work here.
 
-The signed-in user's email and ID number appear on their own dashboard and profile settings only. Existing full names are retained as saved; they are not split automatically. A user can replace the legacy name by entering the separate name fields in profile settings.
+The signed-in user's email and ID number appear on their own dashboard and profile settings only. Existing full names are retained as saved and edited as one field. The nullable `first_name`, `middle_name`, and `last_name` columns added during prototyping are retained for compatibility with existing databases, but the app no longer writes or reads them.
 
 ## Synthetic local accounts
 

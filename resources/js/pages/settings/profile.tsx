@@ -14,9 +14,7 @@ type PageProps = {
     accountDetails: {
         email: string;
         idNumber?: string | null;
-        firstName?: string | null;
-        middleName?: string | null;
-        lastName?: string | null;
+        name: string;
         affiliation?: string | null;
         organizationName?: string | null;
         position?: string | null;
@@ -50,11 +48,7 @@ export default function Profile() {
                 >
                     {({ processing, errors }) => (
                         <>
-                            <div className="grid gap-3 sm:grid-cols-3">
-                                <div className="grid gap-2"><Label htmlFor="first_name">First name</Label><Input id="first_name" name="first_name" defaultValue={accountDetails.firstName ?? ''} required autoComplete="given-name" /><InputError message={errors.first_name} /></div>
-                                <div className="grid gap-2"><Label htmlFor="middle_name">Middle name (optional)</Label><Input id="middle_name" name="middle_name" defaultValue={accountDetails.middleName ?? ''} autoComplete="additional-name" /><InputError message={errors.middle_name} /></div>
-                                <div className="grid gap-2"><Label htmlFor="last_name">Last name</Label><Input id="last_name" name="last_name" defaultValue={accountDetails.lastName ?? ''} required autoComplete="family-name" /><InputError message={errors.last_name} /></div>
-                            </div>
+                            <div className="grid gap-2"><Label htmlFor="name">Full name</Label><Input id="name" name="name" defaultValue={accountDetails.name} required autoComplete="name" /><InputError message={errors.name} /></div>
 
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email address</Label>

@@ -51,6 +51,11 @@ const mockRequire = (name) => {
 new Function('require', 'module', 'exports', compiled)(mockRequire, module, module.exports);
 const Register = module.exports.default;
 
+test('student ID input strips letters and limits typing and paste to ten digits', () => {
+    assert.equal(module.exports.sanitizeStudentId('12AB34567890'), '1234567890');
+    assert.equal(module.exports.sanitizeStudentId('12-34 56'), '123456');
+});
+
 test('registration explains account review and why requested student details are collected', () => {
     const markup = renderToStaticMarkup(React.createElement(Register, {
         passwordRules: '',
@@ -61,6 +66,10 @@ test('registration explains account review and why requested student details are
     assert.match(markup, /Email confirmation and TaskMate account review are separate steps/);
     assert.match(markup, /Students can browse approved tasks before verification, but must be verified to apply/);
     assert.match(markup, /Student ID number/);
+    assert.match(markup, /Full name/);
+    assert.doesNotMatch(markup, /First name|Middle name|Last name/);
+    assert.match(markup, /inputMode="numeric"/);
+    assert.match(markup, /maxLength="10"/);
     assert.match(markup, /Your ID number is visible only to you and administrators/);
     assert.match(markup, /may appear on your profile/);
 });

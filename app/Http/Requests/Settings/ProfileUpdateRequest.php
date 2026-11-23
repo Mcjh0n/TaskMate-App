@@ -17,11 +17,6 @@ class ProfileUpdateRequest extends FormRequest
     {
         $user = $this->user();
         $rules = $this->profileRules($user->id);
-        unset($rules['name']);
-        $rules['name'] = ['prohibited'];
-        $rules['first_name'] = ['required', 'string', 'max:255'];
-        $rules['middle_name'] = ['nullable', 'string', 'max:255'];
-        $rules['last_name'] = ['required', 'string', 'max:255'];
         $rules['email'] = ['sometimes', 'nullable', 'string', 'lowercase', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users')->ignore($user->id)];
         $rules['affiliation'] = $user->isOrganization() ? ['prohibited'] : ['required', 'string', 'max:255'];
         foreach (['organization_name', 'position', 'supporting_info'] as $field) {
