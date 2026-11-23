@@ -63,11 +63,6 @@ const task = {
     category: 'Other',
     categoryKey: 'other',
     description: 'Synthetic task description.',
-    requiredActivities: 'Review details.',
-    deliverables: 'A clear summary.',
-    estimatedDurationHours: '2.0',
-    skillRequirements: null,
-    complexity: 'Low',
     budget: '500.00',
     workMode: 'Remote',
     workplaceName: null,
@@ -93,6 +88,7 @@ test('admin task review renders a task for manual review without automated scree
     }));
 
     assert.match(markup, /Synthetic pending task/);
+    assert.doesNotMatch(markup, /Main activities|Expected result or deliverables|Skills:|Estimated duration:|Complexity:/);
     assert.match(markup, /Every submitted task is reviewed by an administrator/);
     assert.doesNotMatch(markup, /Risk level|Screening breakdown|Score:/);
     assert.match(markup, /No applications have been submitted/);
