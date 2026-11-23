@@ -59,7 +59,7 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard'));
+        $response->assertRedirect(route('taskmate.dashboard'));
     }
 
     public function test_admin_without_a_personal_team_is_sent_to_the_admin_dashboard_after_login(): void
@@ -101,7 +101,7 @@ class AuthenticationTest extends TestCase
     }
 
     /* @chisel-passkeys */
-    public function test_passkey_login_response_redirects_to_the_current_team_dashboard(): void
+    public function test_passkey_login_response_redirects_to_the_taskmate_dashboard(): void
     {
         $user = User::factory()->create();
 
@@ -114,7 +114,7 @@ class AuthenticationTest extends TestCase
         $jsonResponse = app(PasskeyLoginResponse::class)->toResponse($request);
 
         $this->assertSame(
-            route('dashboard', ['current_team' => $user->personalTeam()->slug]),
+            route('taskmate.dashboard'),
             $jsonResponse->getData()->redirect,
         );
     }
@@ -155,6 +155,25 @@ class AuthenticationTest extends TestCase
         ]);
 
         $this->assertGuest();
+    }
+
+    public function test_login_uses_the_signed_in_users_dashboard_instead_of_a_stale_intended_url(): void
+    {
+        $student = User::factory()->create(['email' => 'student-login@example.test']);
+        $this->withSession(['url.intended' => '/admin'])
+            ->post(route('login.store'), ['email' => $student->email, 'password' => 'password'])
+            ->assertRedirect(route('taskmate.dashboard'));
+
+        $admin = User::factory()->create(['email' => 'admin-login@example.test', 'is_admin' => true]);
+        $this->post(route('logout'));
+        $this->withSession(['url.intended' => '/messages/6'])
+            ->post(route('login.store'), ['email' => $admin->email, 'password' => 'password'])
+            ->assertRedirect(route('admin.dashboard'));
+    }
+
+    public function test_guest_opening_a_private_message_url_is_sent_to_login(): void
+    {
+        $this->get('/messages/6')->assertRedirect(route('login'));
     }
 
     public function test_users_can_logout()

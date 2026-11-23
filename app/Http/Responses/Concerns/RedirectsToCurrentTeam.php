@@ -19,16 +19,17 @@ trait RedirectsToCurrentTeam
         }
 
         $team = $user->currentTeam ?? $user->personalTeam();
-
-        // Some existing or locally seeded accounts may not have a personal team.
-        // Keep authentication usable without making TaskMate depend on Teams.
-        if (! $team) {
-            return route('taskmate.dashboard', [], false);
-        }
+        if (! $team) return route('taskmate.dashboard', [], false);
 
         URL::defaults(['current_team' => $team->slug]);
-
         return "/{$team->slug}{$redirect}";
+    }
+
+    protected function dashboardPathForUser(Request $request): string
+    {
+        $user = $request->user();
+        abort_if(! $user, 403);
+        return $user->isAdmin() ? route('admin.dashboard', [], false) : route('taskmate.dashboard', [], false);
     }
 
 }
