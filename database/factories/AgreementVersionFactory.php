@@ -28,7 +28,7 @@ class AgreementVersionFactory extends Factory
             'final_amount' => fake()->randomFloat(2, 100, 10000),
             'start_date' => today()->addDay()->toDateString(),
             'due_date' => today()->addWeek()->toDateString(),
-            'work_mode' => 'onsite',
+            'work_mode' => 'on_campus',
             'workplace_name' => 'Synthetic campus location',
             'workplace_address' => 'Synthetic campus address',
             'payment_arrangement' => 'Synthetic direct payment arrangement after both parties agree.',

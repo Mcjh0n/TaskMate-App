@@ -67,7 +67,7 @@ class AgreementRenderingTest extends TestCase
         $revision->final_amount = 550;
         $revision->start_date = today()->addDay();
         $revision->due_date = today()->addWeek();
-        $revision->work_mode = 'remote';
+        $revision->work_mode = 'online';
         $revision->payment_arrangement = 'Direct payment after completion.';
         $revision->comment = 'Synthetic revision for rendering coverage.';
         $revision->created_at = now();
@@ -107,7 +107,7 @@ class AgreementRenderingTest extends TestCase
         $admin = User::factory()->verified()->create();
         $admin->forceFill(['is_admin' => true])->save();
 
-        $task = Task::factory()->for($poster, 'poster')->approved()->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $task = Task::factory()->for($poster, 'poster')->approved()->create(['work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         $application = Application::factory()->for($task)->for($student, 'applicant')->accepted()->create();
         $agreement = Agreement::factory()->for($task)->for($application)->for($poster, 'poster')->for($student, 'student')->create([
             'status' => AgreementStatus::Agreed,
@@ -122,7 +122,7 @@ class AgreementRenderingTest extends TestCase
         $version->final_amount = 500;
         $version->start_date = today()->addDay();
         $version->due_date = today()->addWeek();
-        $version->work_mode = 'remote';
+        $version->work_mode = 'online';
         $version->payment_arrangement = 'Direct payment after completion.';
         $version->created_at = now();
         $version->content_hash = app(AgreementContentHasher::class)->hash($version);

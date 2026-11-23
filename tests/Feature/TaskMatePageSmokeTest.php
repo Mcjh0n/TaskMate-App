@@ -32,7 +32,7 @@ class TaskMatePageSmokeTest extends TestCase
         $admin = User::factory()->verified()->create();
         $admin->forceFill(['is_admin' => true])->save();
 
-        $task = Task::factory()->for($poster, 'poster')->assigned()->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $task = Task::factory()->for($poster, 'poster')->assigned()->create(['work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         $application = Application::factory()->for($task)->for($student, 'applicant')->accepted()->create();
         $conversation = new Conversation;
         $conversation->application_id = $application->id;
@@ -58,7 +58,7 @@ class TaskMatePageSmokeTest extends TestCase
         $version->final_amount = 500;
         $version->start_date = today()->addDay();
         $version->due_date = today()->addWeek();
-        $version->work_mode = 'remote';
+        $version->work_mode = 'online';
         $version->payment_arrangement = 'Direct payment after completion.';
         $version->created_at = now();
         $version->content_hash = app(AgreementContentHasher::class)->hash($version);
@@ -87,8 +87,8 @@ class TaskMatePageSmokeTest extends TestCase
         $messageFlag->matched = ['Skip the agreement'];
         $messageFlag->field = 'body';
         $messageFlag->save();
-        $draft = Task::factory()->for($poster, 'poster')->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
-        $reopenedTask = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $draft = Task::factory()->for($poster, 'poster')->create(['work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $reopenedTask = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         $cancelledWorker = User::factory()->verified()->create();
         $cancelledApplication = Application::factory()->for($reopenedTask)->for($cancelledWorker, 'applicant')->create([
             'status' => ApplicationStatus::Cancelled,
@@ -132,7 +132,7 @@ class TaskMatePageSmokeTest extends TestCase
             'agreements.show.cancelled' => route('agreements.show', $cancelledAgreement),
             'agreements.rate' => route('agreements.rate', $agreement),
             'browse.index' => route('browse.index'),
-            'browse.show' => route('browse.show', Task::factory()->approved()->create(['poster_id' => $poster->id, 'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null])),
+            'browse.show' => route('browse.show', Task::factory()->approved()->create(['poster_id' => $poster->id, 'work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null])),
             'applications.mine' => route('applications.mine'),
             'applications.task' => route('applications.task', $application),
             'reports.mine' => route('reports.mine'),

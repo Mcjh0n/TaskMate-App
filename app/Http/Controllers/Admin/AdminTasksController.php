@@ -36,7 +36,7 @@ class AdminTasksController extends Controller
                 'posterType' => config('taskmate.user_types.'.$task->poster->user_type->value),
                 'status' => $task->status->value,
                 'statusLabel' => $task->status->label(),
-                'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
+                'workMode' => config('taskmate.work_modes.'.$task->work_mode, config('taskmate.legacy_work_modes.'.$task->work_mode, $task->work_mode)),
                 'submittedAt' => $task->created_at?->toDateTimeString(),
             ]);
 
@@ -61,7 +61,7 @@ class AdminTasksController extends Controller
                 'description' => $task->description,
                 'budget' => $task->budget,
                 'budgetDisplay' => $task->budgetDisplay(),
-                'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
+                'workMode' => config('taskmate.work_modes.'.$task->work_mode, config('taskmate.legacy_work_modes.'.$task->work_mode, $task->work_mode)),
                 'workplaceName' => $task->workplace_name,
                 'workplaceAddress' => $task->workplace_address,
                 'deadline' => $task->deadline?->toDateString(),

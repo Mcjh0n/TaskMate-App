@@ -52,9 +52,16 @@ return [
     ],
 
     'work_modes' => [
-        'onsite' => 'Onsite',
-        'remote' => 'Remote',
-        'hybrid' => 'Hybrid',
+        'online' => 'Online',
+        'on_campus' => 'On-campus',
+        'off_campus' => 'Off-campus',
+    ],
+
+    // Display only for historical records; new tasks use work_modes above.
+    'legacy_work_modes' => [
+        'remote' => 'Online',
+        'onsite' => 'On-campus',
+        'hybrid' => 'Hybrid (legacy task)',
     ],
 
     'complexity_levels' => [

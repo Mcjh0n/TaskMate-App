@@ -52,7 +52,7 @@ class NotificationsTest extends TestCase
     {
         $poster = $this->poster();
         $applicant = $this->student();
-        $task = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $task = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
 
         $this->actingAs($applicant)->post(route('applications.store', $task), [
             'message' => 'Synthetic interest message.', 'work_details_confirmed' => '1',

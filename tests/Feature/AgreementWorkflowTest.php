@@ -81,7 +81,7 @@ class AgreementWorkflowTest extends TestCase
     public function test_acceptance_prepares_agreement_and_poster_sends_the_prefilled_version(): void
     {
         $pair = $this->assignedTask();
-        $pair['task']->update(['work_mode' => 'hybrid', 'workplace_name' => 'Synthetic campus library', 'workplace_address' => 'Synthetic campus address', 'deliverables' => 'Three edited poster designs']);
+        $pair['task']->update(['work_mode' => 'off_campus', 'workplace_name' => 'Synthetic campus library', 'workplace_address' => 'Synthetic campus address', 'deliverables' => 'Three edited poster designs']);
         $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))
             ->assertRedirect();
         $agreement = Agreement::query()->where('task_id', $pair['task']->id)->firstOrFail()->load('currentVersion');
@@ -90,7 +90,7 @@ class AgreementWorkflowTest extends TestCase
         $this->assertSame('Three edited poster designs', $version->deliverables);
         $this->assertSame('1250.00', $version->final_amount);
         $this->assertSame($pair['task']->deadline->toDateString(), $version->due_date->toDateString());
-        $this->assertSame('hybrid', $version->work_mode);
+        $this->assertSame('off_campus', $version->work_mode);
         $this->assertSame('Synthetic campus library', $version->workplace_name);
         $this->assertSame('Synthetic campus address', $version->workplace_address);
         $this->assertSame(0, $version->confirmations()->count());
@@ -102,7 +102,7 @@ class AgreementWorkflowTest extends TestCase
         $agreement->refresh();
         $version = $agreement->currentVersion()->firstOrFail();
         $this->assertSame(AgreementStatus::Negotiating, $agreement->status);
-        $this->assertSame('hybrid', $version->work_mode);
+        $this->assertSame('off_campus', $version->work_mode);
         $this->assertSame('Synthetic campus library', $version->workplace_name);
         $this->assertSame('Synthetic campus address', $version->workplace_address);
         $this->assertSame($pair['poster']->id, $version->confirmations()->sole()->user_id);
@@ -115,11 +115,11 @@ class AgreementWorkflowTest extends TestCase
     public function test_remote_agreement_keeps_workplace_fields_null_and_work_mode_fixed(): void
     {
         $pair = $this->assignedTask();
-        $pair['task']->update(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null]);
+        $pair['task']->update(['work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null]);
         $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertRedirect();
         $this->post(route('agreements.store', $pair['task']))->assertRedirect();
         $version = AgreementVersion::query()->firstOrFail();
-        $this->assertSame('remote', $version->work_mode);
+        $this->assertSame('online', $version->work_mode);
         $this->assertNull($version->workplace_name);
         $this->assertNull($version->workplace_address);
     }
@@ -302,7 +302,7 @@ class AgreementWorkflowTest extends TestCase
         $studentPoster = User::factory()->verified()->create();
         $worker = User::factory()->verified()->create();
         $task = Task::factory()->approved()->for($studentPoster, 'poster')->create([
-            'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null,
+            'work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null,
         ]);
         $otherPoster = User::factory()->verified()->facultyStaff()->create();
         $otherTask = Task::factory()->approved()->for($otherPoster, 'poster')->create();

@@ -28,7 +28,7 @@ class TaskReviewWorkflowTest extends TestCase
             'description' => 'Prepare materials for a synthetic campus event.',
             'budget_mode' => 'single',
             'budget' => 1000,
-            'work_mode' => 'remote',
+            'work_mode' => 'online',
             'guidelines_confirmed' => '1',
         ], $overrides);
     }
@@ -91,8 +91,8 @@ class TaskReviewWorkflowTest extends TestCase
         $admin = $this->verifiedPoster();
         $admin->forceFill(['is_admin' => true])->save();
         $poster = $this->verifiedPoster();
-        $older = Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Needle older', 'work_mode' => 'remote', 'created_at' => now()->subHour()]);
-        $newer = Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Needle newer', 'work_mode' => 'remote', 'created_at' => now()]);
+        $older = Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Needle older', 'work_mode' => 'online', 'created_at' => now()->subHour()]);
+        $newer = Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Needle newer', 'work_mode' => 'online', 'created_at' => now()]);
         Task::factory()->approved()->create(['poster_id' => $poster->id, 'title' => 'Needle approved', 'created_at' => now()->addMinute()]);
         Task::factory()->create(['poster_id' => $poster->id, 'title' => 'Different']);
 
@@ -107,7 +107,7 @@ class TaskReviewWorkflowTest extends TestCase
             ->missing('riskLevels')
             ->missing('tasks.data.0.riskLevel'));
 
-        $this->get(route('admin.tasks.index', ['work_mode' => 'onsite']))
+        $this->get(route('admin.tasks.index', ['work_mode' => 'on_campus']))
             ->assertInertia(fn (Assert $page) => $page->has('tasks.data', 2));
     }
 
@@ -156,7 +156,7 @@ class TaskReviewWorkflowTest extends TestCase
         $admin = $this->verifiedPoster();
         $admin->forceFill(['is_admin' => true])->save();
         $poster = $this->verifiedPoster();
-        $task = Task::factory()->create(['poster_id' => $poster->id, 'work_mode' => 'remote']);
+        $task = Task::factory()->create(['poster_id' => $poster->id, 'work_mode' => 'online']);
         TaskScreening::factory()->create(['task_id' => $task->id]);
 
         $this->actingAs($poster)->get(route('tasks.show', $task))->assertInertia(fn (Assert $page) => $page

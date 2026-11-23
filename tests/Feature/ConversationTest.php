@@ -241,10 +241,10 @@ class ConversationTest extends TestCase
         $otherApplicant = User::factory()->verified()->create();
         $otherPoster = User::factory()->verified()->facultyStaff()->create();
         $studentTask = Task::factory()->approved()->for($student, 'poster')->create([
-            'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null,
+            'work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null,
         ]);
         $otherTask = Task::factory()->approved()->for($otherPoster, 'poster')->create([
-            'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null,
+            'work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null,
         ]);
         $asPoster = Application::factory()->for($studentTask)->for($otherApplicant, 'applicant')->create();
         $asApplicant = Application::factory()->for($otherTask)->for($student, 'applicant')->create();
@@ -264,7 +264,7 @@ class ConversationTest extends TestCase
         $poster = User::factory()->verified()->facultyStaff()->create();
         $applicant = User::factory()->verified()->create();
         $task = Task::factory()->approved()->for($poster, 'poster')->create([
-            'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null,
+            'work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null,
         ]);
         $application = Application::factory()->for($task)->for($applicant, 'applicant')->create();
         $conversation = app(ConversationWorkflow::class)->createForApplication($application);

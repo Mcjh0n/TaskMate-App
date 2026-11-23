@@ -169,7 +169,7 @@ class PrivacyAuditTest extends TestCase
     {
         $poster = User::factory()->verified()->facultyStaff()->create(['email' => 'poster.private@example.test', 'id_number' => 'FAKE-POSTER-ID']);
         $student = User::factory()->verified()->create(['email' => 'student.private@example.test', 'id_number' => 'FAKE-STUDENT-ID']);
-        $task = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $task = Task::factory()->approved()->for($poster, 'poster')->create(['work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         $application = \App\Models\Application::factory()->for($task)->for($student, 'applicant')->create();
         $conversation = new \App\Models\Conversation;
         $conversation->application_id = $application->id; $conversation->task_id = $task->id; $conversation->poster_id = $poster->id; $conversation->applicant_id = $student->id; $conversation->save();

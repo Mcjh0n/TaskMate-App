@@ -15,7 +15,7 @@ class ConversationFactory extends Factory
 
     public function definition(): array
     {
-        $task = Task::factory()->approved()->create(['work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
+        $task = Task::factory()->approved()->create(['work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         $applicant = User::factory()->verified()->create();
         $application = Application::factory()->for($task)->for($applicant, 'applicant')->create();
 

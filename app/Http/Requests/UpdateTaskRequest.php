@@ -12,7 +12,7 @@ class UpdateTaskRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
-        if ($this->input('work_mode') === 'remote') {
+        if ($this->input('work_mode') === 'online') {
             $this->merge(['workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null]);
         }
         if ($this->exists('hazard_exposure') && ! $this->boolean('hazard_exposure')) {
@@ -35,7 +35,7 @@ class UpdateTaskRequest extends FormRequest
 
     public function rules(): array
     {
-        $requiresWorkplace = in_array($this->input('work_mode'), ['onsite', 'hybrid'], true);
+        $requiresWorkplace = in_array($this->input('work_mode'), ['on_campus', 'off_campus'], true);
         $physicalDemand = config('taskmate.risk_questions.physical_demand', []);
         $academicInvolvement = config('taskmate.risk_questions.academic_involvement', []);
         $workplaceSettings = config('taskmate.risk_questions.workplace_setting', []);

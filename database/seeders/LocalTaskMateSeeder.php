@@ -66,14 +66,18 @@ class LocalTaskMateSeeder extends Seeder
             $task->complexity = ['low', 'medium', 'high'][($index - 1) % 3];
             $task->budget = 500 + ($index * 250);
             $task->work_mode = $mode;
-            $task->workplace_name = $mode === 'remote' ? null : 'Synthetic Demo Worksite '.$index;
-            $task->workplace_address = $mode === 'remote' ? null : 'Synthetic campus location '.$index;
+            $task->workplace_name = $mode === 'online' ? null : 'Synthetic Demo Worksite '.$index;
+            $task->workplace_address = $mode === 'online' ? null : 'Synthetic campus location '.$index;
             $task->physical_demand = ['none', 'light', 'moderate'][($index - 1) % 3];
             $task->academic_involvement = 'none';
             $task->hazard_exposure = false;
             $task->hazard_description = null;
             $task->private_meeting_required = false;
-            $task->workplace_setting = $mode === 'remote' ? null : ['on_campus', 'off_campus_public'][($index - 1) % 2];
+            $task->workplace_setting = match ($mode) {
+                'online' => null,
+                'on_campus' => 'on_campus',
+                default => 'off_campus_public',
+            };
             $task->deadline = null;
             $task->status = TaskStatus::Approved;
             $task->guidelines_confirmed_at = now();

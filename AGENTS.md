@@ -46,6 +46,7 @@ TaskMate records agreements and payment status only. Money moves directly betwee
 - New student registrations require exactly ten numeric Student ID digits. The registration form strips non-numeric characters from student IDs while typing or pasting, and the server enforces exactly ten digits. Faculty/staff employee ID formats are not constrained by this rule. Registration and profile settings use one full-name field; do not split legacy names. Nullable split-name columns remain in the database for compatibility but are unused by application code.
 - A user's email and ID number are shown only on their own dashboard and settings page (and to administrators on the admin user detail page); never add them to shared Inertia props, public profiles, or another user's summaries.
 - Posters may enter one task budget amount or a minimum–maximum range. Each amount is capped at ₱999,999.99 in both server validation and the form. Task listings display a single amount as entered or both range endpoints. This cap does not apply to application suggestions, agreement amounts, or payment event amounts.
+- New task work modes are Online, On-campus, and Off-campus. Online tasks have no location; both in-person modes require a disclosed work location. Hybrid is not offered for new tasks. Historical hybrid agreement versions remain unchanged and are labeled as legacy data.
 
 # STACK AND ENVIRONMENT
 

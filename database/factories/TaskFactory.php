@@ -25,7 +25,7 @@ class TaskFactory extends Factory
             'skill_requirements' => fake()->optional()->sentence(),
             'complexity' => 'medium',
             'budget' => fake()->randomFloat(2, 500, 10000),
-            'work_mode' => 'onsite',
+            'work_mode' => 'on_campus',
             'workplace_name' => 'Synthetic Campus Office',
             'workplace_address' => 'Synthetic campus location',
             'physical_demand' => 'none',

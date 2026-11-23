@@ -235,7 +235,7 @@ class TaskController extends Controller
             'budgetMin' => $task->budget_min,
             'budgetMax' => $task->budget_max,
             'budgetDisplay' => $task->budgetDisplay(),
-            'workMode' => config('taskmate.work_modes.'.$task->work_mode, $task->work_mode),
+            'workMode' => config('taskmate.work_modes.'.$task->work_mode, config('taskmate.legacy_work_modes.'.$task->work_mode, $task->work_mode)),
             'status' => $task->status->value,
             'statusLabel' => $task->status->label(),
             'hasActiveApplications' => $task->applications()->whereIn('status', [ApplicationStatus::Pending->value, ApplicationStatus::Accepted->value])->exists(),

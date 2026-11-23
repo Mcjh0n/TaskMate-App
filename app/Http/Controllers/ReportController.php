@@ -86,7 +86,7 @@ class ReportController extends Controller
                 'relatedTask' => $isAdmin ? [
                     'id' => $task->id, 'title' => $task->title, 'status' => $task->status->label(), 'category' => $task->category,
                     'description' => $task->description, 'requiredActivities' => $task->required_activities, 'deliverables' => $task->deliverables,
-                    'skillRequirements' => $task->skill_requirements, 'workMode' => $task->work_mode, 'workplaceName' => $task->workplace_name,
+                    'skillRequirements' => $task->skill_requirements, 'workMode' => config('taskmate.work_modes.'.$task->work_mode, config('taskmate.legacy_work_modes.'.$task->work_mode, $task->work_mode)), 'workplaceName' => $task->workplace_name,
                     'workplaceAddress' => $task->workplace_address,
                     'applications' => $task->applications->map(fn ($application) => ['name' => $application->applicant->name, 'status' => $application->status->value])->values(),
                     'flags' => $task->contentFlags()->get()->map(fn ($flag) => ['category' => $flag->category, 'matched' => $flag->matched, 'field' => $flag->field, 'status' => $flag->status->value])->values(),

@@ -42,7 +42,7 @@ class BrowseApplicationsTest extends TestCase
             'required_activities' => 'Prepare sample learning resources.',
             'deliverables' => 'A set of sample resources.',
             'budget' => 2000,
-            'work_mode' => 'onsite',
+            'work_mode' => 'on_campus',
             'workplace_name' => 'Synthetic Learning Center',
             'workplace_address' => 'Synthetic campus location',
             'workplace_setting' => 'on_campus',
@@ -103,9 +103,9 @@ class BrowseApplicationsTest extends TestCase
         config(['taskmate.browse.per_page' => 50]);
         $student = $this->student();
         $poster = $this->poster();
-        $cheap = $this->task($poster, ['title' => 'Needle remote cheap', 'budget' => 1000, 'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null, 'complexity' => 'low']);
-        $range = $this->task($poster, ['title' => 'Needle ranged task', 'budget' => null, 'budget_min' => 1800, 'budget_max' => 2500, 'work_mode' => 'remote', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null, 'complexity' => 'low']);
-        $expensive = $this->task($poster, ['title' => 'Needle onsite expensive', 'budget' => 5000, 'work_mode' => 'onsite', 'complexity' => 'high', 'deadline' => '2026-11-13']);
+        $cheap = $this->task($poster, ['title' => 'Needle remote cheap', 'budget' => 1000, 'work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null, 'complexity' => 'low']);
+        $range = $this->task($poster, ['title' => 'Needle ranged task', 'budget' => null, 'budget_min' => 1800, 'budget_max' => 2500, 'work_mode' => 'online', 'workplace_name' => null, 'workplace_address' => null, 'workplace_setting' => null, 'complexity' => 'low']);
+        $expensive = $this->task($poster, ['title' => 'Needle onsite expensive', 'budget' => 5000, 'work_mode' => 'on_campus', 'complexity' => 'high', 'deadline' => '2026-11-13']);
         $cheap->created_at = now()->subDay();
         $cheap->save();
         $this->task($poster, ['status' => TaskStatus::PendingReview, 'title' => 'Hidden pending']);
@@ -124,7 +124,7 @@ class BrowseApplicationsTest extends TestCase
                 ->where('tasks.data.0.deadline', '2026-11-13'));
         $this->get(route('browse.index', ['search' => 'learning']))->assertInertia(fn ($page) => $page->has('tasks.data', 3));
         $this->get(route('browse.index', ['category' => 'tutoring_and_academic_support']))->assertInertia(fn ($page) => $page->has('tasks.data', 3));
-        $this->get(route('browse.index', ['work_mode' => 'remote']))->assertInertia(fn ($page) => $page->has('tasks.data', 2)->where('tasks.data.0.id', $range->id));
+        $this->get(route('browse.index', ['work_mode' => 'online']))->assertInertia(fn ($page) => $page->has('tasks.data', 2)->where('tasks.data.0.id', $range->id));
         $this->get(route('browse.index', ['complexity' => 'high']))->assertInertia(fn ($page) => $page->has('tasks.data', 1)->where('tasks.data.0.id', $expensive->id));
         $this->get(route('browse.index', ['min_budget' => 3000]))->assertInertia(fn ($page) => $page->has('tasks.data', 1));
         $this->get(route('browse.index', ['min_budget' => 2300, 'max_budget' => 2600]))->assertInertia(fn ($page) => $page->has('tasks.data', 1)->where('tasks.data.0.id', $range->id)->where('tasks.data.0.budgetDisplay', '₱1,800.00–₱2,500.00'));

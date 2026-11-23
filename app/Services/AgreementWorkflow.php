@@ -33,7 +33,7 @@ class AgreementWorkflow
                 || $task->hasActiveAgreement()) {
                 throw ValidationException::withMessages(['agreement' => 'This task is not ready for an agreement.']);
             }
-            if (in_array($task->work_mode, ['onsite', 'hybrid'], true)
+            if (in_array($task->work_mode, ['on_campus', 'off_campus', 'onsite', 'hybrid'], true)
                 && (! $task->workplace_name || ! $task->workplace_address)) {
                 throw ValidationException::withMessages(['task' => 'The task must have complete workplace details before an agreement can be proposed.']);
             }

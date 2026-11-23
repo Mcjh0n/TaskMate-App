@@ -27,7 +27,7 @@ class TaskPostingTest extends TestCase
             'complexity' => 'low',
             'budget_mode' => 'single',
             'budget' => 1500,
-            'work_mode' => 'onsite',
+            'work_mode' => 'on_campus',
             'workplace_name' => 'Synthetic Student Center',
             'workplace_address' => 'Synthetic campus room 101',
             'physical_demand' => 'none',
@@ -91,7 +91,7 @@ class TaskPostingTest extends TestCase
             'description' => 'Help prepare the event space and leave the area ready for attendees.',
             'budget_mode' => 'single',
             'budget' => 1200,
-            'work_mode' => 'remote',
+            'work_mode' => 'online',
             'guidelines_confirmed' => '1',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
@@ -128,7 +128,7 @@ class TaskPostingTest extends TestCase
             'description' => 'A clear description with the essential task information.',
             'budget_mode' => 'single',
             'budget' => 1500,
-            'work_mode' => 'onsite',
+            'work_mode' => 'on_campus',
             'workplace_name' => 'Synthetic Student Center',
             'workplace_address' => 'Synthetic campus room 101',
             'guidelines_confirmed' => '1',
@@ -149,8 +149,9 @@ class TaskPostingTest extends TestCase
         $poster = $this->verifiedPoster();
         $this->actingAs($poster)->post(route('tasks.store'), $this->taskData(['category' => 'invented']))->assertSessionHasErrors('category');
         $this->post(route('tasks.store'), $this->taskData(['work_mode' => 'teleport']))->assertSessionHasErrors('work_mode');
+        $this->post(route('tasks.store'), $this->taskData(['work_mode' => 'hybrid']))->assertSessionHasErrors('work_mode');
         $this->post(route('tasks.store'), $this->taskData(['workplace_name' => '', 'workplace_address' => '']))->assertSessionHasErrors(['workplace_name', 'workplace_address']);
-        $this->post(route('tasks.store'), $this->taskData(['work_mode' => 'hybrid', 'workplace_name' => '', 'workplace_address' => '']))->assertSessionHasErrors(['workplace_name', 'workplace_address']);
+        $this->post(route('tasks.store'), $this->taskData(['work_mode' => 'off_campus', 'workplace_name' => '', 'workplace_address' => '']))->assertSessionHasErrors(['workplace_name', 'workplace_address']);
         $this->post(route('tasks.store'), $this->taskData(['budget' => 0]))->assertSessionHasErrors('budget');
         $this->post(route('tasks.store'), $this->taskData(['budget' => 1000000]))->assertSessionHasErrors('budget');
         $this->post(route('tasks.store'), $this->taskData(['budget' => '100.123']))->assertSessionHasErrors('budget');
@@ -160,6 +161,23 @@ class TaskPostingTest extends TestCase
         $this->post(route('tasks.store'), $this->taskData(['guidelines_confirmed' => '0']))->assertSessionHasErrors('guidelines_confirmed');
         $this->post(route('tasks.store'), $this->taskData(['complexity' => 'invented']))->assertSessionHasErrors('complexity');
         $this->post(route('tasks.store'), $this->taskData(['physical_demand' => 'invented']))->assertSessionHasErrors('physical_demand');
+    }
+
+    public function test_online_needs_no_location_and_off_campus_requires_one(): void
+    {
+        $poster = $this->verifiedPoster();
+        $this->actingAs($poster)->post(route('tasks.store'), $this->taskData([
+            'work_mode' => 'online', 'workplace_name' => 'Ignore this', 'workplace_address' => 'Ignore this too',
+        ]))->assertRedirect()->assertSessionHasNoErrors();
+        $onlineTask = $poster->tasks()->latest('id')->firstOrFail();
+        $this->assertNull($onlineTask->workplace_name);
+        $this->assertNull($onlineTask->workplace_address);
+
+        $this->post(route('tasks.store'), $this->taskData([
+            'work_mode' => 'off_campus', 'workplace_name' => 'Synthetic public library', 'workplace_address' => 'Synthetic downtown location',
+        ]))->assertRedirect()->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('tasks', ['work_mode' => 'off_campus', 'workplace_name' => 'Synthetic public library']);
+        $this->assertSame(['online', 'on_campus', 'off_campus'], array_keys(config('taskmate.work_modes')));
     }
 
     public function test_task_budget_accepts_the_six_digit_limit_with_cents(): void
@@ -201,7 +219,7 @@ class TaskPostingTest extends TestCase
     {
         $poster = $this->verifiedPoster();
         $this->actingAs($poster)->post(route('tasks.store'), $this->taskData([
-            'work_mode' => 'remote',
+            'work_mode' => 'online',
             'workplace_name' => 'Private home',
             'workplace_address' => 'Should not be retained',
             'status' => 'approved',
@@ -224,7 +242,7 @@ class TaskPostingTest extends TestCase
         $this->actingAs($owner)->get(route('tasks.show', $task))->assertOk()->assertInertia(fn ($page) => $page->component('tasks/show')->has('task.title'));
         $this->actingAs($other)->get(route('tasks.show', $task))->assertForbidden();
         $this->actingAs($other)->get(route('tasks.edit', $task))->assertForbidden();
-        $this->actingAs($owner)->put(route('tasks.update', $task), $this->taskData(['work_mode' => 'remote']))->assertRedirect();
+        $this->actingAs($owner)->put(route('tasks.update', $task), $this->taskData(['work_mode' => 'online']))->assertRedirect();
         $this->actingAs($owner)->post(route('tasks.cancel', $task))->assertRedirect(route('tasks.mine'));
         $this->assertSame(TaskStatus::Cancelled, $task->fresh()->status);
         $this->actingAs($owner)->get(route('tasks.edit', $task))->assertForbidden();
@@ -273,7 +291,7 @@ class TaskPostingTest extends TestCase
             'reviewed_at' => now(),
         ]);
 
-        $this->actingAs($poster)->put(route('tasks.update', $task), $this->taskData(['work_mode' => 'remote']))->assertRedirect();
+        $this->actingAs($poster)->put(route('tasks.update', $task), $this->taskData(['work_mode' => 'online']))->assertRedirect();
         $this->assertSame(TaskStatus::PendingReview, $task->fresh()->status);
         $this->assertNull($task->fresh()->review_note);
         $this->assertNull($task->fresh()->reviewed_by);
@@ -315,7 +333,7 @@ class TaskPostingTest extends TestCase
         $this->assertNull(Task::latest('id')->firstOrFail()->workplace_setting);
 
         $this->post(route('tasks.store'), $this->taskData([
-            'work_mode' => 'remote',
+            'work_mode' => 'online',
             'workplace_name' => 'Ignore me',
             'workplace_address' => 'Ignore me',
             'workplace_setting' => 'off_campus_private_or_residential',

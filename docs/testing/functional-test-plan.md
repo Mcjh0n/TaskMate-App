@@ -10,7 +10,7 @@
 | F-04 | Manual task review | Verified poster/admin | Submit text that matched former risk keywords, then open the admin queue | Task stays pending; an administrator decides; no auto-approval or auto-block occurs | Team decision; FR-13–21 |  |  |
 | F-05 | Manual task review | Admin | Approve, reject, or request changes on a pending task | The administrator's choice and required notes determine the task state | FR-13–21 |  |  |
 | F-06 | Resubmission | Verified poster/admin | Edit a task after changes are requested | Task returns to pending review for a new manual decision | FR-09–12 |  |  |
-| F-07 | Workplace disclosure | Student | Open approved onsite/hybrid listing | Work name, address, setting, and conditions are visible before application | FR-22–29 |  |  |
+| F-07 | Workplace disclosure | Student | Open approved On-campus and Off-campus listings; compare with an Online listing | In-person listings disclose the work location before application; Online listings do not require a location | FR-22–29 |  |  |
 | F-08 | Application | Student | Apply, withdraw pending application, and inspect status | One application is recorded and status changes are enforced | FR-25–30 |  |  |
 | F-09 | Agreement | Poster/student | Propose, revise, send back, confirm same version | Agreement locks only after both confirm the current version | FR-31–34 |  |  |
 | F-10 | Completion | Poster/student | Mark delivery and record completion | Each party's allowed action is recorded; completed state is visible | FR-35–39 |  |  |

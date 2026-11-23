@@ -67,7 +67,7 @@ class DemoScenarioSeeder extends Seeder
             $task->skill_requirements = null;
             $task->complexity = 'low';
             $task->budget = 500;
-            $task->work_mode = 'remote';
+            $task->work_mode = 'online';
             $task->workplace_name = null;
             $task->workplace_address = null;
             $task->physical_demand = 'none';
@@ -165,7 +165,7 @@ class DemoScenarioSeeder extends Seeder
             $task->poster()->associate($faculty); $task->title = $taskTitle;
             $task->category = array_key_first(config('taskmate.categories')); $task->description = 'Synthetic payment-status scenario.';
             $task->required_activities = 'Synthetic activity.'; $task->deliverables = 'Synthetic deliverable.';
-            $task->estimated_duration_hours = 1; $task->complexity = 'low'; $task->budget = 500; $task->work_mode = 'remote';
+            $task->estimated_duration_hours = 1; $task->complexity = 'low'; $task->budget = 500; $task->work_mode = 'online';
             $task->status = TaskStatus::InProgress; $task->guidelines_confirmed_at = now();
             $task->physical_demand = 'none'; $task->academic_involvement = 'none';
             $task->hazard_exposure = false; $task->private_meeting_required = false; $task->workplace_setting = null;
@@ -188,7 +188,7 @@ class DemoScenarioSeeder extends Seeder
                 $version->proposed_by = $faculty->id; $version->deliverables = 'Synthetic agreed deliverable.';
                 $version->terms = 'Synthetic agreement terms for local testing only.'; $version->final_amount = 500;
                 $version->start_date = today()->subDay(); $version->due_date = today()->addDays(5);
-                $version->work_mode = 'remote'; $version->payment_arrangement = 'Synthetic direct payment arrangement after completion.';
+                $version->work_mode = 'online'; $version->payment_arrangement = 'Synthetic direct payment arrangement after completion.';
                 $version->comment = 'Synthetic demo proposal.'; $version->created_at = now();
                 $version->content_hash = app(AgreementContentHasher::class)->hash($version); $version->save();
                 $agreement->current_version_id = $version->id; $agreement->status = AgreementStatus::Agreed; $agreement->locked_at = now(); $agreement->save();
