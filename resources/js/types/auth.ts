@@ -7,7 +7,11 @@ export type User = {
     can_post_tasks: boolean;
     can_apply_tasks: boolean;
     can_browse_tasks: boolean;
-    verification_status: 'pending' | 'verified' | 'rejected' | 'more_info_requested';
+    verification_status:
+        | 'pending'
+        | 'verified'
+        | 'rejected'
+        | 'more_info_requested';
     /* @chisel-2fa */
     two_factor_enabled?: boolean;
     /* @end-chisel-2fa */

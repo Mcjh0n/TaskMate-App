@@ -12,12 +12,19 @@ export default function AdminLayout({ children }: PropsWithChildren) {
             <PrototypeBanner />
             <AppShell>
                 <AdminSidebar />
-                <AppContent variant="sidebar" className="min-w-0 overflow-x-clip">
+                <AppContent
+                    variant="sidebar"
+                    className="min-w-0 overflow-x-clip"
+                >
                     <AppSidebarHeader
                         showMessages={false}
-                        breadcrumbs={[{ title: 'Administration', href: '/admin' }]}
+                        breadcrumbs={[
+                            { title: 'Administration', href: '/admin' },
+                        ]}
                     />
-                    <div className="mx-auto w-full max-w-6xl px-4 py-6">{children}</div>
+                    <div className="mx-auto w-full max-w-6xl px-4 py-6">
+                        {children}
+                    </div>
                     <SiteFooter />
                 </AppContent>
             </AppShell>

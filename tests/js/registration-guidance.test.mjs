@@ -4,13 +4,17 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import test from 'node:test';
+import { runInNewContext } from 'node:vm';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const require = createRequire(import.meta.url);
-const source = readFileSync(resolve(root, 'resources/js/pages/auth/register.tsx'), 'utf8');
+const source = readFileSync(
+    resolve(root, 'resources/js/pages/auth/register.tsx'),
+    'utf8',
+);
 const compiled = ts.transpileModule(source, {
     compilerOptions: {
         jsx: ts.JsxEmit.ReactJSX,
@@ -21,55 +25,95 @@ const compiled = ts.transpileModule(source, {
 }).outputText;
 
 function element(tag, { children, ...props } = {}) {
-    return React.createElement(tag, props, typeof children === 'function' ? children({ errors: {}, processing: false }) : children);
+    return React.createElement(
+        tag,
+        props,
+        typeof children === 'function'
+            ? children({ errors: {}, processing: false })
+            : children,
+    );
 }
 
 const modules = {
-    '@inertiajs/react': { Form: ({ resetOnSuccess, disableWhileProcessing, ...props }) => element('form', props), Head: () => null },
+    '@inertiajs/react': {
+        Form: ({
+            resetOnSuccess: _resetOnSuccess,
+            disableWhileProcessing: _disableWhileProcessing,
+            ...props
+        }) => element('form', props),
+        Head: () => null,
+    },
     '@/components/input-error': () => null,
     '@/components/password-input': (props) => element('input', props),
-    '@/components/safety-notice': { SafetyNotice: () => element('p', { children: 'Safety notice' }) },
+    '@/components/safety-notice': {
+        SafetyNotice: () => element('p', { children: 'Safety notice' }),
+    },
     '@/components/text-link': (props) => element('a', props),
     '@/components/ui/button': { Button: (props) => element('button', props) },
     '@/components/ui/input': { Input: (props) => element('input', props) },
     '@/components/ui/label': { Label: (props) => element('label', props) },
     '@/components/ui/spinner': { Spinner: () => null },
-    '@/components/ui/textarea': { Textarea: (props) => element('textarea', props) },
+    '@/components/ui/textarea': {
+        Textarea: (props) => element('textarea', props),
+    },
     '@/routes': { login: () => '/login' },
-    '@/routes/register': { store: { form: () => ({ action: '/register', method: 'post' }) } },
+    '@/routes/register': {
+        store: { form: () => ({ action: '/register', method: 'post' }) },
+    },
 };
 
 const module = { exports: {} };
 const mockRequire = (name) => {
     if (name === 'react/jsx-runtime') return require('react/jsx-runtime');
     if (name === 'react') return React;
-    if (!(name in modules)) throw new Error(`Unexpected module in registration guidance render test: ${name}`);
+    if (!(name in modules))
+        throw new Error(
+            `Unexpected module in registration guidance render test: ${name}`,
+        );
     const value = modules[name];
     if (typeof value === 'function') return value;
     return { __esModule: true, ...value };
 };
-new Function('require', 'module', 'exports', compiled)(mockRequire, module, module.exports);
+runInNewContext(compiled, {
+    require: mockRequire,
+    module: module,
+    exports: module.exports,
+});
 const Register = module.exports.default;
 
-test('student ID input strips letters and limits typing and paste to ten digits', () => {
-    assert.equal(module.exports.sanitizeStudentId('12AB34567890'), '1234567890');
+void test('student ID input strips letters and limits typing and paste to ten digits', () => {
+    assert.equal(
+        module.exports.sanitizeStudentId('12AB34567890'),
+        '1234567890',
+    );
     assert.equal(module.exports.sanitizeStudentId('12-34 56'), '123456');
 });
 
-test('registration explains account review and why requested student details are collected', () => {
-    const markup = renderToStaticMarkup(React.createElement(Register, {
-        passwordRules: '',
-        institutionalEmailDomains: ['cmu.edu.ph'],
-    }));
+void test('registration explains account review and why requested student details are collected', () => {
+    const markup = renderToStaticMarkup(
+        React.createElement(Register, {
+            passwordRules: '',
+            institutionalEmailDomains: ['cmu.edu.ph'],
+        }),
+    );
 
     assert.match(markup, /How account review works/);
-    assert.match(markup, /Email confirmation and TaskMate account review are separate steps/);
-    assert.match(markup, /Students can browse approved tasks before verification, but must be verified to apply/);
+    assert.match(
+        markup,
+        /Email confirmation and TaskMate account review are separate steps/,
+    );
+    assert.match(
+        markup,
+        /Students can browse approved tasks before verification, but must be verified to apply/,
+    );
     assert.match(markup, /Student ID number/);
     assert.match(markup, /Full name/);
     assert.doesNotMatch(markup, /First name|Middle name|Last name/);
     assert.match(markup, /inputMode="numeric"/);
     assert.match(markup, /maxLength="10"/);
-    assert.match(markup, /Your ID number is visible only to you and administrators/);
+    assert.match(
+        markup,
+        /Your ID number is visible only to you and administrators/,
+    );
     assert.match(markup, /may appear on your profile/);
 });

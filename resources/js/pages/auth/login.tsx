@@ -21,14 +21,10 @@ type Props = {
     canResetPassword: boolean;
 };
 
-export default function Login({
-    status,
-    canResetPassword,
-}: Props) {
+export default function Login({ status, canResetPassword }: Props) {
     return (
         <>
             <Head title="Log in" />
-
 
             {/* @chisel-passkeys */}
             <PasskeyVerify />

@@ -4,70 +4,70 @@ Status reflects code and documents at this prototype phase. “Implemented but p
 
 Current team refinements: every student account can browse approved tasks regardless of TaskMate verification status; only verified students can apply. Registration enforces a ten-digit numeric Student ID, strips non-numeric characters from student input, and leaves employee ID formats unchanged. Registration and profile editing use one full-name field; existing full names remain intact. Users see their own email and ID on their dashboard and profile settings; they are not added to shared or public profile props. Task posting allows a budget through ₱999,999.99; this limit does not change application suggestions, agreement amounts, or payment records. Covered by `BrowseApplicationsTest`, `RegistrationTest`, `ProfileUpdateTest`, `PrivacyAuditTest`, `TaskPostingTest`, and the registration UI tests.
 
-| Requirement | Status | Main route / file | Test coverage |
-|---|---|---|---|
-| FR-01 | Implemented but provisional | `registration, verification, admin user review` | `UserAccountRulesTest, AdminVerificationTest` |
-| FR-02 | Implemented but provisional | `registration, verification, admin user review` | `UserAccountRulesTest, AdminVerificationTest` |
-| FR-03 | Implemented but provisional | `registration, verification, admin user review` | `UserAccountRulesTest, AdminVerificationTest` |
-| FR-04 | Implemented but provisional | `registration, verification, admin user review` | `UserAccountRulesTest, AdminVerificationTest` |
-| FR-05 | Implemented but provisional | `registration, verification, admin user review` | `UserAccountRulesTest, AdminVerificationTest` |
-| FR-06 | Implemented but provisional | `registration, verification, admin user review` | `UserAccountRulesTest, AdminVerificationTest` |
-| FR-07 | Implemented but provisional | `registration, verification, admin user review` | `UserAccountRulesTest, AdminVerificationTest` |
-| FR-08 | Implemented but provisional | `registration, verification, admin user review` | `UserAccountRulesTest, AdminVerificationTest` |
-| FR-09 | Implemented | `tasks, TaskController, TaskPolicy` | `TaskPostingTest` |
-| FR-10 | Implemented | `tasks, TaskController, TaskPolicy` | `TaskPostingTest` |
-| FR-11 | Implemented | `tasks, TaskController, TaskPolicy` | `TaskPostingTest` |
-| FR-12 | Implemented | `tasks, TaskController, TaskPolicy` | `TaskPostingTest` |
-| FR-13 | Not implemented | Automated risk screening was removed; all tasks require an administrator's decision | `TaskReviewWorkflowTest` verifies no automatic decision is made |
-| FR-14 | Not implemented | No risk levels or automated prioritization | `TaskReviewWorkflowTest` verifies manual review queue ordering |
-| FR-15 | Not implemented | No risk-score-based outcomes | `TaskReviewWorkflowTest` verifies submissions remain pending |
-| FR-16 | Not implemented | No keyword-based risk score or block | `TaskReviewWorkflowTest` submits former sample phrases and verifies pending status |
-| FR-17 | Not implemented | No automated risk assessment service is active | `TaskReviewWorkflowTest` |
-| FR-18 | Implemented but provisional | `TaskController`, admin task review; workplace details are disclosed and decisions are manual | `TaskPostingTest`, `TaskReviewWorkflowTest` |
-| FR-19 | Not implemented | Keyword-based risk decisions are disabled; task content is reviewed by an administrator | `TaskReviewWorkflowTest` |
-| FR-20 | Not implemented | No automated risk outcomes or escalation | `TaskReviewWorkflowTest` |
-| FR-21 | Implemented | Pending tasks can be approved, rejected, or sent back by an admin | `TaskReviewWorkflowTest` |
-| FR-22 | Implemented | `BrowseController` discloses workplace details before applying | `BrowseApplicationsTest` |
-| FR-23 | Implemented but provisional | Previously saved work-condition values remain visible; new posting form no longer collects the optional questionnaire | `TaskPostingTest`, `BrowseApplicationsTest` |
-| FR-24 | Implemented | Workplace address is a stated worksite; no location tracking exists | `TaskPostingTest`, `PrivacyAuditTest` |
-| FR-25 | Implemented but provisional | `browse, applications` | `BrowseApplicationsTest` |
-| FR-26 | Implemented but provisional | `browse, applications` | `BrowseApplicationsTest` |
-| FR-27 | Implemented but provisional | `browse, applications` | `BrowseApplicationsTest` |
-| FR-28 | Implemented but provisional | `browse, applications` | `BrowseApplicationsTest` |
-| FR-29 | Implemented but provisional | `browse, applications` | `BrowseApplicationsTest` |
-| FR-30 | Implemented but provisional | `browse, applications` | `BrowseApplicationsTest` |
-| FR-31 | Implemented | `agreements` | `AgreementWorkflowTest` |
-| FR-32 | Implemented | `agreements` | `AgreementWorkflowTest` |
-| FR-33 | Implemented | `agreements` | `AgreementWorkflowTest` |
-| FR-34 | Implemented | `agreements` | `AgreementWorkflowTest` |
-| FR-35 | Implemented | `completion and payment` | `CompletionPaymentReportsTest` |
-| FR-36 | Implemented | `completion and payment` | `CompletionPaymentReportsTest` |
-| FR-37 | Implemented | `completion and payment` | `CompletionPaymentReportsTest` |
-| FR-38 | Implemented | `completion and payment` | `CompletionPaymentReportsTest` |
-| FR-39 | Implemented | `completion and payment` | `CompletionPaymentReportsTest` |
-| FR-40 | Implemented but provisional | `ratings` | `RatingsTest` |
-| FR-41 | Implemented but provisional | `ratings` | `RatingsTest` |
-| FR-42 | Implemented but provisional | `ratings` | `RatingsTest` |
-| FR-43 | Implemented but provisional | `ratings` | `RatingsTest` |
-| FR-44 | Implemented but provisional | `reports, moderation, sanctions` | `CompletionPaymentReportsTest, PhaseNineSafetyTest` |
-| FR-45 | Implemented but provisional | `reports, moderation, sanctions` | `CompletionPaymentReportsTest, PhaseNineSafetyTest` |
-| FR-46 | Implemented but provisional | `reports, moderation, sanctions` | `CompletionPaymentReportsTest, PhaseNineSafetyTest` |
-| FR-47 | Implemented but provisional | `reports, moderation, sanctions` | `CompletionPaymentReportsTest, PhaseNineSafetyTest` |
-| FR-48 | Implemented but provisional | `reports, moderation, sanctions` | `CompletionPaymentReportsTest, PhaseNineSafetyTest` |
-| FR-49 | Implemented but provisional | `OffPlatformScanner, content flags` | `PhaseNineSafetyTest` |
-| NFR-01 | Implemented but provisional | `authorization and route audit` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-02 | Implemented but provisional | `privacy props and data handling doc` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-03 | Implemented but provisional | `route and mass-assignment audits` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-04 | Implemented but provisional | `append-only models` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-05 | Implemented but provisional | `privacy boundary and upload checks` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-06 | Documented only | `docs/research-data-separation.md` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-07 | Documented only | `docs/privacy-and-data-handling.md DRAFT` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-08 | Documented only | `docs/testing/usability-test-plan.md` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-09 | Implemented but provisional | `config, rate limits, audits` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-10 | Documented only | `synthetic demo/reset tooling` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-11 | Documented only | `docs/testing/usability-test-plan.md` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-12 | Documented only | `docs/testing/safety-scenarios.md` | `PrivacyAuditTest` / applicable feature tests |
-| NFR-13 | Documented only | `docs/testing/matching-relevance-feedback.md` | `PrivacyAuditTest` / applicable feature tests |
+| Requirement | Status                      | Main route / file                                                                                                     | Test coverage                                                                      |
+| ----------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| FR-01       | Implemented but provisional | `registration, verification, admin user review`                                                                       | `UserAccountRulesTest, AdminVerificationTest`                                      |
+| FR-02       | Implemented but provisional | `registration, verification, admin user review`                                                                       | `UserAccountRulesTest, AdminVerificationTest`                                      |
+| FR-03       | Implemented but provisional | `registration, verification, admin user review`                                                                       | `UserAccountRulesTest, AdminVerificationTest`                                      |
+| FR-04       | Implemented but provisional | `registration, verification, admin user review`                                                                       | `UserAccountRulesTest, AdminVerificationTest`                                      |
+| FR-05       | Implemented but provisional | `registration, verification, admin user review`                                                                       | `UserAccountRulesTest, AdminVerificationTest`                                      |
+| FR-06       | Implemented but provisional | `registration, verification, admin user review`                                                                       | `UserAccountRulesTest, AdminVerificationTest`                                      |
+| FR-07       | Implemented but provisional | `registration, verification, admin user review`                                                                       | `UserAccountRulesTest, AdminVerificationTest`                                      |
+| FR-08       | Implemented but provisional | `registration, verification, admin user review`                                                                       | `UserAccountRulesTest, AdminVerificationTest`                                      |
+| FR-09       | Implemented                 | `tasks, TaskController, TaskPolicy`                                                                                   | `TaskPostingTest`                                                                  |
+| FR-10       | Implemented                 | `tasks, TaskController, TaskPolicy`                                                                                   | `TaskPostingTest`                                                                  |
+| FR-11       | Implemented                 | `tasks, TaskController, TaskPolicy`                                                                                   | `TaskPostingTest`                                                                  |
+| FR-12       | Implemented                 | `tasks, TaskController, TaskPolicy`                                                                                   | `TaskPostingTest`                                                                  |
+| FR-13       | Not implemented             | Automated risk screening was removed; all tasks require an administrator's decision                                   | `TaskReviewWorkflowTest` verifies no automatic decision is made                    |
+| FR-14       | Not implemented             | No risk levels or automated prioritization                                                                            | `TaskReviewWorkflowTest` verifies manual review queue ordering                     |
+| FR-15       | Not implemented             | No risk-score-based outcomes                                                                                          | `TaskReviewWorkflowTest` verifies submissions remain pending                       |
+| FR-16       | Not implemented             | No keyword-based risk score or block                                                                                  | `TaskReviewWorkflowTest` submits former sample phrases and verifies pending status |
+| FR-17       | Not implemented             | No automated risk assessment service is active                                                                        | `TaskReviewWorkflowTest`                                                           |
+| FR-18       | Implemented but provisional | `TaskController`, admin task review; workplace details are disclosed and decisions are manual                         | `TaskPostingTest`, `TaskReviewWorkflowTest`                                        |
+| FR-19       | Not implemented             | Keyword-based risk decisions are disabled; task content is reviewed by an administrator                               | `TaskReviewWorkflowTest`                                                           |
+| FR-20       | Not implemented             | No automated risk outcomes or escalation                                                                              | `TaskReviewWorkflowTest`                                                           |
+| FR-21       | Implemented                 | Pending tasks can be approved, rejected, or sent back by an admin                                                     | `TaskReviewWorkflowTest`                                                           |
+| FR-22       | Implemented                 | `BrowseController` discloses workplace details before applying                                                        | `BrowseApplicationsTest`                                                           |
+| FR-23       | Implemented but provisional | Previously saved work-condition values remain visible; new posting form no longer collects the optional questionnaire | `TaskPostingTest`, `BrowseApplicationsTest`                                        |
+| FR-24       | Implemented                 | Workplace address is a stated worksite; no location tracking exists                                                   | `TaskPostingTest`, `PrivacyAuditTest`                                              |
+| FR-25       | Implemented but provisional | `browse, applications`                                                                                                | `BrowseApplicationsTest`                                                           |
+| FR-26       | Implemented but provisional | `browse, applications`                                                                                                | `BrowseApplicationsTest`                                                           |
+| FR-27       | Implemented but provisional | `browse, applications`                                                                                                | `BrowseApplicationsTest`                                                           |
+| FR-28       | Implemented but provisional | `browse, applications`                                                                                                | `BrowseApplicationsTest`                                                           |
+| FR-29       | Implemented but provisional | `browse, applications`                                                                                                | `BrowseApplicationsTest`                                                           |
+| FR-30       | Implemented but provisional | `browse, applications`                                                                                                | `BrowseApplicationsTest`                                                           |
+| FR-31       | Implemented                 | `agreements`                                                                                                          | `AgreementWorkflowTest`                                                            |
+| FR-32       | Implemented                 | `agreements`                                                                                                          | `AgreementWorkflowTest`                                                            |
+| FR-33       | Implemented                 | `agreements`                                                                                                          | `AgreementWorkflowTest`                                                            |
+| FR-34       | Implemented                 | `agreements`                                                                                                          | `AgreementWorkflowTest`                                                            |
+| FR-35       | Implemented                 | `completion and payment`                                                                                              | `CompletionPaymentReportsTest`                                                     |
+| FR-36       | Implemented                 | `completion and payment`                                                                                              | `CompletionPaymentReportsTest`                                                     |
+| FR-37       | Implemented                 | `completion and payment`                                                                                              | `CompletionPaymentReportsTest`                                                     |
+| FR-38       | Implemented                 | `completion and payment`                                                                                              | `CompletionPaymentReportsTest`                                                     |
+| FR-39       | Implemented                 | `completion and payment`                                                                                              | `CompletionPaymentReportsTest`                                                     |
+| FR-40       | Implemented but provisional | `ratings`                                                                                                             | `RatingsTest`                                                                      |
+| FR-41       | Implemented but provisional | `ratings`                                                                                                             | `RatingsTest`                                                                      |
+| FR-42       | Implemented but provisional | `ratings`                                                                                                             | `RatingsTest`                                                                      |
+| FR-43       | Implemented but provisional | `ratings`                                                                                                             | `RatingsTest`                                                                      |
+| FR-44       | Implemented but provisional | `reports, moderation, sanctions`                                                                                      | `CompletionPaymentReportsTest, PhaseNineSafetyTest`                                |
+| FR-45       | Implemented but provisional | `reports, moderation, sanctions`                                                                                      | `CompletionPaymentReportsTest, PhaseNineSafetyTest`                                |
+| FR-46       | Implemented but provisional | `reports, moderation, sanctions`                                                                                      | `CompletionPaymentReportsTest, PhaseNineSafetyTest`                                |
+| FR-47       | Implemented but provisional | `reports, moderation, sanctions`                                                                                      | `CompletionPaymentReportsTest, PhaseNineSafetyTest`                                |
+| FR-48       | Implemented but provisional | `reports, moderation, sanctions`                                                                                      | `CompletionPaymentReportsTest, PhaseNineSafetyTest`                                |
+| FR-49       | Implemented but provisional | `OffPlatformScanner, content flags`                                                                                   | `PhaseNineSafetyTest`                                                              |
+| NFR-01      | Implemented but provisional | `authorization and route audit`                                                                                       | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-02      | Implemented but provisional | `privacy props and data handling doc`                                                                                 | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-03      | Implemented but provisional | `route and mass-assignment audits`                                                                                    | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-04      | Implemented but provisional | `append-only models`                                                                                                  | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-05      | Implemented but provisional | `privacy boundary and upload checks`                                                                                  | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-06      | Documented only             | `docs/research-data-separation.md`                                                                                    | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-07      | Documented only             | `docs/privacy-and-data-handling.md DRAFT`                                                                             | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-08      | Documented only             | `docs/testing/usability-test-plan.md`                                                                                 | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-09      | Implemented but provisional | `config, rate limits, audits`                                                                                         | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-10      | Documented only             | `synthetic demo/reset tooling`                                                                                        | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-11      | Documented only             | `docs/testing/usability-test-plan.md`                                                                                 | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-12      | Documented only             | `docs/testing/safety-scenarios.md`                                                                                    | `PrivacyAuditTest` / applicable feature tests                                      |
+| NFR-13      | Documented only             | `docs/testing/matching-relevance-feedback.md`                                                                         | `PrivacyAuditTest` / applicable feature tests                                      |
 
 ## Phase 11 decisions and coverage
 

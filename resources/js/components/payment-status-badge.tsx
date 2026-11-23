@@ -7,6 +7,16 @@ const styles: Record<string, string> = {
     not_received: 'border-red-300 bg-red-50 text-red-900',
 };
 
-export function PaymentStatusBadge({ status, label }: { status: string; label: string }) {
-    return <Badge variant="outline" className={styles[status] ?? ''}>{label}</Badge>;
+export function PaymentStatusBadge({
+    status,
+    label,
+}: {
+    status: string;
+    label: string;
+}) {
+    return (
+        <Badge variant="outline" className={styles[status] ?? ''}>
+            {label}
+        </Badge>
+    );
 }

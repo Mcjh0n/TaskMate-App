@@ -7,6 +7,16 @@ const styles: Record<string, string> = {
     cancelled: 'border-slate-300 bg-slate-100 text-slate-700',
 };
 
-export function AgreementStatusBadge({ status, label }: { status: string; label: string }) {
-    return <Badge variant="outline" className={styles[status] ?? ''}>{label}</Badge>;
+export function AgreementStatusBadge({
+    status,
+    label,
+}: {
+    status: string;
+    label: string;
+}) {
+    return (
+        <Badge variant="outline" className={styles[status] ?? ''}>
+            {label}
+        </Badge>
+    );
 }

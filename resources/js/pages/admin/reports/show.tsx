@@ -6,12 +6,223 @@ import InputError from '@/components/input-error';
 import { ReportDetails } from '@/components/report-details';
 import admin from '@/routes/admin';
 
-function DecisionForm({ reportId, decision, label, noteRequired, showOutcome = false }: { reportId: number; decision: string; label: string; noteRequired: boolean; showOutcome?: boolean }) {
-    return <Form {...admin.reports.decision.form(reportId)} className="space-y-3 rounded-lg border p-4">{({ errors, processing }) => <><input type="hidden" name="decision" value={decision} /><h3 className="font-medium">{label}</h3>{showOutcome && <div><label className="mb-1 block text-sm" htmlFor="outcome">Outcome</label><select id="outcome" name="outcome" required className="h-10 w-full rounded-md border bg-background px-3 text-sm"><option value="">Choose an outcome</option><option value="supported">Supported</option><option value="not_supported">Not supported</option><option value="inconclusive">Inconclusive</option></select><InputError message={errors.outcome} /></div>}{decision === 'resolve' && <Textarea name="resolution_message" maxLength={3000} placeholder="Optional message visible to the reporter" />}<Textarea name="note" required={noteRequired} placeholder={noteRequired ? 'Required internal note' : 'Optional internal note'} /><InputError message={errors.note} /><Button type="submit" disabled={processing}>{label}</Button></>}</Form>;
+function DecisionForm({
+    reportId,
+    decision,
+    label,
+    noteRequired,
+    showOutcome = false,
+}: {
+    reportId: number;
+    decision: string;
+    label: string;
+    noteRequired: boolean;
+    showOutcome?: boolean;
+}) {
+    return (
+        <Form
+            {...admin.reports.decision.form(reportId)}
+            className="space-y-3 rounded-lg border p-4"
+        >
+            {({ errors, processing }) => (
+                <>
+                    <input type="hidden" name="decision" value={decision} />
+                    <h3 className="font-medium">{label}</h3>
+                    {showOutcome && (
+                        <div>
+                            <label
+                                className="mb-1 block text-sm"
+                                htmlFor="outcome"
+                            >
+                                Outcome
+                            </label>
+                            <select
+                                id="outcome"
+                                name="outcome"
+                                required
+                                className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                            >
+                                <option value="">Choose an outcome</option>
+                                <option value="supported">Supported</option>
+                                <option value="not_supported">
+                                    Not supported
+                                </option>
+                                <option value="inconclusive">
+                                    Inconclusive
+                                </option>
+                            </select>
+                            <InputError message={errors.outcome} />
+                        </div>
+                    )}
+                    {decision === 'resolve' && (
+                        <Textarea
+                            name="resolution_message"
+                            maxLength={3000}
+                            placeholder="Optional message visible to the reporter"
+                        />
+                    )}
+                    <Textarea
+                        name="note"
+                        required={noteRequired}
+                        placeholder={
+                            noteRequired
+                                ? 'Required internal note'
+                                : 'Optional internal note'
+                        }
+                    />
+                    <InputError message={errors.note} />
+                    <Button type="submit" disabled={processing}>
+                        {label}
+                    </Button>
+                </>
+            )}
+        </Form>
+    );
 }
 
-function AdminReportShow({ report, canReview, notice }: { report: any; canReview: boolean; notice: string }) {
-    return <><Head title={`Review report #${report.id}`} /><div className="space-y-5"><p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">{notice}</p><ReportDetails report={report} />{report.escalatedAt && <p className="rounded border p-3 text-sm">Escalated {report.escalatedAt}: {report.escalationNote}{report.escalationOfficeLabel ? ` · ${report.escalationOfficeLabel}` : ''}</p>}{canReview && <section className="space-y-3 rounded-xl border p-5"><h2 className="text-lg font-semibold">Review decision</h2><div className="grid gap-3 md:grid-cols-2"><DecisionForm reportId={report.id} decision="start_review" label="Start review" noteRequired={false} /><DecisionForm reportId={report.id} decision="escalate" label="Escalate" noteRequired /><DecisionForm reportId={report.id} decision="resolve" label="Resolve report" noteRequired showOutcome /><DecisionForm reportId={report.id} decision="dismiss" label="Dismiss report" noteRequired /></div>{report.reportedUser && <Form action={`/admin/users/${report.reportedUser.id}/sanctions`} method="post" className="grid gap-3 rounded-lg border p-4 md:grid-cols-2">{({ processing }) => <><h3 className="font-medium md:col-span-2">Platform action for reported user</h3><input type="hidden" name="report_id" value={report.id} /><select name="action" className="h-10 rounded border bg-background px-3"><option value="warning">Issue warning</option><option value="require_verification">Require additional verification</option><option value="suspend">Suspend user</option><option value="ban">Ban user</option><option value="remove_post">Remove related post</option></select><input name="task_id" type="number" defaultValue={report.task.id} className="h-10 rounded border bg-background px-3" placeholder="Task ID to remove" /><input name="ends_at" type="datetime-local" className="h-10 rounded border bg-background px-3" /><Textarea name="reason" required minLength={5} maxLength={2000} placeholder="Reason visible to the user" /><Textarea name="internal_note" required minLength={3} maxLength={3000} placeholder="Internal admin note" /><Button type="submit" disabled={processing}>Record platform action</Button></>}</Form>}</section>}{!canReview && ['open', 'under_review'].includes(report.status) && <p className="rounded border p-4 text-sm">This report is not available for review by this administrator.</p>}</div></>;
+function AdminReportShow({
+    report,
+    canReview,
+    notice,
+}: {
+    report: any;
+    canReview: boolean;
+    notice: string;
+}) {
+    return (
+        <>
+            <Head title={`Review report #${report.id}`} />
+            <div className="space-y-5">
+                <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
+                    {notice}
+                </p>
+                <ReportDetails report={report} />
+                {report.escalatedAt && (
+                    <p className="rounded border p-3 text-sm">
+                        Escalated {report.escalatedAt}: {report.escalationNote}
+                        {report.escalationOfficeLabel
+                            ? ` · ${report.escalationOfficeLabel}`
+                            : ''}
+                    </p>
+                )}
+                {canReview && (
+                    <section className="space-y-3 rounded-xl border p-5">
+                        <h2 className="text-lg font-semibold">
+                            Review decision
+                        </h2>
+                        <div className="grid gap-3 md:grid-cols-2">
+                            <DecisionForm
+                                reportId={report.id}
+                                decision="start_review"
+                                label="Start review"
+                                noteRequired={false}
+                            />
+                            <DecisionForm
+                                reportId={report.id}
+                                decision="escalate"
+                                label="Escalate"
+                                noteRequired
+                            />
+                            <DecisionForm
+                                reportId={report.id}
+                                decision="resolve"
+                                label="Resolve report"
+                                noteRequired
+                                showOutcome
+                            />
+                            <DecisionForm
+                                reportId={report.id}
+                                decision="dismiss"
+                                label="Dismiss report"
+                                noteRequired
+                            />
+                        </div>
+                        {report.reportedUser && (
+                            <Form
+                                action={`/admin/users/${report.reportedUser.id}/sanctions`}
+                                method="post"
+                                className="grid gap-3 rounded-lg border p-4 md:grid-cols-2"
+                            >
+                                {({ processing }) => (
+                                    <>
+                                        <h3 className="font-medium md:col-span-2">
+                                            Platform action for reported user
+                                        </h3>
+                                        <input
+                                            type="hidden"
+                                            name="report_id"
+                                            value={report.id}
+                                        />
+                                        <select
+                                            name="action"
+                                            className="h-10 rounded border bg-background px-3"
+                                        >
+                                            <option value="warning">
+                                                Issue warning
+                                            </option>
+                                            <option value="require_verification">
+                                                Require additional verification
+                                            </option>
+                                            <option value="suspend">
+                                                Suspend user
+                                            </option>
+                                            <option value="ban">
+                                                Ban user
+                                            </option>
+                                            <option value="remove_post">
+                                                Remove related post
+                                            </option>
+                                        </select>
+                                        <input
+                                            name="task_id"
+                                            type="number"
+                                            defaultValue={report.task.id}
+                                            className="h-10 rounded border bg-background px-3"
+                                            placeholder="Task ID to remove"
+                                        />
+                                        <input
+                                            name="ends_at"
+                                            type="datetime-local"
+                                            className="h-10 rounded border bg-background px-3"
+                                        />
+                                        <Textarea
+                                            name="reason"
+                                            required
+                                            minLength={5}
+                                            maxLength={2000}
+                                            placeholder="Reason visible to the user"
+                                        />
+                                        <Textarea
+                                            name="internal_note"
+                                            required
+                                            minLength={3}
+                                            maxLength={3000}
+                                            placeholder="Internal admin note"
+                                        />
+                                        <Button
+                                            type="submit"
+                                            disabled={processing}
+                                        >
+                                            Record platform action
+                                        </Button>
+                                    </>
+                                )}
+                            </Form>
+                        )}
+                    </section>
+                )}
+                {!canReview &&
+                    ['open', 'under_review'].includes(report.status) && (
+                        <p className="rounded border p-4 text-sm">
+                            This report is not available for review by this
+                            administrator.
+                        </p>
+                    )}
+            </div>
+        </>
+    );
 }
-AdminReportShow.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;
+AdminReportShow.layout = (page: React.ReactNode) => (
+    <AdminLayout>{page}</AdminLayout>
+);
 export default AdminReportShow;

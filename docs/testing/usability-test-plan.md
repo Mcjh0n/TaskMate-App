@@ -21,8 +21,8 @@
 ## Observer sheet
 
 | Session ID (anonymous) | Task | Completed? | Hesitations / errors observed | Participant comments | Observer notes |
-|---|---|---|---|---|---|
-|  |  |  |  |  |  |
+| ---------------------- | ---- | ---------- | ----------------------------- | -------------------- | -------------- |
+|                        |      |            |                               |                      |                |
 
 ## System Usability Scale (SUS)
 

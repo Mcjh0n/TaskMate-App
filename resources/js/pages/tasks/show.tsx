@@ -14,65 +14,405 @@ import { ProblemReportForm } from '@/components/problem-report-form';
 
 type Applicant = {
     id: number;
-    applicant: { id: number; name: string; type: string; affiliation: string | null; verificationStatus: 'pending' | 'verified' | 'rejected' | 'more_info_requested'; profileUrl: string; ratingSummary: import('@/components/rating-summary').RatingSummaryData };
-    message: string; proposedAmount: string | null; status: string; statusLabel: string; appliedAt: string | null; conversationId: number | null; messageBlockedReason: string | null;
+    applicant: {
+        id: number;
+        name: string;
+        type: string;
+        affiliation: string | null;
+        verificationStatus:
+            | 'pending'
+            | 'verified'
+            | 'rejected'
+            | 'more_info_requested';
+        profileUrl: string;
+        ratingSummary: import('@/components/rating-summary').RatingSummaryData;
+    };
+    message: string;
+    proposedAmount: string | null;
+    status: string;
+    statusLabel: string;
+    appliedAt: string | null;
+    conversationId: number | null;
+    messageBlockedReason: string | null;
 };
 type Task = {
-    id: number; title: string; category: string; budget: string | null; budgetMin: string | null; budgetMax: string | null; budgetDisplay: string; workMode: string; status: string; description: string;
-    requiredActivities: string | null; deliverables: string | null; estimatedDurationDays: number | null; skillRequirements: string | null;
-    workplaceName: string | null; workplaceAddress: string | null;
-    reviewNote: string | null; removalReason?: string | null; createdAt: string | null;
-    hasActiveApplications: boolean; applicantsCount: number;
+    id: number;
+    title: string;
+    category: string;
+    budget: string | null;
+    budgetMin: string | null;
+    budgetMax: string | null;
+    budgetDisplay: string;
+    workMode: string;
+    status: string;
+    description: string;
+    requiredActivities: string | null;
+    deliverables: string | null;
+    estimatedDurationDays: number | null;
+    skillRequirements: string | null;
+    workplaceName: string | null;
+    workplaceAddress: string | null;
+    reviewNote: string | null;
+    removalReason?: string | null;
+    createdAt: string | null;
+    hasActiveApplications: boolean;
+    applicantsCount: number;
 };
-type Props = { task: Task; statusLabel: string; canEdit: boolean; canCancel: boolean; canRespondApplications: boolean; status?: string | null; applicants: Applicant[]; agreement: { id: number; status: string; statusLabel: string; paymentStatus: string; paymentStatusLabel: string } | null; canProposeAgreement: boolean; problemReport?: { taskAction: string | null; types: { value: string; label: string }[]; applicantActions: { applicationId: number; action: string }[]; flaggedApplicants: number[]; offPlatformWarning: boolean } };
+type Props = {
+    task: Task;
+    statusLabel: string;
+    canEdit: boolean;
+    canCancel: boolean;
+    canRespondApplications: boolean;
+    status?: string | null;
+    applicants: Applicant[];
+    agreement: {
+        id: number;
+        status: string;
+        statusLabel: string;
+        paymentStatus: string;
+        paymentStatusLabel: string;
+    } | null;
+    canProposeAgreement: boolean;
+    problemReport?: {
+        taskAction: string | null;
+        types: { value: string; label: string }[];
+        applicantActions: { applicationId: number; action: string }[];
+        flaggedApplicants: number[];
+        offPlatformWarning: boolean;
+    };
+};
 
-export default function ShowTask({ task, statusLabel, canEdit, canCancel, canRespondApplications, status, applicants, agreement, canProposeAgreement, problemReport }: Props) {
+export default function ShowTask({
+    task,
+    statusLabel,
+    canEdit,
+    canCancel,
+    canRespondApplications,
+    status,
+    applicants,
+    agreement,
+    canProposeAgreement,
+    problemReport,
+}: Props) {
     return (
         <>
             <Head title={task.title} />
             <div className="mx-auto max-w-4xl space-y-5 p-4 sm:p-6">
-                {status && <div role="status" className="rounded-lg border px-4 py-3 text-sm">{status}</div>}
+                {status && (
+                    <div
+                        role="status"
+                        className="rounded-lg border px-4 py-3 text-sm"
+                    >
+                        {status}
+                    </div>
+                )}
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div><p className="text-sm text-muted-foreground">{task.category}</p><h1 className="mt-1 text-2xl font-semibold">{task.title}</h1></div>
+                    <div>
+                        <p className="text-sm text-muted-foreground">
+                            {task.category}
+                        </p>
+                        <h1 className="mt-1 text-2xl font-semibold">
+                            {task.title}
+                        </h1>
+                    </div>
                     <TaskStatusBadge status={task.status} label={statusLabel} />
                 </div>
                 <section className="space-y-4 rounded-xl border p-5">
                     <h2 className="text-lg font-semibold">Task details</h2>
                     <p className="whitespace-pre-wrap">{task.description}</p>
-                    {task.requiredActivities && <div><h3 className="font-medium">Main activities</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.requiredActivities}</p></div>}
-                    {task.deliverables && <div><h3 className="font-medium">Expected result or deliverables</h3><p className="mt-1 whitespace-pre-wrap text-sm">{task.deliverables}</p></div>}
-                    {task.estimatedDurationDays && <p className="text-sm">Estimated duration: {task.estimatedDurationDays} {task.estimatedDurationDays === 1 ? 'day' : 'days'} total</p>}
-                    {task.skillRequirements && <p className="text-sm">Skills: {task.skillRequirements}</p>}
+                    {task.requiredActivities && (
+                        <div>
+                            <h3 className="font-medium">Main activities</h3>
+                            <p className="mt-1 text-sm whitespace-pre-wrap">
+                                {task.requiredActivities}
+                            </p>
+                        </div>
+                    )}
+                    {task.deliverables && (
+                        <div>
+                            <h3 className="font-medium">
+                                Expected result or deliverables
+                            </h3>
+                            <p className="mt-1 text-sm whitespace-pre-wrap">
+                                {task.deliverables}
+                            </p>
+                        </div>
+                    )}
+                    {task.estimatedDurationDays && (
+                        <p className="text-sm">
+                            Estimated duration: {task.estimatedDurationDays}{' '}
+                            {task.estimatedDurationDays === 1 ? 'day' : 'days'}{' '}
+                            total
+                        </p>
+                    )}
+                    {task.skillRequirements && (
+                        <p className="text-sm">
+                            Skills: {task.skillRequirements}
+                        </p>
+                    )}
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Work details</h2><p>{task.workMode}</p>
-                    {task.workplaceName && <p>{task.workplaceName}</p>}{task.workplaceAddress && <p>{task.workplaceAddress}</p>}
-                    <p className="text-sm text-muted-foreground">In-person work details are shown to students before they apply. Workplace information should describe a place of work, not a home address.</p>
+                    <h2 className="text-lg font-semibold">Work details</h2>
+                    <p>{task.workMode}</p>
+                    {task.workplaceName && <p>{task.workplaceName}</p>}
+                    {task.workplaceAddress && <p>{task.workplaceAddress}</p>}
+                    <p className="text-sm text-muted-foreground">
+                        In-person work details are shown to students before they
+                        apply. Workplace information should describe a place of
+                        work, not a home address.
+                    </p>
                 </section>
                 <section className="space-y-2 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Compensation</h2><p>Estimated budget: {task.budgetDisplay}</p>
-                    <p className="text-sm text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p>
+                    <h2 className="text-lg font-semibold">Compensation</h2>
+                    <p>Estimated budget: {task.budgetDisplay}</p>
+                    <p className="text-sm text-muted-foreground">
+                        {PAYMENT_BOUNDARY_NOTICE}
+                    </p>
                 </section>
-                {task.reviewNote && <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">Review note: {task.reviewNote}</div>}
-                {task.removalReason && <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-950">This post was removed by an administrator. Reason: {task.removalReason}</div>}
-                {agreement && <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-5"><div><h2 className="font-semibold">Agreement</h2><p className="text-sm">Status: {agreement.statusLabel}</p><div className="mt-2"><PaymentStatusBadge status={agreement.paymentStatus} label={agreement.paymentStatusLabel} /></div></div><Button asChild><Link href={agreements.show(agreement.id)}>{agreement.status === 'draft' ? 'Review and send agreement' : 'View agreement'}</Link></Button></section>}
-                {canProposeAgreement && <Button asChild><Link href={agreements.create(task.id)}>Prepare agreement</Link></Button>}
-                {applicants.length > 0 && <section className="space-y-4 rounded-xl border p-5">
-                    <h2 className="text-lg font-semibold">Applicants ({applicants.length})</h2>
-                    {applicants.map((application) => <article key={application.id} className="space-y-3 border-t pt-4">
-                        <div className="flex flex-wrap items-center justify-between gap-2"><div><h3 className="font-medium"><Link className="underline" href={application.applicant.profileUrl}>{application.applicant.name}</Link></h3><p className="text-sm text-muted-foreground">{application.applicant.type}{application.applicant.affiliation ? ` · ${application.applicant.affiliation}` : ''}</p><RatingSummary summary={application.applicant.ratingSummary} /></div><VerificationStatusBadge status={application.applicant.verificationStatus} /></div>
-                        <p className="whitespace-pre-wrap text-sm">{application.message}</p>
-                        {problemReport?.flaggedApplicants.includes(application.id) && <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.</div>}
-                        {problemReport?.applicantActions.find((item) => item.applicationId === application.id) && <ProblemReportForm action={problemReport.applicantActions.find((item) => item.applicationId === application.id)!.action} types={problemReport.types} reportLabel="Report this applicant" />}
-                        <p className="text-sm">Suggested amount: {application.proposedAmount ? `₱${formatAmount(application.proposedAmount)}` : 'No suggestion'} · Applied {application.appliedAt ? formatDate(application.appliedAt) : '—'}</p>
-                        <div className="flex flex-wrap items-center gap-2"><ApplicationStatusBadge status={application.status} label={application.statusLabel} />{application.conversationId && <Button size="sm" variant="outline" asChild><Link href={`/messages/${application.conversationId}`}>{application.messageBlockedReason ? 'View conversation' : 'Message applicant'}</Link></Button>}{canRespondApplications && application.status === 'pending' && task.status === 'approved' && <><Form {...taskApplications.accept.form({ task: task.id, application: application.id })}><Button size="sm" type="submit">Accept</Button></Form><Form {...taskApplications.decline.form({ task: task.id, application: application.id })}><Button size="sm" variant="outline" type="submit">Decline</Button></Form></>}</div>{application.messageBlockedReason && <p className="text-xs text-muted-foreground">{application.messageBlockedReason}</p>}
-                    </article>)}
-                </section>}
-                {problemReport?.taskAction && <ProblemReportForm action={problemReport.taskAction} types={problemReport.types} />}
-                {problemReport?.offPlatformWarning && <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.</div>}
-                {task.hasActiveApplications && task.status !== 'assigned' && <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">This task has active applicants. Cancel it and post a new task to change its details.</p>}
-                {task.status === 'assigned' && <p className="rounded-lg border p-4 text-sm">This task has been assigned and cannot be edited.</p>}
-                <div className="flex flex-wrap gap-2"><Button variant="outline" asChild><Link href={mine()}>My tasks</Link></Button>{canEdit && !task.hasActiveApplications && task.status !== 'assigned' && <Button asChild><Link href={edit(task.id)}>Edit task</Link></Button>}{canCancel && <Form {...cancel.form(task.id)} onSubmit={(event) => { if (!window.confirm('Cancel this task?')) event.preventDefault(); }}><Button variant="outline" type="submit">Cancel task</Button></Form>}</div>
+                {task.reviewNote && (
+                    <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                        Review note: {task.reviewNote}
+                    </div>
+                )}
+                {task.removalReason && (
+                    <div className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-950">
+                        This post was removed by an administrator. Reason:{' '}
+                        {task.removalReason}
+                    </div>
+                )}
+                {agreement && (
+                    <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-5">
+                        <div>
+                            <h2 className="font-semibold">Agreement</h2>
+                            <p className="text-sm">
+                                Status: {agreement.statusLabel}
+                            </p>
+                            <div className="mt-2">
+                                <PaymentStatusBadge
+                                    status={agreement.paymentStatus}
+                                    label={agreement.paymentStatusLabel}
+                                />
+                            </div>
+                        </div>
+                        <Button asChild>
+                            <Link href={agreements.show(agreement.id)}>
+                                {agreement.status === 'draft'
+                                    ? 'Review and send agreement'
+                                    : 'View agreement'}
+                            </Link>
+                        </Button>
+                    </section>
+                )}
+                {canProposeAgreement && (
+                    <Button asChild>
+                        <Link href={agreements.create(task.id)}>
+                            Prepare agreement
+                        </Link>
+                    </Button>
+                )}
+                {applicants.length > 0 && (
+                    <section className="space-y-4 rounded-xl border p-5">
+                        <h2 className="text-lg font-semibold">
+                            Applicants ({applicants.length})
+                        </h2>
+                        {applicants.map((application) => (
+                            <article
+                                key={application.id}
+                                className="space-y-3 border-t pt-4"
+                            >
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <div>
+                                        <h3 className="font-medium">
+                                            <Link
+                                                className="underline"
+                                                href={
+                                                    application.applicant
+                                                        .profileUrl
+                                                }
+                                            >
+                                                {application.applicant.name}
+                                            </Link>
+                                        </h3>
+                                        <p className="text-sm text-muted-foreground">
+                                            {application.applicant.type}
+                                            {application.applicant.affiliation
+                                                ? ` · ${application.applicant.affiliation}`
+                                                : ''}
+                                        </p>
+                                        <RatingSummary
+                                            summary={
+                                                application.applicant
+                                                    .ratingSummary
+                                            }
+                                        />
+                                    </div>
+                                    <VerificationStatusBadge
+                                        status={
+                                            application.applicant
+                                                .verificationStatus
+                                        }
+                                    />
+                                </div>
+                                <p className="text-sm whitespace-pre-wrap">
+                                    {application.message}
+                                </p>
+                                {problemReport?.flaggedApplicants.includes(
+                                    application.id,
+                                ) && (
+                                    <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+                                        This message contains a request to move
+                                        outside TaskMate or skip its steps. Be
+                                        careful, keep agreements and
+                                        communications on record, and report
+                                        anything that makes you uncomfortable.
+                                    </div>
+                                )}
+                                {problemReport?.applicantActions.find(
+                                    (item) =>
+                                        item.applicationId === application.id,
+                                ) && (
+                                    <ProblemReportForm
+                                        action={
+                                            problemReport.applicantActions.find(
+                                                (item) =>
+                                                    item.applicationId ===
+                                                    application.id,
+                                            )!.action
+                                        }
+                                        types={problemReport.types}
+                                        reportLabel="Report this applicant"
+                                    />
+                                )}
+                                <p className="text-sm">
+                                    Suggested amount:{' '}
+                                    {application.proposedAmount
+                                        ? `₱${formatAmount(application.proposedAmount)}`
+                                        : 'No suggestion'}{' '}
+                                    · Applied{' '}
+                                    {application.appliedAt
+                                        ? formatDate(application.appliedAt)
+                                        : '—'}
+                                </p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <ApplicationStatusBadge
+                                        status={application.status}
+                                        label={application.statusLabel}
+                                    />
+                                    {application.conversationId && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            asChild
+                                        >
+                                            <Link
+                                                href={`/messages/${application.conversationId}`}
+                                            >
+                                                {application.messageBlockedReason
+                                                    ? 'View conversation'
+                                                    : 'Message applicant'}
+                                            </Link>
+                                        </Button>
+                                    )}
+                                    {canRespondApplications &&
+                                        application.status === 'pending' &&
+                                        task.status === 'approved' && (
+                                            <>
+                                                <Form
+                                                    {...taskApplications.accept.form(
+                                                        {
+                                                            task: task.id,
+                                                            application:
+                                                                application.id,
+                                                        },
+                                                    )}
+                                                >
+                                                    <Button
+                                                        size="sm"
+                                                        type="submit"
+                                                    >
+                                                        Accept
+                                                    </Button>
+                                                </Form>
+                                                <Form
+                                                    {...taskApplications.decline.form(
+                                                        {
+                                                            task: task.id,
+                                                            application:
+                                                                application.id,
+                                                        },
+                                                    )}
+                                                >
+                                                    <Button
+                                                        size="sm"
+                                                        variant="outline"
+                                                        type="submit"
+                                                    >
+                                                        Decline
+                                                    </Button>
+                                                </Form>
+                                            </>
+                                        )}
+                                </div>
+                                {application.messageBlockedReason && (
+                                    <p className="text-xs text-muted-foreground">
+                                        {application.messageBlockedReason}
+                                    </p>
+                                )}
+                            </article>
+                        ))}
+                    </section>
+                )}
+                {problemReport?.taskAction && (
+                    <ProblemReportForm
+                        action={problemReport.taskAction}
+                        types={problemReport.types}
+                    />
+                )}
+                {problemReport?.offPlatformWarning && (
+                    <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+                        This message contains a request to move outside TaskMate
+                        or skip its steps. Be careful, keep agreements and
+                        communications on record, and report anything that makes
+                        you uncomfortable.
+                    </div>
+                )}
+                {task.hasActiveApplications && task.status !== 'assigned' && (
+                    <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                        This task has active applicants. Cancel it and post a
+                        new task to change its details.
+                    </p>
+                )}
+                {task.status === 'assigned' && (
+                    <p className="rounded-lg border p-4 text-sm">
+                        This task has been assigned and cannot be edited.
+                    </p>
+                )}
+                <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" asChild>
+                        <Link href={mine()}>My tasks</Link>
+                    </Button>
+                    {canEdit &&
+                        !task.hasActiveApplications &&
+                        task.status !== 'assigned' && (
+                            <Button asChild>
+                                <Link href={edit(task.id)}>Edit task</Link>
+                            </Button>
+                        )}
+                    {canCancel && (
+                        <Form
+                            {...cancel.form(task.id)}
+                            onSubmit={(event) => {
+                                if (!window.confirm('Cancel this task?'))
+                                    event.preventDefault();
+                            }}
+                        >
+                            <Button variant="outline" type="submit">
+                                Cancel task
+                            </Button>
+                        </Form>
+                    )}
+                </div>
             </div>
         </>
     );

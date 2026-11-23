@@ -42,15 +42,15 @@ The signed-in user's email and ID number appear on their own dashboard and profi
 
 Local seeding is guarded by `APP_ENV=local`. Password for synthetic users: `password` (local testing only; do not reuse outside this synthetic prototype).
 
-| Email | Role | Initial state |
-|---|---|---|
-| `admin@example.test` | Administrator and faculty/staff | Verified admin |
-| `student1@example.test` | Student | Verified |
-| `student2@example.test` | Student | Verified |
-| `student.pending@example.test` | Student | Pending |
-| `faculty@example.test` | Faculty/staff | Verified |
-| `organization@example.test` | Office/organization representative | Verified |
-| `organization.pending@example.test` | Office/organization representative | Pending |
+| Email                               | Role                               | Initial state  |
+| ----------------------------------- | ---------------------------------- | -------------- |
+| `admin@example.test`                | Administrator and faculty/staff    | Verified admin |
+| `student1@example.test`             | Student                            | Verified       |
+| `student2@example.test`             | Student                            | Verified       |
+| `student.pending@example.test`      | Student                            | Pending        |
+| `faculty@example.test`              | Faculty/staff                      | Verified       |
+| `organization@example.test`         | Office/organization representative | Verified       |
+| `organization.pending@example.test` | Office/organization representative | Pending        |
 
 All names, IDs, tasks, locations, messages, reports, and payment records are synthetic. Fake identity numbers are clearly marked.
 
