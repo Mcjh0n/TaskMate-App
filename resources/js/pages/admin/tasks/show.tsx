@@ -36,7 +36,7 @@ type Props = {
 
 function DecisionForm({ taskId, decision, label, noteRequired }: { taskId: number; decision: string; label: string; noteRequired: boolean }) {
     return <Form {...admin.tasks.decision.form(taskId)} className="space-y-2 rounded-lg border p-4">
-        {({ errors, processing }) => <><input type="hidden" name="decision" value={decision} /><label className="block text-sm font-medium" htmlFor={`${decision}-note`}>Admin note {noteRequired ? '(required)' : '(optional)'}</label><Textarea id={`${decision}-note`} name="note" required={noteRequired} placeholder={decision === 'approve' ? 'Optional note for the poster.' : 'Explain the decision to the poster.'} /><InputError message={errors.note} /><Button type="submit" disabled={processing}>{label}</Button></>}
+        {({ errors, processing }) => <><input type="hidden" name="decision" value={decision} />{decision !== 'approve' && <><label className="block text-sm font-medium" htmlFor={`${decision}-note`}>Admin note (required)</label><Textarea id={`${decision}-note`} name="note" required placeholder="Explain the decision to the poster." /><InputError message={errors.note} /></>}<Button type="submit" disabled={processing}>{label}</Button></>}
     </Form>;
 }
 

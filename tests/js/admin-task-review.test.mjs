@@ -99,3 +99,15 @@ test('admin task review renders a task for manual review without automated scree
     assert.match(markup, /No off-platform content flags have been recorded/);
     assert.doesNotMatch(markup, />Agreement</);
 });
+
+test('approval has no note field while rejection and change requests keep required notes', () => {
+    const markup = renderToStaticMarkup(React.createElement(AdminTaskReview, {
+        task,
+        canReview: true,
+    }));
+
+    assert.match(markup, /Approve task/);
+    assert.doesNotMatch(markup, /approve-note|Optional note for the poster/);
+    assert.match(markup, /reject-note/);
+    assert.match(markup, /request_changes-note/);
+});
