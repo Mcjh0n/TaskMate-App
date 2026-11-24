@@ -34,12 +34,9 @@ export default function Register({
     const idLabel =
         userType === 'student' ? 'Student ID number' : 'Employee ID number';
     const accountTypeGuidance = {
-        student:
-            'Students can browse approved tasks right away. Administrator verification is required before applying. Students can also post tasks when student posting is enabled.',
-        faculty_staff:
-            'After administrator approval, faculty and staff can post tasks. Faculty and staff accounts cannot apply to tasks.',
-        organization:
-            'After administrator approval, organization representatives can post tasks. Organization accounts cannot browse or apply to tasks.',
+        student: 'Browse approved tasks now. Verification is required to post or apply.',
+        faculty_staff: 'Verification is required to post. Faculty and staff cannot apply.',
+        organization: 'Verification is required to post. Organizations cannot browse or apply.',
     }[userType];
 
     return (
@@ -85,28 +82,6 @@ export default function Register({
                                 </p>
                             </div>
 
-                            <section
-                                className="space-y-2 rounded-lg border bg-muted/30 p-4 text-sm"
-                                aria-label="How account verification works"
-                            >
-                                <h2 className="font-medium">
-                                    How account review works
-                                </h2>
-                                <p>
-                                    An administrator reviews the details you
-                                    submit. You must also confirm your email
-                                    address. Email confirmation and TaskMate
-                                    account review are separate steps.
-                                </p>
-                                <p>
-                                    Students can browse approved tasks before
-                                    verification, but must be verified to apply.
-                                    Posting also requires administrator
-                                    approval. TaskMate does not ask for ID
-                                    photos or other identity documents.
-                                </p>
-                            </section>
-
                             <SafetyNotice />
 
                             {userType === 'organization' ? (
@@ -121,10 +96,6 @@ export default function Register({
                                             required
                                             placeholder="Organization name"
                                         />
-                                        <p className="text-xs text-muted-foreground">
-                                            This is the organization’s display
-                                            name on TaskMate.
-                                        </p>
                                         <InputError
                                             message={errors.organization_name}
                                         />
@@ -139,10 +110,6 @@ export default function Register({
                                             required
                                             placeholder="Representative position"
                                         />
-                                        <p className="text-xs text-muted-foreground">
-                                            Used by administrators to review
-                                            this account.
-                                        </p>
                                         <InputError message={errors.position} />
                                     </div>
                                     <div className="grid gap-2">
@@ -158,9 +125,7 @@ export default function Register({
                                             placeholder="Briefly describe your organization and why you want to post tasks."
                                         />
                                         <p className="text-xs text-muted-foreground">
-                                            This description is for
-                                            administrator review and is not
-                                            shown on public profiles.
+                                            Visible only to you and administrators.
                                         </p>
                                         <InputError
                                             message={errors.supporting_info}
@@ -206,12 +171,9 @@ export default function Register({
                                             }
                                         />
                                         <p className="text-xs text-muted-foreground">
-                                            Used for account review. Your ID
-                                            number is visible only to you and
-                                            administrators.
                                             {userType === 'student'
-                                                ? ' Enter exactly 10 digits.'
-                                                : ''}
+                                                ? 'Enter exactly 10 digits. Letters are removed automatically.'
+                                                : 'Only you and administrators can see this ID number.'}
                                         </p>
                                         <InputError
                                             message={errors.id_number}
@@ -227,11 +189,6 @@ export default function Register({
                                             required
                                             placeholder={affiliationLabel}
                                         />
-                                        <p className="text-xs text-muted-foreground">
-                                            Helps other users understand your
-                                            campus affiliation and may appear on
-                                            your profile.
-                                        </p>
                                         <InputError
                                             message={errors.affiliation}
                                         />
@@ -274,9 +231,7 @@ export default function Register({
                                     </p>
                                 )}
                                 <p className="text-xs text-muted-foreground">
-                                    Your email is used to sign in and confirm
-                                    your address. It is not shown on your public
-                                    profile.
+                                    Confirm your email address. Account approval is a separate step.
                                 </p>
                             </div>
 
