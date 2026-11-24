@@ -13,8 +13,7 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
     && npm ci \
     && npm run build \
     && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
-    && rm -rf /var/lib/nginx/tmp
+    && chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
