@@ -14,6 +14,9 @@ class ConfirmReceivedRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('respondPayment', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['amount' => ['nullable', 'numeric', 'min:1', 'max:1000000']];

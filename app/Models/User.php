@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Concerns\HasTeams;
 use App\Enums\UserType;
 use App\Enums\VerificationStatus;
+use Carbon\CarbonImmutable;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -26,6 +27,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string $name
  * @property string $email
  * @property Carbon|null $email_verified_at
+ * @property-write Carbon|CarbonImmutable|string|null $email_verified_at
  * @property string $password
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -38,6 +40,17 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Team> $ownedTeams
  * @property-read Collection<int, Membership> $teamMemberships
  * @property-read Collection<int, Team> $teams
+
+ * @property-read Carbon|null $verified_at
+ * @property-write Carbon|CarbonImmutable|string|null $verified_at
+ * @property-read bool $is_admin
+ * @property-write bool|int|string $is_admin
+
+ * @property-read UserType $user_type
+ * @property-write UserType|string $user_type
+ * @property-read VerificationStatus $verification_status
+ * @property-write VerificationStatus|string $verification_status
+ * @property int|null $verified_by
  */
 #[Fillable(['name', 'email', 'password', 'user_type', 'id_number', 'affiliation', 'organization_name', 'position', 'supporting_info'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
@@ -89,76 +102,92 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return ! $this->isAdmin() && $this->isStudent();
     }
 
+    /** @return MorphMany<AdminAction, $this> */
     public function adminActions(): MorphMany
     {
         return $this->morphMany(AdminAction::class, 'subject');
     }
 
+    /** @return HasMany<AdminAction, $this> */
     public function adminActionsPerformed(): HasMany
     {
         return $this->hasMany(AdminAction::class, 'admin_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(self::class, 'verified_by');
     }
 
+    /** @return HasMany<Task, $this> */
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class, 'poster_id');
     }
 
+    /** @return HasMany<Application, $this> */
     public function applications(): HasMany
     {
         return $this->hasMany(Application::class, 'applicant_id');
     }
 
+    /** @return HasMany<Conversation, $this> */
     public function postedConversations(): HasMany
     {
         return $this->hasMany(Conversation::class, 'poster_id');
     }
 
+    /** @return HasMany<Conversation, $this> */
     public function applicantConversations(): HasMany
     {
         return $this->hasMany(Conversation::class, 'applicant_id');
     }
 
+    /** @return HasMany<Agreement, $this> */
     public function postedAgreements(): HasMany
     {
         return $this->hasMany(Agreement::class, 'poster_id');
     }
 
+    /** @return HasMany<Agreement, $this> */
     public function studentAgreements(): HasMany
     {
         return $this->hasMany(Agreement::class, 'student_id');
     }
 
+    /** @return HasMany<Report, $this> */
     public function filedReports(): HasMany
     {
         return $this->hasMany(Report::class, 'reporter_id');
     }
 
+    /** @return HasMany<Report, $this> */
     public function receivedReports(): HasMany
     {
         return $this->hasMany(Report::class, 'reported_user_id');
     }
 
+    /** @return HasMany<Rating, $this> */
     public function ratingsGiven(): HasMany
     {
         return $this->hasMany(Rating::class, 'rater_id');
     }
 
+    /** @return HasMany<Rating, $this> */
+    /** @return HasMany<Rating, $this> */
     public function ratingsReceived(): HasMany
     {
         return $this->hasMany(Rating::class, 'ratee_id');
     }
 
+    /** @return HasMany<UserSanction, $this> */
     public function sanctions(): HasMany
     {
         return $this->hasMany(UserSanction::class);
     }
 
+    /** @return HasMany<ContentFlag, $this> */
     public function contentFlags(): HasMany
     {
         return $this->hasMany(ContentFlag::class, 'source_user_id');

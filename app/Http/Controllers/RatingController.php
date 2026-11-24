@@ -20,12 +20,14 @@ class RatingController extends Controller
         $direction = $agreement->poster_id === $request->user()->id ? RatingDirection::PosterToStudent : RatingDirection::StudentToPoster;
         $ratee = $direction === RatingDirection::PosterToStudent ? $agreement->student : $agreement->poster;
         $latest = $agreement->paymentEvents()->reorder()->latest('id')->first();
+        /** @var array<string, string> $dimensions */
+        $dimensions = (array) config("taskmate.ratings.dimensions.{$direction->value}", []);
 
         return Inertia::render('ratings/create', [
             'agreement' => ['id' => $agreement->id, 'taskTitle' => $agreement->task->title, 'agreedAmount' => $agreement->currentVersion->final_amount, 'paymentStatus' => $agreement->paymentStatus()->label()],
             'direction' => $direction->value,
             'rateeName' => $ratee->isOrganization() ? $ratee->organization_name : $ratee->name,
-            'dimensions' => collect(config("taskmate.ratings.dimensions.{$direction->value}", []))->map(fn ($label, $key) => compact('key', 'label'))->values(),
+            'dimensions' => collect($dimensions)->map(fn ($label, $key) => compact('key', 'label'))->values(),
             'commentMaxLength' => config('taskmate.ratings.comment_max_length', 1000),
             'visibility' => config('taskmate.ratings.visibility', 'after_both'),
             'reportUrl' => route('agreements.show', $agreement),

@@ -14,6 +14,9 @@ class ReportNotReceivedRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('respondPayment', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [];

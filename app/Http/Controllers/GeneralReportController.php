@@ -46,9 +46,11 @@ class GeneralReportController extends Controller
         $agreement = Agreement::query()->where(fn ($q) => $q
             ->where(fn ($party) => $party->where('poster_id', $reporter->id)->where('student_id', $user->id))
             ->orWhere(fn ($party) => $party->where('poster_id', $user->id)->where('student_id', $reporter->id)))->first();
-        $task = Task::query()->where(fn ($q) => $q
-            ->where(fn ($posted) => $posted->where('poster_id', $user->id)->whereHas('applications', fn ($a) => $a->where('applicant_id', $reporter->id)))
-            ->orWhere(fn ($applied) => $applied->where('poster_id', $reporter->id)->whereHas('applications', fn ($a) => $a->where('applicant_id', $user->id))))
+        $task = Task::query()->where('poster_id', $reporter->id)
+            ->whereHas('applications', fn ($application) => $application->where('applicant_id', $user->id))
+            ->first();
+        $task ??= Task::query()->where('poster_id', $user->id)
+            ->whereHas('applications', fn ($application) => $application->where('applicant_id', $reporter->id))
             ->first();
         if (! $agreement && ! $task) {
             throw ValidationException::withMessages(['report' => 'You can report this person only when you have a related TaskMate task or agreement.']);

@@ -14,6 +14,9 @@ class AdminFlagDecisionRequest extends FormRequest
         return $this->user()?->isAdmin() && $this->route('flag') instanceof ContentFlag && $this->route('flag')->status === ContentFlagStatus::Open;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['decision' => ['required', Rule::in(['reviewed', 'dismissed'])], 'note' => ['required', 'string', 'min:3', 'max:2000']];

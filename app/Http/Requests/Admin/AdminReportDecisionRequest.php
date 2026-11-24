@@ -16,6 +16,9 @@ class AdminReportDecisionRequest extends FormRequest
         return $report instanceof Report && ($this->user()?->can('review', $report) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $decision = $this->input('decision');

@@ -146,6 +146,10 @@ class TaskMatePurgeDemoData extends Command
         return self::SUCCESS;
     }
 
+    /**
+     * @param  array<int, int|string>  $values
+     * @return array<int, int>
+     */
     private function ids(string $table, string $column, array $values, ?\Closure $extra = null): array
     {
         if (! Schema::hasTable($table)) {
@@ -160,6 +164,9 @@ class TaskMatePurgeDemoData extends Command
         })->pluck('id')->all();
     }
 
+    /**
+     * @param  array<int, int>  $values
+     */
     private function delete(string $table, string $column, array $values): void
     {
         if ($values !== [] && Schema::hasTable($table)) {

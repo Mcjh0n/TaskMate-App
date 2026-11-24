@@ -22,6 +22,9 @@ class StoreConversationMessageRequest extends FormRequest
         }
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['body' => ['required', 'string', 'max:'.(int) config('taskmate.messages.max_length', 1000)]];

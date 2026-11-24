@@ -18,6 +18,9 @@ class VerificationDecisionRequest extends FormRequest
             && $admin->isNot($subject);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

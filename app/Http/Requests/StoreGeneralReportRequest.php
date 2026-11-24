@@ -13,6 +13,9 @@ class StoreGeneralReportRequest extends FormRequest
         return $this->user()?->isVerified() === true && ! $this->user()->isAdmin();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $allowed = array_values(array_filter(array_column(ReportType::cases(), 'value'), fn (string $type) => $type !== ReportType::NonPayment->value));
@@ -25,6 +28,9 @@ class StoreGeneralReportRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<int, \Closure>
+     */
     public function after(): array
     {
         return [function ($validator): void {
@@ -32,7 +38,14 @@ class StoreGeneralReportRequest extends FormRequest
                 if (! $file) {
                     continue;
                 }
-                $mime = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file->getRealPath());
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                if ($finfo === false) {
+                    $validator->errors()->add("evidence.{$index}", 'The uploaded file could not be checked.');
+
+                    continue;
+                }
+                $mime = finfo_file($finfo, $file->getRealPath()) ?: 'application/octet-stream';
+                finfo_close($finfo);
                 $extension = strtolower($file->getClientOriginalExtension());
                 $extensions = ['image/jpeg' => ['jpg', 'jpeg'], 'image/png' => ['png'], 'application/pdf' => ['pdf']];
                 if (! isset($extensions[$mime]) || ! in_array($extension, $extensions[$mime], true)) {

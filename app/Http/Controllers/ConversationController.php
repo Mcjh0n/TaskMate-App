@@ -38,6 +38,9 @@ class ConversationController extends Controller
         $other = $user->id === $conversation->poster_id ? $conversation->applicant : $conversation->poster;
         $reason = $conversation->sendingBlockedReason($user);
 
+        /** @var array<string, array{label: string}> $reportTypes */
+        $reportTypes = (array) config('taskmate.reports.types', []);
+
         return Inertia::render('messages/show', [
             'conversation' => [
                 'id' => $conversation->id,
@@ -55,19 +58,19 @@ class ConversationController extends Controller
                 'canSend' => $reason === null,
                 'canClose' => $user->can('close', $conversation),
                 'canReopen' => $user->can('reopen', $conversation),
-                'lastMessageId' => $conversation->messages->last()?->id ?? 0,
+                'lastMessageId' => $conversation->messages->last()->id ?? 0,
             ],
             'messages' => $conversation->messages->map(fn (ConversationMessage $message) => $this->messageItem($message, $user))->values(),
             'events' => $conversation->events->map(fn ($event) => [
                 'id' => $event->id,
                 'event' => $event->event,
                 'actor' => Conversation::displayName($event->user),
-                'createdAt' => $event->created_at?->toDateTimeString(),
+                'createdAt' => $event->created_at->toDateTimeString(),
             ])->values(),
             'messageMaxLength' => (int) config('taskmate.messages.max_length', 1000),
             'pollSeconds' => (int) config('taskmate.notifications.poll_seconds', 10),
             'reportContextMessages' => (int) config('taskmate.messages.report_context_messages', 5),
-            'reportTypes' => collect(config('taskmate.reports.types', []))->only(['harassment', 'unsafe_behavior', 'off_platform_transaction', 'rule_bypass_request', 'misleading_description', 'fraudulent_post', 'other'])->map(fn ($type, $value) => ['value' => $value, 'label' => $type['label']])->values(),
+            'reportTypes' => collect($reportTypes)->only(['harassment', 'unsafe_behavior', 'off_platform_transaction', 'rule_bypass_request', 'misleading_description', 'fraudulent_post', 'other'])->map(fn ($type, $value) => ['value' => $value, 'label' => $type['label']])->values(),
         ]);
     }
 
@@ -108,6 +111,9 @@ class ConversationController extends Controller
         return back()->with('status', 'The conversation was reopened.');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function inboxItem(Conversation $conversation, User $user): array
     {
         $other = $conversation->poster_id === $user->id ? $conversation->applicant : $conversation->poster;
@@ -125,6 +131,9 @@ class ConversationController extends Controller
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function messageItem(ConversationMessage $message, User $viewer): array
     {
         $sender = $message->sender;
@@ -135,7 +144,7 @@ class ConversationController extends Controller
             'senderName' => Conversation::displayName($sender),
             'isMine' => $sender->id === $viewer->id,
             'body' => $message->body,
-            'createdAt' => $message->created_at?->toDateTimeString(),
+            'createdAt' => $message->created_at->toDateTimeString(),
             'flaggedForRecipient' => ! $message->contentFlags->where('source_user_id', '!=', $viewer->id)->where('status.value', 'open')->isEmpty(),
             'reportUrl' => $sender->id === $viewer->id ? null : route('messages.report', [$message->conversation_id, $message->id]),
         ];

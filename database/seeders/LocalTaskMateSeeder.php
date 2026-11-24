@@ -60,7 +60,7 @@ class LocalTaskMateSeeder extends Seeder
             $task ??= $poster->tasks()->make(['title' => $title]);
             $task->poster()->associate($poster);
             $task->title = $title;
-            $task->category = $categories[($index - 1) % count($categories)];
+            $task->category = (string) $categories[($index - 1) % count($categories)];
             $task->description = 'Synthetic demonstration task for local testing only. This task contains no real offer or location.';
             $task->required_activities = 'Complete a clearly described sample activity for this local demo.';
             $task->deliverables = 'Provide the synthetic sample deliverable described for this local test.';
@@ -68,7 +68,7 @@ class LocalTaskMateSeeder extends Seeder
             $task->skill_requirements = 'Synthetic general skills only.';
             $task->complexity = ['low', 'medium', 'high'][($index - 1) % 3];
             $task->budget = 500 + ($index * 250);
-            $task->work_mode = $mode;
+            $task->work_mode = (string) $mode;
             $task->workplace_name = $mode === 'online' ? null : 'Synthetic Demo Worksite '.$index;
             $task->workplace_address = $mode === 'online' ? null : 'Synthetic campus location '.$index;
             $task->physical_demand = ['none', 'light', 'moderate'][($index - 1) % 3];

@@ -33,6 +33,9 @@ class UpdateTaskRequest extends FormRequest
         return $task instanceof Task && ($this->user()?->can('update', $task) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $requiresWorkplace = in_array($this->input('work_mode'), ['on_campus', 'off_campus'], true);
@@ -71,6 +74,9 @@ class UpdateTaskRequest extends FormRequest
         return ['guidelines_confirmed.accepted' => 'You must confirm that this task follows the platform rules.'];
     }
 
+    /**
+     * @return array<int, \Closure>
+     */
     public function after(): array
     {
         return [function ($validator): void {

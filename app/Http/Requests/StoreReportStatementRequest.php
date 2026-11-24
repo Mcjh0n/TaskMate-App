@@ -15,6 +15,9 @@ class StoreReportStatementRequest extends FormRequest
         return $report instanceof Report && ($this->user()?->can('reply', $report) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $maxFiles = (int) config('taskmate.reports.evidence_max_files', 5);
@@ -28,18 +31,29 @@ class StoreReportStatementRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<int, \Closure>
+     */
     public function after(): array
     {
         return [function (Validator $validator): void {
-            $existing = $this->route('report')?->evidence()->count() ?? 0;
+            $report = $this->route('report');
+            $existing = $report instanceof Report ? $report->evidence()->count() : 0;
             if ($existing + count($this->file('evidence', [])) > (int) config('taskmate.reports.evidence_max_files', 5)) {
                 $validator->errors()->add('evidence', 'The evidence file limit for this report has been reached.');
             }
             foreach ($this->file('evidence', []) as $index => $file) {
-                if (! $file?->isValid()) {
+                if (! $file->isValid()) {
                     continue;
                 }
-                $mime = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file->getRealPath()) ?: 'application/octet-stream';
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                if ($finfo === false) {
+                    $validator->errors()->add("evidence.{$index}", 'The uploaded file could not be checked.');
+
+                    continue;
+                }
+                $mime = finfo_file($finfo, $file->getRealPath()) ?: 'application/octet-stream';
+                finfo_close($finfo);
                 $extension = strtolower($file->getClientOriginalExtension());
                 $allowed = ['image/jpeg' => ['jpg', 'jpeg'], 'image/png' => ['png'], 'application/pdf' => ['pdf']];
                 if (! in_array($extension, $allowed[$mime] ?? [], true)) {

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
@@ -36,7 +37,7 @@ class ReportController extends Controller
         ]);
         $agreement = $report->agreement;
         $version = $agreement?->currentVersion;
-        $events = $agreement?->paymentEvents ?? collect();
+        $events = $agreement->paymentEvents ?? collect();
         $isReporter = $report->reporter_id === $request->user()->id;
         $isAdmin = $request->user()->isAdmin();
         $canReply = $request->user()->can('reply', $report);
@@ -77,7 +78,7 @@ class ReportController extends Controller
                     'id' => $event->id, 'event' => $event->event->value, 'actorName' => $event->actor->name,
                     'amount' => $event->amount, 'paidOn' => $event->paid_on?->toDateString(), 'method' => $event->method,
                     'note' => $event->note, 'createdAt' => $event->created_at?->toDateTimeString(),
-                    'amountMismatch' => $event->amount !== null && (float) $event->amount !== (float) ($version?->final_amount ?? 0),
+                    'amountMismatch' => $event->amount !== null && (float) $event->amount !== (float) ($version->final_amount ?? 0),
                 ])->values(),
                 'statements' => $report->statements->map(fn ($statement) => ['id' => $statement->id, 'name' => ! $isReporter && ! $isAdmin && $statement->role === 'reporter' ? 'Reporter' : $statement->user->name, 'role' => $statement->role, 'body' => $statement->body, 'createdAt' => $statement->created_at?->toDateTimeString()])->values(),
                 'evidence' => $report->evidence->map(fn (ReportEvidence $evidence) => ['id' => $evidence->id, 'name' => $evidence->original_name, 'mime' => $evidence->mime, 'sizeBytes' => $evidence->size_bytes, 'downloadUrl' => route('reports.evidence', [$report, $evidence])])->values(),
@@ -102,7 +103,9 @@ class ReportController extends Controller
 
     public function mine(Request $request): Response
     {
-        $replyable = collect(config('taskmate.reports.types', []))->filter(fn ($settings) => $settings['respondent_can_reply'] ?? false)->keys()->all();
+        /** @var array<string, array{respondent_can_reply?: bool}> $reportTypes */
+        $reportTypes = (array) config('taskmate.reports.types', []);
+        $replyable = collect($reportTypes)->filter(fn ($settings) => $settings['respondent_can_reply'] ?? false)->keys()->all();
         $reports = Report::query()
             ->where(fn ($query) => $query->where('reporter_id', $request->user()->id)->orWhere(fn ($respondent) => $respondent->where('reported_user_id', $request->user()->id)->whereIn('type', $replyable)))
             ->with(['task:id,title', 'reporter:id,name', 'reportedUser:id,name'])
@@ -130,7 +133,7 @@ class ReportController extends Controller
         return back()->with('status', 'Your response was added to the report.');
     }
 
-    public function evidence(Report $report, ReportEvidence $evidence, Request $request)
+    public function evidence(Report $report, ReportEvidence $evidence, Request $request): StreamedResponse
     {
         Gate::authorize('view', $report);
         abort_unless($evidence->report_id === $report->id, 404);

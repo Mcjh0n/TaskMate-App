@@ -23,6 +23,8 @@ class AdminFlagsController extends Controller
     {
         $categories = array_keys(config('taskmate.offplatform.category_labels', []));
         $filters = $request->validate(['category' => ['nullable', Rule::in($categories)], 'status' => ['nullable', Rule::in(array_column(ContentFlagStatus::cases(), 'value'))]]);
+        /** @var array<string, string> $categoryLabels */
+        $categoryLabels = (array) config('taskmate.offplatform.category_labels', []);
         $flags = ContentFlag::query()->with(['sourceUser:id,name,user_type', 'flaggable'])
             ->when($filters['category'] ?? null, fn ($q, $value) => $q->where('category', $value))
             ->when($filters['status'] ?? null, fn ($q, $value) => $q->where('status', $value))
@@ -33,7 +35,7 @@ class AdminFlagsController extends Controller
                 'context' => class_basename($flag->flaggable_type).' #'.$flag->flaggable_id,
             ]);
 
-        return Inertia::render('admin/flags/index', ['flags' => $flags, 'filters' => $filters, 'categories' => collect(config('taskmate.offplatform.category_labels', []))->map(fn ($label, $value) => compact('value', 'label'))->values()]);
+        return Inertia::render('admin/flags/index', ['flags' => $flags, 'filters' => $filters, 'categories' => collect($categoryLabels)->map(fn ($label, $value) => compact('value', 'label'))->values()]);
     }
 
     public function show(ContentFlag $flag): Response

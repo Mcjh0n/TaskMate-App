@@ -14,6 +14,9 @@ class ConfirmAgreementRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('confirm', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['version_id' => ['required', 'integer', 'exists:agreement_versions,id']];

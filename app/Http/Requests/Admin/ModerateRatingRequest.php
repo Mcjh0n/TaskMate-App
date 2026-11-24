@@ -15,6 +15,9 @@ class ModerateRatingRequest extends FormRequest
         return $rating instanceof Rating && $this->user()?->can('moderate', $rating);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['action' => ['required', Rule::in(['hide', 'restore'])], 'reason' => ['required_if:action,hide', 'nullable', 'string', 'max:2000']];

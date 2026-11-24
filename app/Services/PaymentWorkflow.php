@@ -16,6 +16,9 @@ class PaymentWorkflow
 {
     public function __construct(private readonly TaskMateNotifications $alerts) {}
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function markPaid(Agreement $agreement, User $poster, array $data): PaymentEvent
     {
         return DB::transaction(function () use ($agreement, $poster, $data): PaymentEvent {

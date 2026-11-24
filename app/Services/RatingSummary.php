@@ -6,6 +6,9 @@ use App\Models\User;
 
 class RatingSummary
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function forUser(User $user): array
     {
         $ratings = app(RatingVisibility::class)->visibleQuery()->where('ratee_id', $user->id)->get();

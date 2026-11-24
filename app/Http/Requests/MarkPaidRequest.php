@@ -14,6 +14,9 @@ class MarkPaidRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('markPaid', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

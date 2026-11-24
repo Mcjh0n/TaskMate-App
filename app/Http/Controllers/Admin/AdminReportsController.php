@@ -96,7 +96,7 @@ class AdminReportsController extends Controller
                     'id' => $event->id, 'event' => $event->event->value, 'actorName' => $event->actor->name,
                     'amount' => $event->amount, 'paidOn' => $event->paid_on?->toDateString(), 'method' => $event->method,
                     'note' => $event->note, 'createdAt' => $event->created_at?->toDateTimeString(),
-                    'amountMismatch' => $event->amount !== null && (float) $event->amount !== (float) ($version?->final_amount ?? 0),
+                    'amountMismatch' => $event->amount !== null && (float) $event->amount !== (float) ($version->final_amount ?? 0),
                 ])->values() ?? [],
                 'statements' => $report->statements->map(fn ($statement) => ['id' => $statement->id, 'name' => $statement->user->name, 'role' => $statement->role, 'body' => $statement->body, 'createdAt' => $statement->created_at?->toDateTimeString()])->values(),
                 'versions' => $agreement?->versions->map(fn ($item) => ['version' => $item->version_number, 'proposer' => $item->proposer->name, 'deliverables' => $item->deliverables, 'terms' => $item->terms, 'finalAmount' => $item->final_amount, 'startDate' => $item->start_date?->toDateString(), 'durationDays' => $item->duration_days, 'workMode' => $item->work_mode, 'workplaceName' => $item->workplace_name, 'workplaceAddress' => $item->workplace_address, 'paymentArrangement' => $item->payment_arrangement, 'comment' => $item->comment, 'hash' => $item->content_hash, 'confirmations' => $item->confirmations->map(fn ($confirmation) => ['name' => $confirmation->user->name, 'at' => $confirmation->confirmed_at?->toDateTimeString()])->values()])->values() ?? [],
@@ -120,6 +120,9 @@ class AdminReportsController extends Controller
         return config('taskmate.user_types.'.$user->user_type->value, $user->user_type->value);
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     private function sanctions(User $user): array
     {
         return $user->sanctions->map(fn ($sanction) => ['type' => $sanction->type->value, 'reason' => $sanction->reason, 'active' => ! $sanction->lifted_at && $sanction->starts_at?->isPast() && ($sanction->ends_at === null || $sanction->ends_at->isFuture())])->values()->all();

@@ -222,7 +222,9 @@ class ReportWorkflow
         }
     }
 
-    /** @param array<int, UploadedFile> $files @param array<int, string> $storedPaths */
+    /** @param array<int, UploadedFile> $files
+     * @param  array<int, string>  $storedPaths
+     */
     public function storeEvidence(Report $report, User $uploader, array $files, array &$storedPaths): void
     {
         foreach ($files as $file) {
@@ -236,7 +238,12 @@ class ReportWorkflow
             $evidence->uploaded_by = $uploader->id;
             $evidence->original_name = mb_substr(preg_replace('/[\x00-\x1F\x7F]/u', '', basename($file->getClientOriginalName())) ?? 'evidence', 0, 255);
             $evidence->stored_path = $path;
-            $evidence->mime = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file->getRealPath()) ?: 'application/octet-stream';
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo === false) {
+                throw new \RuntimeException('Evidence file content could not be checked.');
+            }
+            $evidence->mime = finfo_file($finfo, $file->getRealPath()) ?: 'application/octet-stream';
+            finfo_close($finfo);
             $evidence->size_bytes = $file->getSize() ?: 0;
             $evidence->created_at = now();
             $evidence->save();

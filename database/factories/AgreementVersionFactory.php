@@ -41,7 +41,7 @@ class AgreementVersionFactory extends Factory
             'proposed_by' => User::factory()->verified(),
             ...$values,
             'comment' => null,
-            'content_hash' => hash('sha256', json_encode($values, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)),
+            'content_hash' => hash('sha256', json_encode($values, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)),
             'created_at' => now(),
         ];
     }

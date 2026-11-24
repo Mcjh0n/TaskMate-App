@@ -13,7 +13,7 @@ class EnforceTaskMateRateLimits
     {
         $routeName = $request->route()?->getName();
         if (in_array($routeName, ['notifications.summary', 'messages.updates'], true)) {
-            $key = $routeName.'|'.($request->user()?->id ?? $request->ip());
+            $key = $routeName.'|'.($request->user()->id ?? $request->ip());
             $limit = max(1, (int) config('taskmate.notifications.throttle_per_minute', 120));
             if (RateLimiter::tooManyAttempts($key, $limit)) {
                 return response()->json(['message' => 'Please wait before checking alerts again.'], 429)
@@ -36,7 +36,7 @@ class EnforceTaskMateRateLimits
 
         if ($bucket !== null) {
             $limits = config('taskmate.rate_limits.'.$bucket);
-            $key = $bucket.'|'.($request->user()?->id ?? $request->ip());
+            $key = $bucket.'|'.($request->user()->id ?? $request->ip());
             if (RateLimiter::tooManyAttempts($key, (int) $limits['max_attempts'])) {
                 abort(429, 'Too many requests. Please wait and try again.');
             }

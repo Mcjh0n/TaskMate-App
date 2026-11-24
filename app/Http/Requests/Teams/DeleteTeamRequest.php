@@ -24,6 +24,9 @@ class DeleteTeamRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -35,6 +38,9 @@ class DeleteTeamRequest extends FormRequest
      * Configure the validator instance.
      *
      * @return array<int, Closure(Validator): void>
+     */
+    /**
+     * @return array<int, Closure>
      */
     public function after(): array
     {

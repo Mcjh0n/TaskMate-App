@@ -104,6 +104,9 @@ class BrowseController extends Controller
         ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function listing(Task $task, int $studentId, bool $canApply): array
     {
         return [
@@ -128,6 +131,9 @@ class BrowseController extends Controller
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function details(Task $task): array
     {
         return [
@@ -149,6 +155,9 @@ class BrowseController extends Controller
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function poster(Task $task): array
     {
         $poster = $task->poster;
@@ -162,13 +171,23 @@ class BrowseController extends Controller
         ];
     }
 
+    /**
+     * @param  array<string, string>  $values
+     * @return array<int, array{value: string, label: string}>
+     */
     private function options(array $values): array
     {
         return collect($values)->map(fn (string $label, string $value) => compact('value', 'label'))->values()->all();
     }
 
+    /**
+     * @return array<int, array{value: string, label: string}>
+     */
     private function problemReportTypes(): array
     {
-        return collect(config('taskmate.reports.types', []))->except(['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()->all();
+        /** @var array<string, array{label: string}> $reportTypes */
+        $reportTypes = (array) config('taskmate.reports.types', []);
+
+        return collect($reportTypes)->except(['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()->all();
     }
 }

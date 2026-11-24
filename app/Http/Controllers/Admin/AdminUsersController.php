@@ -7,6 +7,7 @@ use App\Enums\VerificationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\AdminUsersIndexRequest;
 use App\Models\AdminAction;
+use App\Models\Rating;
 use App\Models\User;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -88,6 +89,10 @@ class AdminUsersController extends Controller
         ]);
     }
 
+    /**
+     * @param  Rating  $rating
+     * @return array<string, mixed>
+     */
     private function ratingRecord($rating, string $otherParty): array
     {
         return [

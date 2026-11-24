@@ -15,6 +15,9 @@ class StoreNonPaymentReportRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('reportNonPayment', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $maxFiles = (int) config('taskmate.reports.evidence_max_files', 5);
@@ -28,6 +31,9 @@ class StoreNonPaymentReportRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<int, \Closure>
+     */
     public function after(): array
     {
         return [function (Validator $validator): void {
@@ -39,10 +45,17 @@ class StoreNonPaymentReportRequest extends FormRequest
     {
         $extensions = ['image/jpeg' => ['jpg', 'jpeg'], 'image/png' => ['png'], 'application/pdf' => ['pdf']];
         foreach ($this->file('evidence', []) as $index => $file) {
-            if (! $file?->isValid()) {
+            if (! $file->isValid()) {
                 continue;
             }
-            $mime = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file->getRealPath()) ?: 'application/octet-stream';
+            $finfo = finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo === false) {
+                $validator->errors()->add("evidence.{$index}", 'The uploaded file could not be checked.');
+
+                continue;
+            }
+            $mime = finfo_file($finfo, $file->getRealPath()) ?: 'application/octet-stream';
+            finfo_close($finfo);
             $clientExtension = strtolower($file->getClientOriginalExtension());
             if (! in_array($clientExtension, $extensions[$mime] ?? [], true)) {
                 $validator->errors()->add("evidence.{$index}", 'The file content must match its JPG, PNG, or PDF file extension.');

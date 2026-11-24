@@ -15,6 +15,9 @@ class AcknowledgeWarningRequest extends FormRequest
         return $sanction instanceof UserSanction && $sanction->user_id === $this->user()?->id && $sanction->type === SanctionType::Warning && ! $sanction->acknowledged_at;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [];

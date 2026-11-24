@@ -67,6 +67,11 @@ class AgreementController extends Controller
             'reports',
         ]);
 
+        /** @var array<string, array{label: string, priority?: string, respondent_can_reply?: bool}> $reportTypes */
+        $reportTypes = (array) config('taskmate.reports.types', []);
+        /** @var array<string, string> $paymentMethods */
+        $paymentMethods = (array) config('taskmate.payment_status.methods', []);
+
         return Inertia::render('agreements/show', [
             ...$this->present($agreement, $request->user()),
             'viewerId' => $request->user()->id,
@@ -74,7 +79,7 @@ class AgreementController extends Controller
             'termsMaxLength' => config('taskmate.agreement.terms_max_length', 3000),
             'notice' => 'This agreement records what the poster and worker agreed. It is not a legal contract. TaskMate does not process, hold, or guarantee payment. Payment is made directly between the two of you.',
             'status' => $request->session()->get('status'),
-            'problemReport' => ['action' => route('agreements.problem-reports.store', $agreement), 'types' => collect(config('taskmate.reports.types', []))->except('non_payment')->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()],
+            'problemReport' => ['action' => route('agreements.problem-reports.store', $agreement), 'types' => collect($reportTypes)->except('non_payment')->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()],
             'offPlatformWarning' => $agreement->versions()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->exists()
                 || $agreement->messages()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->exists(),
         ]);
@@ -133,6 +138,9 @@ class AgreementController extends Controller
         ]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function present(Agreement $agreement, ?User $viewer = null): array
     {
         $version = fn (AgreementVersion $item): array => [
@@ -181,6 +189,9 @@ class AgreementController extends Controller
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function ratingData(Agreement $agreement, User $viewer): array
     {
         $visibility = app(RatingVisibility::class);
@@ -210,12 +221,17 @@ class AgreementController extends Controller
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function completionPaymentData(Agreement $agreement, ?User $viewer = null): array
     {
+        /** @var array<string, string> $paymentMethods */
+        $paymentMethods = (array) config('taskmate.payment_status.methods', []);
         $completion = $agreement->completion;
         $events = $agreement->paymentEvents;
         $latest = $events->last();
-        $agreedAmount = (float) ($agreement->currentVersion?->final_amount ?? 0);
+        $agreedAmount = (float) ($agreement->currentVersion->final_amount ?? 0);
         $paymentStatus = match ($latest?->event) {
             PaymentEventType::MarkedPaid => PaymentStatus::MarkedPaid,
             PaymentEventType::ConfirmedReceived => PaymentStatus::ConfirmedReceived,
@@ -263,7 +279,7 @@ class AgreementController extends Controller
             'canMarkPaid' => $isPoster && $agreement->status === AgreementStatus::Agreed && in_array($agreement->task->status, [TaskStatus::InProgress, TaskStatus::Completed], true) && ! $settled,
             'canRespondPayment' => $isWorker && $agreement->status === AgreementStatus::Agreed && $latest?->event === PaymentEventType::MarkedPaid && ! $settled,
             'canReportNonPayment' => $isWorker && $agreement->status === AgreementStatus::Agreed && ! $activeReport && app(ReportWorkflow::class)->canReportNonPayment($agreement),
-            'paymentMethods' => collect(config('taskmate.payment_status.methods', []))->map(fn (string $label, string $value) => compact('value', 'label'))->values(),
+            'paymentMethods' => collect($paymentMethods)->map(fn (string $label, string $value) => compact('value', 'label'))->values(),
         ];
     }
 }

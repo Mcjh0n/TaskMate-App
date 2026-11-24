@@ -4,19 +4,29 @@ namespace App\Http\Requests;
 
 use App\Models\Agreement;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
 
 class StoreRatingRequest extends FormRequest
 {
     public function authorize(): bool
     {
         $agreement = $this->route('agreement');
+        if (! $agreement instanceof Agreement) {
+            return false;
+        }
 
-        return $agreement instanceof Agreement && $this->user()?->can('rate', $agreement);
+        return $this->user()?->can('rate', $agreement) ?? false;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $agreement = $this->route('agreement');
+        if (! $agreement instanceof Agreement) {
+            return ['scores' => ['prohibited']];
+        }
         $direction = $agreement->poster_id === $this->user()->id ? 'poster_to_student' : 'student_to_poster';
         $dimensions = array_keys(config("taskmate.ratings.dimensions.{$direction}", []));
         $rules = [
@@ -32,7 +42,7 @@ class StoreRatingRequest extends FormRequest
         return $rules;
     }
 
-    public function withValidator($validator): void
+    public function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator): void {
             $agreement = $this->route('agreement');

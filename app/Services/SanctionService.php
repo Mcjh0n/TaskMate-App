@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 
 class SanctionService
 {
+    /** @return Collection<int, UserSanction> */
     public function active(User $user): Collection
     {
         return $user->sanctions()->whereNull('lifted_at')->where('starts_at', '<=', now())

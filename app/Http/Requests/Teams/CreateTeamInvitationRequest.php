@@ -16,6 +16,9 @@ class CreateTeamInvitationRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $team = $this->route('team');

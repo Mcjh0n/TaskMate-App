@@ -15,6 +15,9 @@ class SendAgreementRequest extends FormRequest
         return $agreement !== null && ($this->user()?->can('send', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [];

@@ -2,12 +2,32 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Carbon;
 use LogicException;
 
+/**
+ * @property-read string|null $final_amount
+ * @property-write string|float|int|null $final_amount
+ * @property-read Carbon|null $start_date
+ * @property-write Carbon|CarbonImmutable|string|null $start_date
+ * @property-read Carbon|null $due_date
+ * @property-write Carbon|CarbonImmutable|string|null $due_date
+ * @property-read int|null $duration_days
+ * @property-write int|string|null $duration_days
+ * @property-read Carbon|null $created_at
+ * @property-write Carbon|CarbonImmutable|string|null $created_at
+
+ * @property-read int|null $proposed_by
+ * @property-write int|null $proposed_by
+ * @property-read int|null $version_number
+ * @property-write int|null $version_number
+ * @property-read string $work_mode
+ * @property-write string $work_mode*/
 class AgreementVersion extends Model
 {
     public $timestamps = false;
@@ -28,21 +48,25 @@ class AgreementVersion extends Model
         static::deleting(fn () => throw new LogicException('Agreement versions cannot be deleted.'));
     }
 
+    /** @return BelongsTo<Agreement, $this> */
     public function agreement(): BelongsTo
     {
         return $this->belongsTo(Agreement::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function proposer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'proposed_by');
     }
 
+    /** @return HasMany<AgreementConfirmation, $this> */
     public function confirmations(): HasMany
     {
         return $this->hasMany(AgreementConfirmation::class);
     }
 
+    /** @return MorphMany<ContentFlag, $this> */
     public function contentFlags(): MorphMany
     {
         return $this->morphMany(ContentFlag::class, 'flaggable');

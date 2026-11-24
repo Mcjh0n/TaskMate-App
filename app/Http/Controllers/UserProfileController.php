@@ -18,6 +18,8 @@ class UserProfileController extends Controller
         $hasAgreement = Agreement::query()->where(fn ($query) => $query
             ->where(fn ($pair) => $pair->where('poster_id', $request->user()->id)->where('student_id', $user->id))
             ->orWhere(fn ($pair) => $pair->where('poster_id', $user->id)->where('student_id', $request->user()->id)))->exists();
+        /** @var array<string, array{label: string}> $reportTypes */
+        $reportTypes = (array) config('taskmate.reports.types', []);
         $ratings = app(RatingVisibility::class)->visibleQuery()->where('ratee_id', $user->id)->with(['task:id,title', 'rater:id,name,user_type,organization_name'])->latest()->limit(10)->get();
 
         return Inertia::render('users/show', [
@@ -40,7 +42,7 @@ class UserProfileController extends Controller
                 'raterName' => $rating->rater->isOrganization() ? $rating->rater->organization_name : $rating->rater->name,
             ])->values(),
             'notice' => 'Ratings are one person\'s view of one completed task. They are contextual information and do not guarantee a person\'s future behavior. Serious problems should be reported, not rated.',
-            'problemReport' => ! $request->user()->isAdmin() && $request->user()->id !== $user->id ? ['action' => route('users.problem-reports.store', $user), 'types' => collect(config('taskmate.reports.types', []))->except($hasAgreement ? ['non_payment'] : ['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()] : null,
+            'problemReport' => ! $request->user()->isAdmin() && $request->user()->id !== $user->id ? ['action' => route('users.problem-reports.store', $user), 'types' => collect($reportTypes)->except($hasAgreement ? ['non_payment'] : ['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()] : null,
         ]);
     }
 }

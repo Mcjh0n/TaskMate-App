@@ -16,9 +16,9 @@ class RatingFactory extends Factory
     {
         return [
             'agreement_id' => Agreement::factory(),
-            'task_id' => fn (array $attributes) => Agreement::find($attributes['agreement_id'])?->task_id,
-            'rater_id' => fn (array $attributes) => Agreement::find($attributes['agreement_id'])?->poster_id,
-            'ratee_id' => fn (array $attributes) => Agreement::find($attributes['agreement_id'])?->student_id,
+            'task_id' => fn (array $attributes) => Agreement::query()->find((int) $attributes['agreement_id'])?->task_id,
+            'rater_id' => fn (array $attributes) => Agreement::query()->find((int) $attributes['agreement_id'])?->poster_id,
+            'ratee_id' => fn (array $attributes) => Agreement::query()->find((int) $attributes['agreement_id'])?->student_id,
             'direction' => RatingDirection::PosterToStudent,
             'overall_experience' => fake()->numberBetween(1, 5),
             'comment' => fake()->optional()->sentence(),

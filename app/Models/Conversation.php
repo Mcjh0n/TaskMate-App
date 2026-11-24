@@ -6,13 +6,26 @@ use App\Enums\ApplicationStatus;
 use App\Enums\ReportStatus;
 use App\Enums\TaskStatus;
 use App\Services\SanctionService;
+use Carbon\CarbonImmutable;
 use Database\Factories\ConversationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property-read Carbon|null $closed_at
+ * @property-write Carbon|CarbonImmutable|string|null $closed_at
+
+ * @property-read int|null $closed_by
+ * @property-write int|null $closed_by
+ * @property-read int|null $poster_id
+ * @property-write int|null $poster_id
+ * @property int $task_id
+ * @property int $applicant_id
+ */
 class Conversation extends Model
 {
     /** @use HasFactory<ConversationFactory> */
@@ -25,46 +38,55 @@ class Conversation extends Model
         return ['closed_at' => 'datetime'];
     }
 
+    /** @return BelongsTo<Application, $this> */
     public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);
     }
 
+    /** @return BelongsTo<Task, $this> */
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function poster(): BelongsTo
     {
         return $this->belongsTo(User::class, 'poster_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function applicant(): BelongsTo
     {
         return $this->belongsTo(User::class, 'applicant_id');
     }
 
+    /** @return BelongsTo<User, $this> */
     public function closer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'closed_by');
     }
 
+    /** @return HasMany<ConversationMessage, $this> */
     public function messages(): HasMany
     {
         return $this->hasMany(ConversationMessage::class)->orderBy('id');
     }
 
+    /** @return HasOne<ConversationMessage, $this> */
     public function latestMessage(): HasOne
     {
         return $this->hasOne(ConversationMessage::class)->latestOfMany();
     }
 
+    /** @return HasMany<ConversationRead, $this> */
     public function reads(): HasMany
     {
         return $this->hasMany(ConversationRead::class);
     }
 
+    /** @return HasMany<ConversationEvent, $this> */
     public function events(): HasMany
     {
         return $this->hasMany(ConversationEvent::class)->orderBy('id');

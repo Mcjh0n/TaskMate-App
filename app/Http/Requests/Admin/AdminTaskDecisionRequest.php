@@ -20,6 +20,9 @@ class AdminTaskDecisionRequest extends FormRequest
             && $task->poster_id !== $admin->id;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $noteRequired = in_array($this->input('decision'), ['reject', 'request_changes'], true);

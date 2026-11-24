@@ -9,9 +9,12 @@ class UpdateVerificationDetailsRequest extends FormRequest
     public function authorize(): bool
     {
         return $this->user() !== null
-            && in_array($this->user()->verification_status?->value, ['rejected', 'more_info_requested'], true);
+            && in_array($this->user()->verification_status->value, ['rejected', 'more_info_requested'], true);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $user = $this->user();

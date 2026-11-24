@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class RatingVisibility
 {
+    /** @return Builder<Rating> */
     public function visibleQuery(?int $viewerId = null): Builder
     {
         return Rating::query()->where(function (Builder $query) use ($viewerId): void {
@@ -23,6 +24,7 @@ class RatingVisibility
         });
     }
 
+    /** @param Builder<Rating> $query */
     public function visibleToOthers(Builder $query): void
     {
         if (config('taskmate.ratings.visibility', 'after_both') === 'immediate') {

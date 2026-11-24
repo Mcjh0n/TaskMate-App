@@ -87,6 +87,9 @@ class AgreementWorkflow
         });
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function revise(Agreement $agreement, User $user, array $data): AgreementVersion
     {
         return DB::transaction(function () use ($agreement, $user, $data): AgreementVersion {
@@ -197,6 +200,9 @@ class AgreementWorkflow
         });
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     private function addVersion(Agreement $agreement, User $user, Task $task, array $data, ?string $comment, int $number, bool $confirmProposer = true): AgreementVersion
     {
         $version = new AgreementVersion;

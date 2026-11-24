@@ -16,34 +16,27 @@ class AdminTaskDecisionController extends Controller
     public function __invoke(AdminTaskDecisionRequest $request, Task $task, TaskMateNotifications $alerts): RedirectResponse
     {
         DB::transaction(function () use ($request, $task, $alerts): void {
-            $decision = $request->validated('decision');
-            $task->status = match ($decision) {
-                'approve' => TaskStatus::Approved,
-                'reject' => TaskStatus::Rejected,
-                'request_changes' => TaskStatus::ChangesRequested,
-            };
+            $decision = $request->string('decision')->toString();
+            $decisions = [
+                'approve' => ['status' => TaskStatus::Approved, 'action' => 'task_approved', 'event' => 'task.approved'],
+                'reject' => ['status' => TaskStatus::Rejected, 'action' => 'task_rejected', 'event' => 'task.rejected'],
+                'request_changes' => ['status' => TaskStatus::ChangesRequested, 'action' => 'task_changes_requested', 'event' => 'task.changes_requested'],
+            ];
+            $decisionData = $decisions[$decision] ?? throw new \LogicException('Unsupported task review decision.');
+            $task->status = $decisionData['status'];
             $task->reviewed_by = $request->user()->id;
-            $task->reviewed_at = now();
+            $task->reviewed_at = now()->toMutable();
             $task->decision_source = 'admin';
             $task->review_note = $decision === 'approve' ? null : $request->validated('note');
             $task->save();
 
             $task->adminActions()->create([
                 'admin_id' => $request->user()->id,
-                'action' => match ($decision) {
-                    'approve' => 'task_approved',
-                    'reject' => 'task_rejected',
-                    'request_changes' => 'task_changes_requested',
-                },
+                'action' => $decisionData['action'],
                 'note' => $request->validated('note'),
                 'metadata' => ['decision' => $decision],
             ]);
-            $event = match ($decision) {
-                'approve' => 'task.approved',
-                'reject' => 'task.rejected',
-                'request_changes' => 'task.changes_requested',
-            };
-            $alerts->send(User::query()->findOrFail($task->poster_id), $event, route('tasks.show', $task->id, false), ['task_id' => $task->id], ['task_title' => $task->title], $request->user()->id);
+            $alerts->send(User::query()->findOrFail($task->poster_id), $decisionData['event'], route('tasks.show', $task->id, false), ['task_id' => $task->id], ['task_title' => $task->title], $request->user()->id);
         });
 
         return back()->with('status', 'The task review decision was saved.');

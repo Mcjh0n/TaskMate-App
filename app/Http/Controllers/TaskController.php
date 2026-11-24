@@ -38,7 +38,7 @@ class TaskController extends Controller
             $validated = $request->safe()->except(['guidelines_confirmed', 'budget_mode', 'budget', 'budget_min', 'budget_max']);
             $task = $request->user()->tasks()->make($validated);
             $this->applyBudget($task, $request->validated());
-            $task->guidelines_confirmed_at = now();
+            $task->guidelines_confirmed_at = now()->toMutable();
             $task->save();
             foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
                 if ($task->{$field}) {
@@ -105,6 +105,9 @@ class TaskController extends Controller
             ])->values()
             : collect();
 
+        /** @var array<string, array{label: string}> $reportTypes */
+        $reportTypes = (array) config('taskmate.reports.types', []);
+
         return Inertia::render('tasks/show', [
             'task' => $this->details($task),
             'statusLabel' => $task->status->label(),
@@ -127,7 +130,7 @@ class TaskController extends Controller
                 && ! $task->hasActiveAgreement(),
             'problemReport' => [
                 'taskAction' => $task->poster_id === $request->user()->id ? null : route('tasks.problem-reports.store', $task),
-                'types' => collect(config('taskmate.reports.types', []))->except(['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values(),
+                'types' => collect($reportTypes)->except(['non_payment', 'incomplete_work'])->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values(),
                 'applicantActions' => $applicants->map(fn ($application) => ['applicationId' => $application['id'], 'action' => route('applications.problem-reports.store', [$task, $application['id']])])->values(),
                 'flaggedApplicants' => $task->applications()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->pluck('id')->all(),
                 'offPlatformWarning' => $task->contentFlags()->where('source_user_id', '!=', $request->user()->id)->where('status', 'open')->exists(),
@@ -158,7 +161,7 @@ class TaskController extends Controller
             $validated = $request->safe()->except(['guidelines_confirmed', 'budget_mode', 'budget', 'budget_min', 'budget_max']);
             $task->fill($validated);
             $this->applyBudget($task, $request->validated());
-            $task->guidelines_confirmed_at = now();
+            $task->guidelines_confirmed_at = now()->toMutable();
             $task->save();
             foreach (['title', 'description', 'required_activities', 'deliverables', 'skill_requirements'] as $field) {
                 if ($task->{$field}) {
@@ -205,6 +208,9 @@ class TaskController extends Controller
         return redirect()->route('tasks.mine')->with('status', 'Your task was cancelled.');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function options(): array
     {
         return [
@@ -214,6 +220,9 @@ class TaskController extends Controller
         ];
     }
 
+    /**
+     * @param  array<string, mixed>  $validated
+     */
     private function applyBudget(Task $task, array $validated): void
     {
         if ($validated['budget_mode'] === 'range') {
@@ -229,11 +238,18 @@ class TaskController extends Controller
         $task->budget_max = null;
     }
 
+    /**
+     * @param  array<string, string>  $options
+     * @return array<int, array{value: string, label: string}>
+     */
     private function optionsFor(array $options): array
     {
         return collect($options)->map(fn (string $label, string $value) => compact('value', 'label'))->values()->all();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function summary(Task $task): array
     {
         return [
@@ -256,6 +272,9 @@ class TaskController extends Controller
         ];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function details(Task $task): array
     {
         return [

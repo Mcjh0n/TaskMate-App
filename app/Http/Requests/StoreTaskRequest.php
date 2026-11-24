@@ -23,6 +23,9 @@ class StoreTaskRequest extends FormRequest
         return $this->user()?->can('create', Task::class) ?? false;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return $this->taskRules();
@@ -33,6 +36,9 @@ class StoreTaskRequest extends FormRequest
         return ['guidelines_confirmed.accepted' => 'You must confirm that this task follows the platform rules.'];
     }
 
+    /**
+     * @return array<int, \Closure>
+     */
     public function after(): array
     {
         return [function ($validator): void {
@@ -44,6 +50,9 @@ class StoreTaskRequest extends FormRequest
         }];
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function taskRules(): array
     {
         $requiresWorkplace = in_array($this->input('work_mode'), ['on_campus', 'off_campus'], true);

@@ -33,7 +33,7 @@ class AdminSanctionsController extends Controller
             }
             $action = $request->validated('action');
             if ($action === 'remove_post') {
-                $task = Task::query()->lockForUpdate()->where('poster_id', $user->id)->findOrFail($request->validated('task_id'));
+                $task = Task::query()->lockForUpdate()->where('poster_id', $user->id)->whereKey($request->integer('task_id'))->firstOrFail();
                 $agreement = $task->agreement;
                 if (in_array($task->status, [TaskStatus::InProgress, TaskStatus::Completed], true)
                     || ($agreement && $agreement->status === AgreementStatus::Agreed && $agreement->locked_at)) {
@@ -100,6 +100,10 @@ class AdminSanctionsController extends Controller
         return back()->with('status', 'The sanction was lifted.');
     }
 
+    /**
+     * @param  array<string, mixed>  $metadata
+     * @param  Report|null  $report
+     */
     private function log(User $subject, User $admin, string $action, string $note, $report = null, array $metadata = []): void
     {
         $entry = new AdminAction;

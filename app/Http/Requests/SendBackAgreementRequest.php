@@ -14,6 +14,9 @@ class SendBackAgreementRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('sendBack', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['version_id' => ['required', 'integer', 'exists:agreement_versions,id'], 'body' => ['required', 'string', 'max:1000']];

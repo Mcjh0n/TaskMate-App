@@ -19,43 +19,35 @@ class AdminReportDecisionController extends Controller
         DB::transaction(function () use ($request, $report, $alerts): void {
             $report = Report::query()->lockForUpdate()->findOrFail($report->id);
             abort_unless($request->user()->can('review', $report), 403);
-            $decision = $request->validated('decision');
-            $report->status = match ($decision) {
-                'start_review' => ReportStatus::UnderReview,
-                'escalate' => ReportStatus::UnderReview,
-                'resolve' => ReportStatus::Resolved,
-                'dismiss' => ReportStatus::Dismissed,
-            };
+            $decision = $request->string('decision')->toString();
+            $decisions = [
+                'start_review' => ['status' => ReportStatus::UnderReview, 'action' => 'report_review_started', 'event' => 'report.under_review'],
+                'escalate' => ['status' => ReportStatus::UnderReview, 'action' => 'report_escalated', 'event' => 'report.under_review'],
+                'resolve' => ['status' => ReportStatus::Resolved, 'action' => 'report_resolved', 'event' => 'report.resolved'],
+                'dismiss' => ['status' => ReportStatus::Dismissed, 'action' => 'report_dismissed', 'event' => 'report.dismissed'],
+            ];
+            $decisionData = $decisions[$decision] ?? throw new \LogicException('Unsupported report review decision.');
+            $report->status = $decisionData['status'];
             if ($decision === 'escalate') {
-                $report->escalated_at = now();
+                $report->escalated_at = now()->toMutable();
                 $report->escalated_by = $request->user()->id;
                 $report->escalation_note = $request->validated('note');
             }
-            $report->outcome = $decision === 'resolve' ? ReportOutcome::from($request->validated('outcome')) : null;
+            $report->outcome = $decision === 'resolve' ? ReportOutcome::from((string) $request->validated('outcome')) : null;
             $report->admin_note = $request->validated('note');
             $report->resolution_message = $decision === 'resolve' ? $request->validated('resolution_message') : null;
             $report->reviewed_by = $request->user()->id;
-            $report->reviewed_at = now();
+            $report->reviewed_at = now()->toMutable();
             $report->save();
 
             $report->adminActions()->create([
                 'admin_id' => $request->user()->id,
-                'action' => match ($decision) {
-                    'start_review' => 'report_review_started',
-                    'escalate' => 'report_escalated',
-                    'resolve' => 'report_resolved',
-                    'dismiss' => 'report_dismissed',
-                },
+                'action' => $decisionData['action'],
                 'note' => $request->validated('note'),
                 'metadata' => ['decision' => $decision, 'outcome' => $report->outcome?->value],
             ]);
-            $event = match ($decision) {
-                'start_review', 'escalate' => 'report.under_review',
-                'resolve' => 'report.resolved',
-                'dismiss' => 'report.dismissed',
-            };
-            $values = $decision === 'resolve' ? ['outcome' => $report->outcome?->value ?? 'inconclusive'] : [];
-            $alerts->send(User::query()->findOrFail($report->reporter_id), $event, route('reports.show', $report->id, false), ['report_id' => $report->id], $values, $request->user()->id);
+            $values = $decision === 'resolve' && $report->outcome !== null ? ['outcome' => $report->outcome->value] : [];
+            $alerts->send(User::query()->findOrFail($report->reporter_id), $decisionData['event'], route('reports.show', $report->id, false), ['report_id' => $report->id], $values, $request->user()->id);
         });
 
         return back()->with('status', 'The report review was recorded. This does not order or enforce repayment.');

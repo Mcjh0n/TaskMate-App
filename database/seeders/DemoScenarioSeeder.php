@@ -167,7 +167,6 @@ class DemoScenarioSeeder extends Seeder
         foreach ([
             ['open', ReportStatus::Open, null],
             ['under-review', ReportStatus::UnderReview, null],
-            ['escalated', ReportStatus::UnderReview, null],
             ['resolved', ReportStatus::Resolved, ReportOutcome::Inconclusive],
         ] as [$label, $status, $outcome]) {
             $existing = Report::query()->where('description', 'Synthetic '.$label.' report scenario.')->first();
@@ -182,18 +181,28 @@ class DemoScenarioSeeder extends Seeder
             $report->description = 'Synthetic '.$label.' report scenario.';
             $report->status = $status;
             $report->outcome = $outcome;
-            $report->priority = $label === 'escalated' ? 'high' : 'normal';
-            if ($label === 'escalated') {
-                $report->escalated_at = now();
-                $report->escalated_by = $admin->id;
-                $report->escalation_note = 'Synthetic escalation marker.';
-            }
-            if ($status === ReportStatus::Resolved) {
+            $report->priority = 'normal';
+            if ($label === 'resolved') {
                 $report->reviewed_by = $admin->id;
-                $report->reviewed_at = now();
+                $report->reviewed_at = now()->toMutable();
                 $report->admin_note = 'Synthetic resolution note.';
             }
             $report->save();
+        }
+
+        if (! Report::query()->where('description', 'Synthetic escalated report scenario.')->exists()) {
+            $escalatedReport = new Report;
+            $escalatedReport->reporter()->associate($student);
+            $escalatedReport->reportedUser()->associate($faculty);
+            $escalatedReport->task()->associate($reportTask);
+            $escalatedReport->type = ReportType::Other;
+            $escalatedReport->description = 'Synthetic escalated report scenario.';
+            $escalatedReport->status = ReportStatus::UnderReview;
+            $escalatedReport->priority = 'high';
+            $escalatedReport->escalated_at = now()->toMutable();
+            $escalatedReport->escalated_by = $admin->id;
+            $escalatedReport->escalation_note = 'Synthetic escalation marker.';
+            $escalatedReport->save();
         }
 
         foreach (['unpaid', 'marked-paid', 'received', 'not-received'] as $paymentCase) {

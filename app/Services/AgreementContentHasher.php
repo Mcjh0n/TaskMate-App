@@ -7,6 +7,9 @@ use App\Models\AgreementVersion;
 class AgreementContentHasher
 {
     /** Hash only the terms both parties are confirming, in a stable key order. */
+    /**
+     * @param  array<string, mixed>  $version
+     */
     public function hash(array|AgreementVersion $version): string
     {
         $fields = $version instanceof AgreementVersion ? [

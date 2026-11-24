@@ -16,6 +16,9 @@ class BrowseTasksRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [
@@ -30,6 +33,9 @@ class BrowseTasksRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<int, \Closure>
+     */
     public function after(): array
     {
         return [function ($validator): void {

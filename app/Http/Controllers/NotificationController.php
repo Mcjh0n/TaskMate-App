@@ -60,6 +60,9 @@ class NotificationController extends Controller
         return redirect($target);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function item(DatabaseNotification $notification): array
     {
         $data = $notification->data;

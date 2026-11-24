@@ -2,12 +2,22 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
 use Database\Factories\ReportEvidenceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use LogicException;
 
+/**
+ * @property-read int $size_bytes
+ * @property-write int|string $size_bytes
+ * @property-read Carbon|null $created_at
+ * @property-write Carbon|CarbonImmutable|string|null $created_at
+
+ * @property-read int|null $uploaded_by
+ * @property-write int|null $uploaded_by*/
 class ReportEvidence extends Model
 {
     /** @use HasFactory<ReportEvidenceFactory> */
@@ -28,11 +38,13 @@ class ReportEvidence extends Model
         static::deleting(fn () => throw new LogicException('Report evidence cannot be deleted.'));
     }
 
+    /** @return BelongsTo<Report, $this> */
     public function report(): BelongsTo
     {
         return $this->belongsTo(Report::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function uploader(): BelongsTo
     {
         return $this->belongsTo(User::class, 'uploaded_by');

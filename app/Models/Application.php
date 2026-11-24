@@ -11,7 +11,14 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Carbon;
 
-/** @property ApplicationStatus $status @property Carbon|null $responded_at */
+/** @property ApplicationStatus $status @property Carbon|null $responded_at
+ * @property-read string|null $proposed_amount
+ * @property-write string|float|int|null $proposed_amount
+
+ * @property-read int|null $applicant_id
+ * @property-write int|null $applicant_id
+ * @property-read int|null $task_id
+ * @property-write int|null $task_id*/
 class Application extends Model
 {
     /** @use HasFactory<ApplicationFactory> */
@@ -28,26 +35,31 @@ class Application extends Model
         ];
     }
 
+    /** @return BelongsTo<Task, $this> */
     public function task(): BelongsTo
     {
         return $this->belongsTo(Task::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function applicant(): BelongsTo
     {
         return $this->belongsTo(User::class, 'applicant_id');
     }
 
+    /** @return HasOne<Agreement, $this> */
     public function agreement(): HasOne
     {
         return $this->hasOne(Agreement::class);
     }
 
+    /** @return HasOne<Conversation, $this> */
     public function conversation(): HasOne
     {
         return $this->hasOne(Conversation::class);
     }
 
+    /** @return MorphMany<ContentFlag, $this> */
     public function contentFlags(): MorphMany
     {
         return $this->morphMany(ContentFlag::class, 'flaggable');

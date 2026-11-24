@@ -14,6 +14,9 @@ class CancelAgreementRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('cancel', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['reason' => ['required', 'string', 'max:2000']];

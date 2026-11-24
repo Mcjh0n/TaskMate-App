@@ -14,6 +14,9 @@ class MarkDeliveredRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('markDelivered', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['note' => ['nullable', 'string', 'max:2000']];

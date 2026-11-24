@@ -18,6 +18,7 @@ class RatingScore extends Model
         static::deleting(fn () => throw new LogicException('Rating scores cannot be deleted.'));
     }
 
+    /** @return BelongsTo<Rating, $this> */
     public function rating(): BelongsTo
     {
         return $this->belongsTo(Rating::class);

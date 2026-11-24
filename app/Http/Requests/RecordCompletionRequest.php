@@ -14,6 +14,9 @@ class RecordCompletionRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('recordCompletion', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['note' => ['nullable', 'string', 'max:2000']];

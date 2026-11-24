@@ -4,7 +4,9 @@ namespace App\Notifications;
 
 class TaskMateAlertCatalog
 {
-    /** @return array{title: string, body: string} */
+    /** @param array<string, string> $values
+     * @return array{title: string, body: string}
+     */
     public static function get(string $event, array $values = []): array
     {
         $catalog = [

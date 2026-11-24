@@ -15,6 +15,9 @@ class RatingWorkflow
 {
     public function __construct(private readonly TaskMateNotifications $alerts) {}
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
     public function submit(Agreement $agreement, User $rater, array $data): Rating
     {
         return DB::transaction(function () use ($agreement, $rater, $data): Rating {
@@ -45,6 +48,9 @@ class RatingWorkflow
         });
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
     public function pendingFor(User $user): array
     {
         $visibility = app(RatingVisibility::class);

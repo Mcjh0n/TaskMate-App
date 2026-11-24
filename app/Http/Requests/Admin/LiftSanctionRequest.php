@@ -14,6 +14,9 @@ class LiftSanctionRequest extends FormRequest
         return $this->user()?->isAdmin() && $sanction instanceof UserSanction && $sanction->user_id !== $this->user()->id && ! $sanction->user->isAdmin() && ! $sanction->lifted_at;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['note' => ['required', 'string', 'min:3', 'max:2000']];

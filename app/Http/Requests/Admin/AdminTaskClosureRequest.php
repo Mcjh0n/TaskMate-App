@@ -15,6 +15,9 @@ class AdminTaskClosureRequest extends FormRequest
         return $this->user()?->isAdmin() && $task instanceof Task && $task->status === TaskStatus::InProgress && $task->agreement?->locked_at !== null;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return ['note' => ['required', 'string', 'min:5', 'max:3000']];

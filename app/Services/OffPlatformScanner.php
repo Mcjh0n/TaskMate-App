@@ -31,6 +31,9 @@ class OffPlatformScanner
         return $matches;
     }
 
+    /**
+     * @return list<ContentFlag>
+     */
     public function flag(Model $subject, User $author, string $field, string $text): array
     {
         $groups = [];

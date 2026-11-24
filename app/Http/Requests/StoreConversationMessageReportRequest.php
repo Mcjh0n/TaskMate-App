@@ -19,6 +19,9 @@ class StoreConversationMessageReportRequest extends FormRequest
             && Gate::allows('reportMessage', [$conversation, $message]);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         $relevant = ['harassment', 'unsafe_behavior', 'off_platform_transaction', 'rule_bypass_request', 'misleading_description', 'fraudulent_post', 'other'];
@@ -32,6 +35,9 @@ class StoreConversationMessageReportRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<int, \Closure>
+     */
     public function after(): array
     {
         return [function ($validator): void {
@@ -39,7 +45,14 @@ class StoreConversationMessageReportRequest extends FormRequest
                 if (! $file) {
                     continue;
                 }
-                $mime = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file->getRealPath());
+                $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                if ($finfo === false) {
+                    $validator->errors()->add("evidence.{$index}", 'The uploaded file could not be checked.');
+
+                    continue;
+                }
+                $mime = finfo_file($finfo, $file->getRealPath()) ?: 'application/octet-stream';
+                finfo_close($finfo);
                 $extension = strtolower($file->getClientOriginalExtension());
                 $extensions = ['image/jpeg' => ['jpg', 'jpeg'], 'image/png' => ['png'], 'application/pdf' => ['pdf']];
                 if (! isset($extensions[$mime]) || ! in_array($extension, $extensions[$mime], true)) {

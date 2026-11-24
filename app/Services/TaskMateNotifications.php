@@ -10,20 +10,25 @@ use Illuminate\Support\Facades\DB;
 
 class TaskMateNotifications
 {
-    /** @param array<string, int> $relatedIds */
+    /** @param iterable<int, User>|User $recipients
+     * @param  array<string, int>  $relatedIds
+     * @param  array<string, string>  $values
+     */
     public function send(User|iterable $recipients, string $event, string $url, array $relatedIds = [], array $values = [], ?int $actorId = null): void
     {
-        $recipients = $recipients instanceof User ? collect([$recipients]) : collect($recipients);
         $copy = TaskMateAlertCatalog::get($event, $values);
         $payload = [
             'event' => $event,
             ...$copy,
             'url' => $this->safeUrl($url),
-            'related_ids' => array_filter($relatedIds, fn ($id) => is_int($id)),
+            'related_ids' => $relatedIds,
         ];
-        $ids = $recipients->filter(fn ($recipient) => $recipient instanceof User && $recipient->id !== $actorId)->pluck('id')->unique()->values();
-
-        foreach ($ids as $id) {
+        $recipientList = $recipients instanceof User ? [$recipients] : $recipients;
+        foreach ($recipientList as $recipient) {
+            if ($recipient->id === $actorId) {
+                continue;
+            }
+            $id = $recipient->id;
             DB::afterCommit(function () use ($id, $payload): void {
                 if ($recipient = User::query()->find($id)) {
                     $recipientPayload = $payload;
@@ -37,7 +42,9 @@ class TaskMateNotifications
         }
     }
 
-    /** @param array<string, int> $relatedIds */
+    /** @param array<string, int> $relatedIds
+     * @param  array<string, string>  $values
+     */
     public function admins(string $event, string $url, array $relatedIds = [], array $values = [], ?int $actorId = null): void
     {
         $this->send(User::query()->where('is_admin', true)->get(), $event, $url, $relatedIds, $values, $actorId);

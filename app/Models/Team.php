@@ -80,6 +80,7 @@ class Team extends Model
      *
      * @return HasMany<Membership, $this>
      */
+    /** @return HasMany<Membership, $this> */
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
@@ -90,6 +91,7 @@ class Team extends Model
      *
      * @return HasMany<TeamInvitation, $this>
      */
+    /** @return HasMany<TeamInvitation, $this> */
     public function invitations(): HasMany
     {
         return $this->hasMany(TeamInvitation::class);

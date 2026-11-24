@@ -14,6 +14,9 @@ class StoreAgreementVersionRequest extends FormRequest
         return $agreement instanceof Agreement && ($this->user()?->can('revise', $agreement) ?? false);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return [

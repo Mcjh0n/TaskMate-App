@@ -42,17 +42,23 @@ class AdminTasksController extends Controller
                 'submittedAt' => $task->created_at?->toDateTimeString(),
             ]);
 
+        /** @var array<string, string> $workModes */
+        $workModes = (array) config('taskmate.work_modes', []);
+
         return Inertia::render('admin/tasks/index', [
             'tasks' => $tasks,
             'filters' => $filters,
             'statuses' => collect(TaskStatus::cases())->map(fn (TaskStatus $status) => ['value' => $status->value, 'label' => $status->label()])->values(),
-            'workModes' => collect(config('taskmate.work_modes', []))->map(fn (string $label, string $value) => compact('value', 'label'))->values(),
+            'workModes' => collect($workModes)->map(fn (string $label, string $value) => compact('value', 'label'))->values(),
         ]);
     }
 
     public function show(Task $task): Response
     {
         $task->load(['poster', 'contentFlags', 'adminActions.admin:id,name', 'applications.applicant:id,name', 'agreement.currentVersion', 'agreement.completion', 'agreement.paymentEvents.actor:id,name']);
+
+        /** @var array<string, array<string, string>> $riskQuestions */
+        $riskQuestions = (array) config('taskmate.risk_questions', []);
 
         return Inertia::render('admin/tasks/show', [
             'task' => [
@@ -108,15 +114,22 @@ class AdminTasksController extends Controller
             ] : null,
             'completionPayment' => $task->agreement ? $this->completionPayment($task->agreement) : null,
             'canReview' => $task->status === TaskStatus::PendingReview && $task->poster_id !== auth()->id(),
-            'riskQuestions' => collect(config('taskmate.risk_questions', []))->mapWithKeys(fn (array $items, string $key) => [$key => $this->optionsFor($items)]),
+            'riskQuestions' => collect($riskQuestions)->mapWithKeys(fn (array $items, string $key) => [$key => $this->optionsFor($items)]),
         ]);
     }
 
+    /**
+     * @param  array<string, string>  $options
+     * @return array<int, array{value: string, label: string}>
+     */
     private function optionsFor(array $options): array
     {
         return collect($options)->map(fn (string $label, string $value) => compact('value', 'label'))->values()->all();
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function completionPayment(Agreement $agreement): array
     {
         $completion = $agreement->completion;
