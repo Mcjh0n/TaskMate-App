@@ -89,7 +89,8 @@ function WorkTerms({ version }: { version: Version }) {
                     Start: {version.startDate ?? 'Not set'} · Estimated
                     duration:{' '}
                     {version.durationLabel || version.durationDays
-                        ? version.durationLabel ?? `${version.durationDays} ${version.durationDays === 1 ? 'day' : 'days'}`
+                        ? (version.durationLabel ??
+                          `${version.durationDays} ${version.durationDays === 1 ? 'day' : 'days'}`)
                         : 'Not provided'}
                 </p>
             </div>
@@ -597,7 +598,8 @@ export function AgreementDetails({
                                             Work mode, workplace, and estimated
                                             duration stay as listed:{' '}
                                             {current.workMode}
-                                            {current.durationLabel || current.durationDays
+                                            {current.durationLabel ||
+                                            current.durationDays
                                                 ? ` · ${current.durationLabel ?? `${current.durationDays} ${current.durationDays === 1 ? 'day' : 'days'}`}`
                                                 : ''}
                                             {current.workplaceName

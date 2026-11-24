@@ -91,7 +91,9 @@ export default function BrowseTaskDetail({
                 <p className="text-xs font-semibold tracking-wide text-primary uppercase">
                     Your application
                 </p>
-                <h2 className="mt-1 text-lg font-semibold">Application status</h2>
+                <h2 className="mt-1 text-lg font-semibold">
+                    Application status
+                </h2>
             </div>
             <ApplicationStatusBadge
                 status={application.status}
@@ -135,14 +137,13 @@ export default function BrowseTaskDetail({
                     apply only once.
                 </p>
             </div>
-            <Form
-                {...applications.store.form(task.id)}
-                className="space-y-4"
-            >
+            <Form {...applications.store.form(task.id)} className="space-y-4">
                 {({ errors, processing }) => (
                     <>
                         <div className="grid gap-2">
-                            <Label htmlFor="message">Message to the poster</Label>
+                            <Label htmlFor="message">
+                                Message to the poster
+                            </Label>
                             <Textarea
                                 id="message"
                                 name="message"
@@ -210,8 +211,8 @@ export default function BrowseTaskDetail({
         >
             <h2 className="font-semibold">You can browse this task</h2>
             <p className="text-sm text-muted-foreground">
-                Your account must be verified by an administrator before you
-                can apply.
+                Your account must be verified by an administrator before you can
+                apply.
             </p>
         </section>
     ) : null;
@@ -254,8 +255,8 @@ export default function BrowseTaskDetail({
                                         {task.title}
                                     </h1>
                                     <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                                        Review the work, location, duration,
-                                        and budget before you decide to apply.
+                                        Review the work, location, duration, and
+                                        budget before you decide to apply.
                                     </p>
                                 </div>
                                 {canApply && !application && (
@@ -268,7 +269,10 @@ export default function BrowseTaskDetail({
                                 )}
                             </div>
                             <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-t pt-4 text-sm">
-                                <UserRound className="size-4 text-primary" aria-hidden="true" />
+                                <UserRound
+                                    className="size-4 text-primary"
+                                    aria-hidden="true"
+                                />
                                 <Link
                                     href={poster.profileUrl}
                                     className="font-semibold underline-offset-4 hover:underline"
@@ -277,7 +281,9 @@ export default function BrowseTaskDetail({
                                 </Link>
                                 <span className="text-muted-foreground">
                                     {poster.accountType}
-                                    {poster.affiliation ? ` · ${poster.affiliation}` : ''}
+                                    {poster.affiliation
+                                        ? ` · ${poster.affiliation}`
+                                        : ''}
                                 </span>
                                 <VerificationStatusBadge
                                     status={poster.verificationStatus}
@@ -291,33 +297,60 @@ export default function BrowseTaskDetail({
                         >
                             <div className="flex items-start gap-3 rounded-2xl border bg-card p-4 shadow-sm">
                                 <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                                    <Monitor className="size-5" aria-hidden="true" />
+                                    <Monitor
+                                        className="size-5"
+                                        aria-hidden="true"
+                                    />
                                 </span>
                                 <div>
-                                    <p className="text-xs font-medium text-muted-foreground">Work mode</p>
-                                    <p className="mt-1 font-semibold">{task.workMode}</p>
+                                    <p className="text-xs font-medium text-muted-foreground">
+                                        Work mode
+                                    </p>
+                                    <p className="mt-1 font-semibold">
+                                        {task.workMode}
+                                    </p>
                                 </div>
                             </div>
                             {task.estimatedDurationLabel && (
                                 <div className="flex items-start gap-3 rounded-2xl border bg-card p-4 shadow-sm">
                                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-gold/20 text-foreground">
-                                        <Clock3 className="size-5" aria-hidden="true" />
+                                        <Clock3
+                                            className="size-5"
+                                            aria-hidden="true"
+                                        />
                                     </span>
                                     <div>
-                                        <p className="text-xs font-medium text-muted-foreground">Estimated duration</p>
-                                        <p className="mt-1 font-semibold">{task.estimatedDurationLabel}</p>
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            Estimated duration
+                                        </p>
+                                        <p className="mt-1 font-semibold">
+                                            {task.estimatedDurationLabel}
+                                        </p>
                                     </div>
                                 </div>
                             )}
                             {(task.workplaceName || task.workplaceAddress) && (
                                 <div className="flex items-start gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:col-span-2">
                                     <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                                        <MapPin className="size-5" aria-hidden="true" />
+                                        <MapPin
+                                            className="size-5"
+                                            aria-hidden="true"
+                                        />
                                     </span>
                                     <div>
-                                        <p className="text-xs font-medium text-muted-foreground">Workplace location · {task.workMode}</p>
-                                        {task.workplaceName && <p className="mt-1 font-semibold">{task.workplaceName}</p>}
-                                        {task.workplaceAddress && <p className="mt-1 text-sm text-muted-foreground">{task.workplaceAddress}</p>}
+                                        <p className="text-xs font-medium text-muted-foreground">
+                                            Workplace location · {task.workMode}
+                                        </p>
+                                        {task.workplaceName && (
+                                            <p className="mt-1 font-semibold">
+                                                {task.workplaceName}
+                                            </p>
+                                        )}
+                                        {task.workplaceAddress && (
+                                            <p className="mt-1 text-sm text-muted-foreground">
+                                                {task.workplaceAddress}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -325,26 +358,42 @@ export default function BrowseTaskDetail({
 
                         <section className="space-y-5 rounded-2xl border bg-card p-5 shadow-sm sm:p-7">
                             <div>
-                                <p className="text-xs font-semibold tracking-wide text-primary uppercase">Task overview</p>
-                                <h2 className="mt-1 text-xl font-semibold">About the work</h2>
+                                <p className="text-xs font-semibold tracking-wide text-primary uppercase">
+                                    Task overview
+                                </p>
+                                <h2 className="mt-1 text-xl font-semibold">
+                                    About the work
+                                </h2>
                             </div>
-                            <p className="leading-relaxed whitespace-pre-wrap">{task.description}</p>
+                            <p className="leading-relaxed whitespace-pre-wrap">
+                                {task.description}
+                            </p>
                             {task.requiredActivities && (
                                 <div className="border-t pt-4">
-                                    <h3 className="font-semibold">Main activities</h3>
-                                    <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">{task.requiredActivities}</p>
+                                    <h3 className="font-semibold">
+                                        Main activities
+                                    </h3>
+                                    <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                                        {task.requiredActivities}
+                                    </p>
                                 </div>
                             )}
                             {task.deliverables && (
                                 <div className="border-t pt-4">
-                                    <h3 className="font-semibold">Expected result</h3>
-                                    <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">{task.deliverables}</p>
+                                    <h3 className="font-semibold">
+                                        Expected result
+                                    </h3>
+                                    <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                                        {task.deliverables}
+                                    </p>
                                 </div>
                             )}
                             {task.skillRequirements && (
                                 <div className="border-t pt-4">
                                     <h3 className="font-semibold">Skills</h3>
-                                    <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">{task.skillRequirements}</p>
+                                    <p className="mt-2 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                                        {task.skillRequirements}
+                                    </p>
                                 </div>
                             )}
                         </section>
@@ -354,7 +403,10 @@ export default function BrowseTaskDetail({
                         </div>
                         {offPlatformWarning && (
                             <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
-                                This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.
+                                This message contains a request to move outside
+                                TaskMate or skip its steps. Be careful, keep
+                                agreements and communications on record, and
+                                report anything that makes you uncomfortable.
                             </div>
                         )}
                         {problemReport && (
@@ -367,9 +419,15 @@ export default function BrowseTaskDetail({
 
                     <aside className="space-y-4 lg:sticky lg:top-6">
                         <section className="rounded-2xl border border-primary/20 bg-primary/5 p-5 shadow-sm">
-                            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">Estimated budget</p>
-                            <p className="mt-1 text-3xl font-bold tracking-tight">{task.budgetDisplay}</p>
-                            <p className="mt-3 border-t border-primary/15 pt-3 text-xs leading-relaxed text-muted-foreground">{PAYMENT_BOUNDARY_NOTICE}</p>
+                            <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                                Estimated budget
+                            </p>
+                            <p className="mt-1 text-3xl font-bold tracking-tight">
+                                {task.budgetDisplay}
+                            </p>
+                            <p className="mt-3 border-t border-primary/15 pt-3 text-xs leading-relaxed text-muted-foreground">
+                                {PAYMENT_BOUNDARY_NOTICE}
+                            </p>
                         </section>
 
                         {applicationPanel}
@@ -377,7 +435,10 @@ export default function BrowseTaskDetail({
                         <section className="space-y-3 rounded-2xl border bg-card p-5 shadow-sm">
                             <h2 className="font-semibold">About the poster</h2>
                             <p className="text-sm text-muted-foreground">
-                                Member since {poster.memberSince ? formatDate(poster.memberSince) : '—'}
+                                Member since{' '}
+                                {poster.memberSince
+                                    ? formatDate(poster.memberSince)
+                                    : '—'}
                             </p>
                             <RatingSummary summary={poster.ratingSummary} />
                         </section>

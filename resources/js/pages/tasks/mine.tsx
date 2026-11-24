@@ -104,7 +104,8 @@ export default function MyTasks({ tasks, status }: Props) {
                                 </p>
                                 <p className="text-sm">
                                     Estimated duration:{' '}
-                                    {task.estimatedDurationLabel ?? 'Not provided'}
+                                    {task.estimatedDurationLabel ??
+                                        'Not provided'}
                                 </p>
                                 <p className="font-medium">
                                     {task.budgetDisplay}

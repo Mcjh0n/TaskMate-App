@@ -34,8 +34,8 @@ export default function RateAgreement({
                         Rate your experience
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Share your experience working with {rateeName} on
-                        “{agreement.taskTitle}”.
+                        Share your experience working with {rateeName} on “
+                        {agreement.taskTitle}”.
                     </p>
                 </div>
                 {status && (

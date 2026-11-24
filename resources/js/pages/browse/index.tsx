@@ -55,9 +55,8 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
         max_budget: filters.max_budget ?? '',
         sort: filters.sort ?? 'newest',
     });
-    const [budgetFiltersOpen, setBudgetFiltersOpen] = useState(
-        budgetFiltersActive,
-    );
+    const [budgetFiltersOpen, setBudgetFiltersOpen] =
+        useState(budgetFiltersActive);
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
         router.get(browse.index().url, values, {
@@ -84,7 +83,8 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                         </p>
                     </div>
                     <p className="rounded-full border bg-card px-3 py-1.5 text-sm text-muted-foreground">
-                        {tasks.data.length} task{tasks.data.length === 1 ? '' : 's'} on this page
+                        {tasks.data.length} task
+                        {tasks.data.length === 1 ? '' : 's'} on this page
                     </p>
                 </div>
 
@@ -301,8 +301,12 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                     </div>
                                 </div>
                                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                                    <span className="font-medium">{task.posterName}</span>
-                                    <span className="text-muted-foreground">· {task.posterType}</span>
+                                    <span className="font-medium">
+                                        {task.posterName}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                        · {task.posterType}
+                                    </span>
                                     <VerificationStatusBadge
                                         status={task.posterVerificationStatus}
                                     />
@@ -313,22 +317,34 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                 <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
                                     {task.estimatedDurationLabel && (
                                         <span>
-                                            <span className="font-medium text-foreground">Duration:</span>{' '}
+                                            <span className="font-medium text-foreground">
+                                                Duration:
+                                            </span>{' '}
                                             {task.estimatedDurationLabel}
                                         </span>
                                     )}
-                                    {(task.workplaceName || task.workplaceAddress) && (
+                                    {(task.workplaceName ||
+                                        task.workplaceAddress) && (
                                         <span>
                                             <span className="font-medium text-foreground">
-                                                {task.workMode === 'On-campus' ? 'On-campus:' : 'Off-campus:'}
+                                                {task.workMode === 'On-campus'
+                                                    ? 'On-campus:'
+                                                    : 'Off-campus:'}
                                             </span>{' '}
-                                            {[task.workplaceName, task.workplaceAddress].filter(Boolean).join(' · ')}
+                                            {[
+                                                task.workplaceName,
+                                                task.workplaceAddress,
+                                            ]
+                                                .filter(Boolean)
+                                                .join(' · ')}
                                         </span>
                                     )}
                                 </div>
                                 {task.deliverablesPreview && (
                                     <p className="border-l-2 border-brand-gold pl-3 text-sm">
-                                        <span className="font-medium">Expected result:</span>{' '}
+                                        <span className="font-medium">
+                                            Expected result:
+                                        </span>{' '}
                                         {task.deliverablesPreview}
                                     </p>
                                 )}

@@ -19,8 +19,8 @@ export default function FlagQueue({
                 <h1 className="text-2xl font-semibold">Content flags</h1>
                 {!scanningEnabled && (
                     <p className="text-sm text-muted-foreground">
-                        Automatic flagging is paused. Review past flags here
-                        and open{' '}
+                        Automatic flagging is paused. Review past flags here and
+                        open{' '}
                         <Link href="/admin/reports" className="underline">
                             Reports
                         </Link>{' '}

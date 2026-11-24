@@ -227,8 +227,10 @@ export function ReportDetails({
                     </p>
                     <p>
                         Estimated duration:{' '}
-                        {report.agreement.durationLabel || report.agreement.durationDays
-                            ? report.agreement.durationLabel ?? `${report.agreement.durationDays} ${report.agreement.durationDays === 1 ? 'day' : 'days'}`
+                        {report.agreement.durationLabel ||
+                        report.agreement.durationDays
+                            ? (report.agreement.durationLabel ??
+                              `${report.agreement.durationDays} ${report.agreement.durationDays === 1 ? 'day' : 'days'}`)
                             : 'Not provided'}
                     </p>
                     <p className="whitespace-pre-wrap">
@@ -258,7 +260,8 @@ export function ReportDetails({
                     <p>
                         <strong>Estimated duration:</strong>{' '}
                         {version.durationLabel || version.durationDays
-                            ? version.durationLabel ?? `${version.durationDays} ${version.durationDays === 1 ? 'day' : 'days'}`
+                            ? (version.durationLabel ??
+                              `${version.durationDays} ${version.durationDays === 1 ? 'day' : 'days'}`)
                             : 'Not provided'}
                     </p>
                     <p>
