@@ -20,21 +20,21 @@ class TaskMateAlertCatalog
             'task.changes_requested' => ['Changes requested', 'An administrator requested changes to your task. Check your task page.'],
             'task.removed' => ['Task removed', 'Your task was removed by an administrator.'],
             'task.awaiting_review' => ['Task awaiting review', 'A task is awaiting administrator review.'],
-            'application.new' => ['New application', 'A student applied to one of your tasks.'],
+            'application.new' => ['New application', 'Open your task to review the application.'],
             'application.accepted' => ['Application accepted', 'Your application was accepted.'],
             'application.declined' => ['Application update', 'Your application was declined.'],
             'application.cancelled' => ['Application cancelled', 'Your application was cancelled.'],
             'application.withdrawn' => ['Application withdrawn', 'An applicant withdrew from your task.'],
-            'agreement.proposed' => ['Agreement proposed', 'The poster proposed an agreement.'],
-            'agreement.revised' => ['Agreement revised', 'A new agreement version is ready for you.'],
-            'agreement.sent_back' => ['Agreement comment received', 'The other party sent back a comment about the agreement.'],
+            'agreement.proposed' => ['Agreement ready to review', 'Review the terms and confirm them or request a change.'],
+            'agreement.revised' => ['Agreement revised', 'Review the updated terms before confirming.'],
+            'agreement.sent_back' => ['Agreement change requested', 'Open the agreement to review the requested change.'],
             'agreement.confirmed' => ['Agreement confirmation received', 'The other party confirmed the current agreement.'],
             'agreement.locked' => ['Agreement confirmed', 'Both parties confirmed the agreement. The terms are locked.'],
             'agreement.cancelled' => ['Agreement cancelled', 'The agreement was cancelled. The task is open again.'],
             'agreement.admin_cancelled' => ['Task agreement cancelled', 'An administrator cancelled the agreement.'],
-            'completion.delivered' => ['Work marked as delivered', 'The worker marked work as delivered.'],
+            'completion.delivered' => ['Work marked as delivered', 'Review the delivered work and record completion when ready.'],
             'completion.recorded' => ['Task completed', 'The poster recorded the task as completed.'],
-            'payment.marked' => ['Payment status updated', 'The poster recorded a payment.'],
+            'payment.marked' => ['Payment recorded', 'Open the agreement to confirm whether you received the payment.'],
             'payment.received' => ['Payment receipt confirmed', 'The worker confirmed receipt.'],
             'payment.not_received' => ['Payment response received', 'The worker reported not receiving payment.'],
             'rating.waiting' => ['Rating waiting for you', 'A completed task is ready for you to rate your experience.'],
@@ -50,7 +50,7 @@ class TaskMateAlertCatalog
             'sanction.suspension' => ['Account suspended', 'Your account was suspended. Review your account actions.'],
             'sanction.lifted' => ['Account action lifted', 'An account action was lifted. You can review your account actions.'],
             'flag.new' => ['New content flag', 'A new content flag is awaiting administrator review.'],
-            'conversation.message' => ['New message about {task_title}', 'Open TaskMate to read the message.'],
+            'conversation.message' => ['New message', 'Open the conversation to read it.'],
         ];
 
         abort_unless(isset($catalog[$event]), 500, 'Unknown TaskMate notification event.');
@@ -58,7 +58,6 @@ class TaskMateAlertCatalog
         foreach ($values as $key => $value) {
             $replacement = match ($key) {
                 'outcome' => in_array($value, ['supported', 'not_supported', 'inconclusive'], true) ? str_replace('_', ' ', $value) : 'completed',
-                'task_title' => mb_substr(preg_replace('/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i', '[contact removed]', preg_replace('/[\x00-\x1F\x7F]/u', ' ', strip_tags((string) $value)) ?? '') ?? '', 0, 120),
                 default => '',
             };
             $title = str_replace('{'.$key.'}', $replacement, $title);

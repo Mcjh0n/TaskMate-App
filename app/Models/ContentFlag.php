@@ -25,7 +25,10 @@ use LogicException;
  * @property-read int|null $reviewed_by
  * @property-write int|null $reviewed_by
  * @property-read int|null $source_user_id
- * @property-write int|null $source_user_id*/
+ * @property-write int|null $source_user_id
+ * @property-read string $category
+ * @property-write string $category
+ */
 class ContentFlag extends Model
 {
     /** @use HasFactory<ContentFlagFactory> */

@@ -28,14 +28,20 @@ class AdminFlagsController extends Controller
         $flags = ContentFlag::query()->with(['sourceUser:id,name,user_type', 'flaggable'])
             ->when($filters['category'] ?? null, fn ($q, $value) => $q->where('category', $value))
             ->when($filters['status'] ?? null, fn ($q, $value) => $q->where('status', $value))
-            ->orderByRaw("CASE status WHEN 'open' THEN 0 ELSE 1 END")->orderBy('created_at')
+            ->when(empty($filters['status']), fn ($q) => $q->orderByRaw("CASE status WHEN 'open' THEN 0 ELSE 1 END"))
+            ->orderBy('created_at')->orderBy('id')
             ->paginate(20)->withQueryString()->through(fn (ContentFlag $flag) => [
                 'id' => $flag->id, 'category' => $flag->category, 'categoryLabel' => config('taskmate.offplatform.category_labels.'.$flag->category, $flag->category),
                 'field' => $flag->field, 'author' => $flag->sourceUser->name, 'status' => $flag->status->value, 'createdAt' => $flag->created_at?->toDateTimeString(),
                 'context' => class_basename($flag->flaggable_type).' #'.$flag->flaggable_id,
             ]);
 
-        return Inertia::render('admin/flags/index', ['flags' => $flags, 'filters' => $filters, 'categories' => collect($categoryLabels)->map(fn ($label, $value) => compact('value', 'label'))->values()]);
+        return Inertia::render('admin/flags/index', [
+            'flags' => $flags,
+            'filters' => $filters,
+            'categories' => collect($categoryLabels)->map(fn ($label, $value) => compact('value', 'label'))->values(),
+            'scanningEnabled' => (bool) config('taskmate.offplatform.enabled', false),
+        ]);
     }
 
     public function show(ContentFlag $flag): Response

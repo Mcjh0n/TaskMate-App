@@ -1,4 +1,5 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,17 +9,14 @@ import admin from '@/routes/admin';
 
 function DecisionForm({
     reportId,
-    decision,
-    label,
-    noteRequired,
-    showOutcome = false,
+    options,
 }: {
     reportId: number;
-    decision: string;
-    label: string;
-    noteRequired: boolean;
-    showOutcome?: boolean;
+    options: { value: string; label: string }[];
 }) {
+    const [decision, setDecision] = useState('');
+    const noteRequired = decision !== '' && decision !== 'start_review';
+
     return (
         <Form
             {...admin.reports.decision.form(reportId)}
@@ -26,9 +24,27 @@ function DecisionForm({
         >
             {({ errors, processing }) => (
                 <>
-                    <input type="hidden" name="decision" value={decision} />
-                    <h3 className="font-medium">{label}</h3>
-                    {showOutcome && (
+                    <label className="grid gap-1 text-sm font-medium">
+                        Action
+                        <select
+                            name="decision"
+                            required
+                            value={decision}
+                            onChange={(event) =>
+                                setDecision(event.target.value)
+                            }
+                            className="h-10 rounded-md border bg-background px-3"
+                        >
+                            <option value="">Choose an action</option>
+                            {options.map(({ value, label }) => (
+                                <option key={value} value={value}>
+                                    {label}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+                    <InputError message={errors.decision} />
+                    {decision === 'resolve' && (
                         <div>
                             <label
                                 className="mb-1 block text-sm"
@@ -59,20 +75,22 @@ function DecisionForm({
                             name="resolution_message"
                             maxLength={3000}
                             placeholder="Optional message visible to the reporter"
+                            aria-label="Message to the reporter (optional)"
                         />
                     )}
-                    <Textarea
-                        name="note"
-                        required={noteRequired}
-                        placeholder={
-                            noteRequired
-                                ? 'Required internal note'
-                                : 'Optional internal note'
-                        }
-                    />
-                    <InputError message={errors.note} />
-                    <Button type="submit" disabled={processing}>
-                        {label}
+                    {decision && (
+                        <label className="grid gap-1 text-sm font-medium">
+                            Internal note{noteRequired ? '' : ' (optional)'}
+                            <Textarea
+                                name="note"
+                                required={noteRequired}
+                                maxLength={3000}
+                            />
+                            <InputError message={errors.note} />
+                        </label>
+                    )}
+                    <Button type="submit" disabled={processing || !decision}>
+                        Save decision
                     </Button>
                 </>
             )}
@@ -83,16 +101,29 @@ function DecisionForm({
 function AdminReportShow({
     report,
     canReview,
+    decisionOptions,
+    canRemoveRelatedPost,
     notice,
+    status,
 }: {
     report: any;
     canReview: boolean;
+    decisionOptions: { value: string; label: string }[];
+    canRemoveRelatedPost: boolean;
     notice: string;
+    status?: string;
 }) {
+    const [platformAction, setPlatformAction] = useState('warning');
+
     return (
         <>
             <Head title={`Review report #${report.id}`} />
             <div className="space-y-5">
+                {status && (
+                    <p role="status" className="rounded-lg border p-3 text-sm">
+                        {status}
+                    </p>
+                )}
                 <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
                     {notice}
                 </p>
@@ -106,46 +137,24 @@ function AdminReportShow({
                     </p>
                 )}
                 {canReview && (
-                    <section className="space-y-3 rounded-xl border p-5">
+                    <section className="space-y-3 rounded-xl border bg-card p-5">
                         <h2 className="text-lg font-semibold">
                             Review decision
                         </h2>
-                        <div className="grid gap-3 md:grid-cols-2">
-                            <DecisionForm
-                                reportId={report.id}
-                                decision="start_review"
-                                label="Start review"
-                                noteRequired={false}
-                            />
-                            <DecisionForm
-                                reportId={report.id}
-                                decision="escalate"
-                                label="Escalate"
-                                noteRequired
-                            />
-                            <DecisionForm
-                                reportId={report.id}
-                                decision="resolve"
-                                label="Resolve report"
-                                noteRequired
-                                showOutcome
-                            />
-                            <DecisionForm
-                                reportId={report.id}
-                                decision="dismiss"
-                                label="Dismiss report"
-                                noteRequired
-                            />
-                        </div>
+                        <DecisionForm
+                            key={`${report.id}:${report.status}`}
+                            reportId={report.id}
+                            options={decisionOptions}
+                        />
                         {report.reportedUser && (
                             <Form
                                 action={`/admin/users/${report.reportedUser.id}/sanctions`}
                                 method="post"
-                                className="grid gap-3 rounded-lg border p-4 md:grid-cols-2"
+                                className="space-y-3 rounded-lg border p-4"
                             >
-                                {({ processing }) => (
+                                {({ errors, processing }) => (
                                     <>
-                                        <h3 className="font-medium md:col-span-2">
+                                        <h3 className="font-medium">
                                             Platform action for reported user
                                         </h3>
                                         <input
@@ -155,49 +164,69 @@ function AdminReportShow({
                                         />
                                         <select
                                             name="action"
+                                            aria-label="Platform action"
+                                            value={platformAction}
+                                            onChange={(event) =>
+                                                setPlatformAction(
+                                                    event.target.value,
+                                                )
+                                            }
                                             className="h-10 rounded border bg-background px-3"
                                         >
                                             <option value="warning">
                                                 Issue warning
                                             </option>
-                                            <option value="require_verification">
-                                                Require additional verification
-                                            </option>
                                             <option value="suspend">
                                                 Suspend user
                                             </option>
-                                            <option value="ban">
-                                                Ban user
-                                            </option>
-                                            <option value="remove_post">
-                                                Remove related post
-                                            </option>
+                                            {canRemoveRelatedPost && (
+                                                <option value="remove_post">
+                                                    Remove related post
+                                                </option>
+                                            )}
                                         </select>
-                                        <input
-                                            name="task_id"
-                                            type="number"
-                                            defaultValue={report.task.id}
-                                            className="h-10 rounded border bg-background px-3"
-                                            placeholder="Task ID to remove"
-                                        />
-                                        <input
-                                            name="ends_at"
-                                            type="datetime-local"
-                                            className="h-10 rounded border bg-background px-3"
-                                        />
+                                        <InputError message={errors.action} />
+                                        {platformAction === 'remove_post' && (
+                                            <input
+                                                type="hidden"
+                                                name="task_id"
+                                                value={report.task.id}
+                                            />
+                                        )}
+                                        <InputError message={errors.task_id} />
+                                        {platformAction === 'suspend' && (
+                                            <label className="grid gap-1 text-sm font-medium">
+                                                Suspension ends
+                                                <input
+                                                    name="ends_at"
+                                                    type="datetime-local"
+                                                    required
+                                                    className="h-10 rounded border bg-background px-3"
+                                                />
+                                                <InputError
+                                                    message={errors.ends_at}
+                                                />
+                                            </label>
+                                        )}
                                         <Textarea
                                             name="reason"
                                             required
                                             minLength={5}
                                             maxLength={2000}
                                             placeholder="Reason visible to the user"
+                                            aria-label="Reason visible to the user"
                                         />
+                                        <InputError message={errors.reason} />
                                         <Textarea
                                             name="internal_note"
                                             required
                                             minLength={3}
                                             maxLength={3000}
                                             placeholder="Internal admin note"
+                                            aria-label="Internal admin note"
+                                        />
+                                        <InputError
+                                            message={errors.internal_note}
                                         />
                                         <Button
                                             type="submit"
@@ -205,6 +234,14 @@ function AdminReportShow({
                                         >
                                             Record platform action
                                         </Button>
+                                        <Link
+                                            href={admin.users.show(
+                                                report.reportedUser.id,
+                                            )}
+                                            className="ml-3 text-sm underline"
+                                        >
+                                            Manage reported account
+                                        </Link>
                                     </>
                                 )}
                             </Form>

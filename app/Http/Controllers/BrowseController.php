@@ -25,11 +25,12 @@ class BrowseController extends Controller
                 $query->where(fn ($query) => $query
                     ->where('title', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('required_activities', 'like', "%{$search}%"));
+                    ->orWhere('required_activities', 'like', "%{$search}%")
+                    ->orWhere('deliverables', 'like', "%{$search}%")
+                    ->orWhere('skill_requirements', 'like', "%{$search}%"));
             })
             ->when($filters['category'] ?? null, fn ($query, string $category) => $query->where('category', $category))
             ->when($filters['work_mode'] ?? null, fn ($query, string $mode) => $query->where('work_mode', $mode))
-            ->when($filters['complexity'] ?? null, fn ($query, string $complexity) => $query->where('complexity', $complexity))
             ->when(isset($filters['min_budget']), fn ($query) => $query->where(fn ($query) => $query
                 ->where(fn ($query) => $query->whereNotNull('budget')->where('budget', '>=', $filters['min_budget']))
                 ->orWhere(fn ($query) => $query->whereNull('budget')->where('budget_max', '>=', $filters['min_budget']))))
@@ -40,7 +41,7 @@ class BrowseController extends Controller
             ->when(($filters['sort'] ?? 'newest') === 'budget_low', fn ($query) => $query->orderByRaw('COALESCE(budget, budget_min) ASC'))
             ->when(($filters['sort'] ?? 'newest') === 'newest', fn ($query) => $query->latest()->orderByDesc('id'))
             ->paginate((int) config('taskmate.browse.per_page', 12))
-            ->withQueryString()
+            ->appends($filters)
             ->through(fn (Task $task) => $this->listing($task, $request->user()->id, $request->user()->canApply()));
 
         return Inertia::render('browse/index', [

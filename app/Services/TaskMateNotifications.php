@@ -16,6 +16,10 @@ class TaskMateNotifications
      */
     public function send(User|iterable $recipients, string $event, string $url, array $relatedIds = [], array $values = [], ?int $actorId = null): void
     {
+        if (in_array($event, config('taskmate.notifications.deferred_events', []), true)) {
+            return;
+        }
+
         $copy = TaskMateAlertCatalog::get($event, $values);
         $payload = [
             'event' => $event,
@@ -50,12 +54,12 @@ class TaskMateNotifications
         $this->send(User::query()->where('is_admin', true)->get(), $event, $url, $relatedIds, $values, $actorId);
     }
 
-    public function conversationMessage(User $recipient, Conversation $conversation, string $taskTitle, int $actorId): void
+    public function conversationMessage(User $recipient, Conversation $conversation, int $actorId): void
     {
         if ($recipient->id === $actorId) {
             return;
         }
-        $copy = TaskMateAlertCatalog::get('conversation.message', ['task_title' => $taskTitle]);
+        $copy = TaskMateAlertCatalog::get('conversation.message');
         $payload = [
             'event' => 'conversation.message',
             ...$copy,
@@ -77,6 +81,8 @@ class TaskMateNotifications
             if ($existing) {
                 $data = $existing->data;
                 $data['count'] = ((int) ($data['count'] ?? 1)) + 1;
+                $data['title'] = $payload['title'];
+                $data['body'] = $payload['body'];
                 $existing->data = $data;
                 $existing->created_at = now();
                 $existing->save();

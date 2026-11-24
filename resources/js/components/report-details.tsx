@@ -112,7 +112,7 @@ export function ReportDetails({
                     label={report.statusLabel}
                 />
             </div>
-            <section className="grid gap-4 rounded-xl border p-5 sm:grid-cols-2">
+            <section className="grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-2">
                 <div>
                     <h2 className="font-semibold">Reporter</h2>
                     <p>{report.reporter.name}</p>
@@ -137,7 +137,7 @@ export function ReportDetails({
                 </div>
             </section>
             {(report.reporterSanctions || report.reportedUserSanctions) && (
-                <section className="grid gap-4 rounded-xl border p-5 sm:grid-cols-2">
+                <section className="grid gap-4 rounded-xl border bg-card p-5 sm:grid-cols-2">
                     {[
                         [
                             report.reporter,
@@ -175,7 +175,7 @@ export function ReportDetails({
                 </section>
             )}
             {report.relatedTask && (
-                <section className="space-y-2 rounded-xl border p-5">
+                <section className="space-y-2 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">
                         Related task record
                     </h2>
@@ -219,7 +219,7 @@ export function ReportDetails({
                 </section>
             )}
             {report.agreement && (
-                <section className="space-y-2 rounded-xl border p-5">
+                <section className="space-y-2 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Locked agreement</h2>
                     <p>
                         Agreed amount: ₱
@@ -246,7 +246,7 @@ export function ReportDetails({
             {report.versions?.map((version: any) => (
                 <section
                     key={version.version}
-                    className="space-y-2 rounded-xl border p-5"
+                    className="space-y-2 rounded-xl border bg-card p-5"
                 >
                     <h2 className="font-semibold">
                         Agreement version {version.version} · {version.proposer}
@@ -287,7 +287,7 @@ export function ReportDetails({
                 </section>
             ))}
             {report.messageSnapshots?.length ? (
-                <section className="space-y-3 rounded-xl border p-5">
+                <section className="space-y-3 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">
                         Reported conversation context
                     </h2>
@@ -313,12 +313,12 @@ export function ReportDetails({
                     ))}
                 </section>
             ) : null}
-            <section className="space-y-2 rounded-xl border p-5">
+            <section className="space-y-2 rounded-xl border bg-card p-5">
                 <h2 className="text-lg font-semibold">Report description</h2>
                 <p className="whitespace-pre-wrap">{report.description}</p>
             </section>
             {report.completion && (
-                <section className="space-y-2 rounded-xl border p-5">
+                <section className="space-y-2 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Completion record</h2>
                     <p>
                         Delivered:{' '}
@@ -344,7 +344,7 @@ export function ReportDetails({
                     )}
                 </section>
             )}
-            <section className="space-y-3 rounded-xl border p-5">
+            <section className="space-y-3 rounded-xl border bg-card p-5">
                 <h2 className="text-lg font-semibold">Payment timeline</h2>
                 {report.paymentEvents.length ? (
                     report.paymentEvents.map((event) => (
@@ -384,7 +384,7 @@ export function ReportDetails({
                     </p>
                 )}
             </section>
-            <section className="space-y-3 rounded-xl border p-5">
+            <section className="space-y-3 rounded-xl border bg-card p-5">
                 <h2 className="text-lg font-semibold">Statements</h2>
                 {report.statements.length ? (
                     report.statements.map((statement) => (
@@ -406,7 +406,7 @@ export function ReportDetails({
                     </p>
                 )}
             </section>
-            <section className="space-y-3 rounded-xl border p-5">
+            <section className="space-y-3 rounded-xl border bg-card p-5">
                 <h2 className="text-lg font-semibold">Evidence</h2>
                 {report.evidence.length ? (
                     <ul className="space-y-2">
@@ -435,7 +435,7 @@ export function ReportDetails({
                 )}
             </section>
             {report.outcomeLabel && (
-                <section className="space-y-2 rounded-xl border p-5">
+                <section className="space-y-2 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Review result</h2>
                     <p>Outcome: {report.outcomeLabel}</p>
                     {report.adminNote && (
@@ -446,7 +446,7 @@ export function ReportDetails({
                 </section>
             )}
             {report.resolutionMessage && (
-                <section className="space-y-2 rounded-xl border p-5">
+                <section className="space-y-2 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">
                         Message from the administrators
                     </h2>
@@ -459,7 +459,7 @@ export function ReportDetails({
                 <Form
                     {...reports.reply.form(report.id)}
                     encType="multipart/form-data"
-                    className="space-y-3 rounded-xl border p-5"
+                    className="space-y-3 rounded-xl border bg-card p-5"
                 >
                     {({ errors, processing }) => (
                         <>

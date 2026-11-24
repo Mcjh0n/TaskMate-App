@@ -86,7 +86,7 @@ export default function NotificationsIndex({
                             <Link
                                 key={alert.id}
                                 href={alert.url}
-                                className={`block rounded-lg border p-4 hover:bg-muted/50 ${alert.readAt ? 'opacity-75' : 'border-primary/60'}`}
+                                className={`block rounded-lg border bg-card p-4 hover:bg-muted/50 ${alert.readAt ? 'opacity-75' : 'border-primary/60'}`}
                             >
                                 <div className="flex items-start justify-between gap-4">
                                     <div>
@@ -116,7 +116,7 @@ export default function NotificationsIndex({
                             </Link>
                         ))
                     ) : (
-                        <p className="rounded-lg border p-5 text-sm text-muted-foreground">
+                        <p className="rounded-lg border bg-card p-5 text-sm text-muted-foreground">
                             {filter === 'unread'
                                 ? 'You have no unread alerts.'
                                 : 'You have no alerts yet.'}

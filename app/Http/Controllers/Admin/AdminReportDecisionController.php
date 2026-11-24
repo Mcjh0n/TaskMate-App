@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\TaskMateNotifications;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AdminReportDecisionController extends Controller
 {
@@ -20,6 +21,9 @@ class AdminReportDecisionController extends Controller
             $report = Report::query()->lockForUpdate()->findOrFail($report->id);
             abort_unless($request->user()->can('review', $report), 403);
             $decision = $request->string('decision')->toString();
+            if (! array_key_exists($decision, AdminReportDecisionRequest::decisions($report))) {
+                throw ValidationException::withMessages(['decision' => 'Choose an action available for this report.']);
+            }
             $decisions = [
                 'start_review' => ['status' => ReportStatus::UnderReview, 'action' => 'report_review_started', 'event' => 'report.under_review'],
                 'escalate' => ['status' => ReportStatus::UnderReview, 'action' => 'report_escalated', 'event' => 'report.under_review'],

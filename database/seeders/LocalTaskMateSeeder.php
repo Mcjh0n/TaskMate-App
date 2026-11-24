@@ -67,7 +67,6 @@ class LocalTaskMateSeeder extends Seeder
             $task->estimated_duration_value = ($index % 5) + 1;
             $task->estimated_duration_unit = 'days';
             $task->skill_requirements = 'Synthetic general skills only.';
-            $task->complexity = ['low', 'medium', 'high'][($index - 1) % 3];
             $task->budget = 500 + ($index * 250);
             $task->work_mode = (string) $mode;
             $task->workplace_name = $mode === 'online' ? null : 'Synthetic Demo Worksite '.$index;

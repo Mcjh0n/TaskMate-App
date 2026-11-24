@@ -10,7 +10,6 @@ type Alert = {
     url: string;
     createdAt: string | null;
     readAt: string | null;
-    count?: number;
 };
 type Summary = { unreadCount: number; unreadMessages: number; latest: Alert[] };
 
@@ -36,9 +35,6 @@ export function NotificationBell({
             };
         }
     ).auth?.user;
-    const [toast, setToast] = useState<string | null>(null);
-    const firstResponse = useRef(true);
-    const knownAlerts = useRef(new Map<string, string>());
     const backoff = useRef(0);
 
     useEffect(() => {
@@ -71,27 +67,7 @@ export function NotificationBell({
                     throw new Error(
                         `Notification check failed (${response.status}).`,
                     );
-                const next = (await response.json()) as Summary;
-                const nextAlerts = new Map(
-                    next.latest.map((alert) => [
-                        alert.id,
-                        `${alert.createdAt ?? ''}|${alert.count ?? 1}`,
-                    ]),
-                );
-                if (!firstResponse.current) {
-                    const arrival = next.latest.find(
-                        (alert) =>
-                            knownAlerts.current.get(alert.id) !==
-                            nextAlerts.get(alert.id),
-                    );
-                    if (arrival) {
-                        setToast(arrival.title);
-                        window.setTimeout(() => setToast(null), 5000);
-                    }
-                }
-                knownAlerts.current = nextAlerts;
-                firstResponse.current = false;
-                setSummary(next);
+                setSummary((await response.json()) as Summary);
                 backoff.current = 0;
                 schedule(Math.max(1, pollSeconds) * 1000);
             } catch (error) {
@@ -138,15 +114,18 @@ export function NotificationBell({
                 authUser.verification_status === 'verified' && (
                     <Link
                         href="/messages"
-                        className="rounded-md px-3 py-2 text-sm underline-offset-4 hover:underline"
+                        className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm underline-offset-4 hover:underline"
                     >
                         Messages
-                        {summary.unreadMessages > 0
-                            ? ` (${summary.unreadMessages})`
-                            : ''}
-                        <span className="sr-only">
-                            , {summary.unreadMessages} unread conversations
-                        </span>
+                        {summary.unreadMessages > 0 && (
+                            <>
+                                <span className="sr-only">, new messages</span>
+                                <span
+                                    className="size-2 rounded-full bg-primary"
+                                    aria-hidden="true"
+                                />
+                            </>
+                        )}
                     </Link>
                 )}
             <details className="relative">
@@ -201,20 +180,6 @@ export function NotificationBell({
                     </div>
                 </div>
             </details>
-            <div
-                className="pointer-events-none fixed top-20 right-4 z-[100]"
-                aria-live="polite"
-                aria-atomic="true"
-            >
-                {toast && (
-                    <p
-                        role="status"
-                        className="rounded-md border bg-background px-4 py-3 text-sm shadow-lg"
-                    >
-                        New alert: {toast}
-                    </p>
-                )}
-            </div>
         </div>
     );
 }

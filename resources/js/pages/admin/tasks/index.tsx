@@ -59,7 +59,7 @@ export default function AdminTaskQueue({
                 </div>
                 <form
                     onSubmit={filter}
-                    className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-4"
+                    className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
                 >
                     <input
                         aria-label="Search title or poster"
@@ -102,7 +102,7 @@ export default function AdminTaskQueue({
                     </button>
                 </form>
                 {tasks.data.length ? (
-                    <div className="overflow-x-auto rounded-lg border">
+                    <div className="overflow-x-auto rounded-lg border bg-card">
                         <table className="w-full text-left text-sm">
                             <thead className="bg-muted/50 text-muted-foreground">
                                 <tr>
@@ -148,7 +148,7 @@ export default function AdminTaskQueue({
                         </table>
                     </div>
                 ) : (
-                    <div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
+                    <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
                         No tasks match these filters.
                     </div>
                 )}

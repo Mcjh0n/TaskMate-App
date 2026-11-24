@@ -61,7 +61,7 @@ class CompletionPaymentReportsTest extends TestCase
         $version->terms = 'Synthetic agreed terms';
         $version->final_amount = '1400.00';
         $version->start_date = today()->subDays(8)->toDateString();
-        $version->due_date = $options['due_date'] ?? today()->subDays(5)->toDateString();
+        $version->due_date = array_key_exists('due_date', $options) ? $options['due_date'] : today()->subDays(5)->toDateString();
         $version->work_mode = $task->work_mode;
         $version->workplace_name = $task->workplace_name;
         $version->workplace_address = $task->workplace_address;
@@ -125,7 +125,7 @@ class CompletionPaymentReportsTest extends TestCase
         $this->assertSame(TaskStatus::Completed, $pair['task']->fresh()->status);
         $this->assertSame($pair['poster']->id, $pair['agreement']->completion->fresh()->completed_by);
         $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'completion.recorded']);
-        $this->assertDatabaseHas('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'rating.waiting']);
+        $this->assertDatabaseMissing('notifications', ['notifiable_id' => $pair['student']->id, 'data->event' => 'rating.waiting']);
         $this->assertDatabaseMissing('notifications', ['notifiable_id' => $pair['poster']->id, 'data->event' => 'rating.waiting']);
         $this->actingAs($pair['poster'])->post(route('agreements.completion.complete', $pair['agreement']))->assertInvalid('completion');
         $this->assertFalse($pair['poster']->can('update', $pair['task']->fresh()));
@@ -227,6 +227,43 @@ class CompletionPaymentReportsTest extends TestCase
         $completion->completed_by = $second['poster']->id;
         $completion->save();
         $this->actingAs($second['student'])->post(route('agreements.reports.store', $second['agreement']), ['description' => 'Completion wait has passed.'])->assertRedirect();
+    }
+
+    public function test_delivery_starts_the_wait_for_agreements_without_a_due_date(): void
+    {
+        config(['taskmate.reports.non_payment_wait_days' => 3]);
+        $pair = $this->lockedAgreement(['due_date' => null]);
+        $agreement = $pair['agreement'];
+        $url = route('agreements.reports.store', $agreement);
+        $data = ['description' => 'The work was delivered and is still unpaid.'];
+
+        $this->actingAs($pair['student'])->post($url, $data)->assertInvalid('report');
+        $this->post(route('agreements.completion.delivered', $agreement))->assertRedirect();
+        $this->travel(2)->days();
+        $this->post($url, $data)->assertInvalid('report');
+        $this->travel(1)->days();
+        $this->get(route('agreements.show', $agreement))->assertInertia(fn (Assert $page) => $page
+            ->where('completionPayment.canReportNonPayment', true));
+        $this->post($url, $data)->assertRedirect();
+        $this->assertDatabaseHas('reports', ['agreement_id' => $agreement->id, 'type' => 'non_payment']);
+    }
+
+    public function test_student_can_report_an_amount_difference_without_overwriting_receipt(): void
+    {
+        $pair = $this->lockedAgreement(['due_date' => null]);
+        $agreement = $pair['agreement'];
+        $url = route('agreements.reports.store', $agreement);
+        $data = ['description' => 'I received 1300 of the agreed 1400.'];
+
+        $this->postPaid($pair, ['amount' => '1300.00'])->assertRedirect();
+        $this->actingAs($pair['student'])->post(route('agreements.payments.confirm-received', $agreement), ['amount' => '1300.00'])->assertRedirect();
+        $this->get(route('agreements.show', $agreement))->assertInertia(fn (Assert $page) => $page
+            ->where('completionPayment.settled', false)->where('completionPayment.canReportNonPayment', true));
+        $this->post($url, $data)->assertRedirect();
+        $this->assertDatabaseHas('reports', ['agreement_id' => $agreement->id, 'type' => 'non_payment']);
+        $this->assertDatabaseCount('payment_events', 2);
+        $this->assertSame(PaymentStatus::ConfirmedReceived, $agreement->paymentStatus());
+        $this->post($url, $data)->assertInvalid('report');
     }
 
     public function test_report_description_and_upload_types_sizes_and_file_count_are_validated(): void
@@ -339,11 +376,13 @@ class CompletionPaymentReportsTest extends TestCase
         $reviewPair = $this->lockedAgreement(['due_date' => today()->subDays(3)->toDateString()]);
         $this->actingAs($reviewPair['student'])->post(route('agreements.reports.store', $reviewPair['agreement']), ['description' => 'Review synthetic report'])->assertRedirect();
         $reviewReport = Report::query()->where('agreement_id', $reviewPair['agreement']->id)->firstOrFail();
+        $closedReport = Report::factory()->resolved()->create(['priority' => 'high', 'created_at' => now()->subDay()]);
         $admin = User::factory()->verified()->create(['is_admin' => true]);
         $this->actingAs($admin)->post(route('admin.reports.decision', $reviewReport), ['decision' => 'start_review'])->assertRedirect();
+        $this->post(route('admin.reports.decision', $reviewReport), ['decision' => 'start_review'])->assertInvalid('decision');
 
         $this->actingAs($admin)->get(route('admin.reports.index'))->assertOk()->assertInertia(fn (Assert $page) => $page->component('admin/reports/index')
-            ->where('reports.data.0.id', $openReport->id)->where('reports.data.1.id', $reviewReport->id));
+            ->where('reports.data.0.id', $openReport->id)->where('reports.data.1.id', $reviewReport->id)->where('reports.data.2.id', $closedReport->id));
         $this->get(route('admin.reports.index', ['status' => 'under_review', 'type' => 'non_payment', 'search' => $reviewPair['student']->name]))
             ->assertOk()->assertInertia(fn (Assert $page) => $page->has('reports.data', 1)->where('reports.data.0.id', $reviewReport->id));
     }

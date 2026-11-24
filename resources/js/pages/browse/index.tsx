@@ -44,7 +44,7 @@ type Props = {
 };
 
 export default function BrowseTasks({ tasks, filters, options }: Props) {
-    const advancedFiltersActive = Boolean(
+    const budgetFiltersActive = Boolean(
         filters.min_budget || filters.max_budget,
     );
     const [values, setValues] = useState({
@@ -55,8 +55,8 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
         max_budget: filters.max_budget ?? '',
         sort: filters.sort ?? 'newest',
     });
-    const [moreFiltersOpen, setMoreFiltersOpen] = useState(
-        advancedFiltersActive,
+    const [budgetFiltersOpen, setBudgetFiltersOpen] = useState(
+        budgetFiltersActive,
     );
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
@@ -80,7 +80,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
 
                 <form
                     onSubmit={submit}
-                    className="space-y-4 rounded-xl border p-4 sm:p-5"
+                    className="space-y-4 rounded-xl border bg-card p-4 sm:p-5"
                 >
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <label
@@ -91,7 +91,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                             <input
                                 id="search-tasks"
                                 name="search"
-                                placeholder="Try tutoring, design, or an activity"
+                                placeholder="Try tutoring or spreadsheet skills"
                                 value={values.search}
                                 onChange={(event) =>
                                     setValues({
@@ -188,15 +188,15 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                     </div>
 
                     <details
-                        open={moreFiltersOpen}
+                        open={budgetFiltersOpen}
                         onToggle={(event) =>
-                            setMoreFiltersOpen(event.currentTarget.open)
+                            setBudgetFiltersOpen(event.currentTarget.open)
                         }
                         className="rounded-lg border px-4 py-3"
                     >
                         <summary className="cursor-pointer text-sm font-medium">
-                            More filters
-                            {advancedFiltersActive ? ' · filters active' : ''}
+                            Budget filters
+                            {budgetFiltersActive ? ' · active' : ''}
                         </summary>
                         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                             <label
@@ -267,7 +267,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                         {tasks.data.map((task) => (
                             <article
                                 key={task.id}
-                                className="flex flex-col gap-3 rounded-xl border p-5"
+                                className="flex flex-col gap-3 rounded-xl border bg-card p-5"
                             >
                                 <div className="flex items-start justify-between gap-2">
                                     <div>
@@ -362,7 +362,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                         ))}
                     </div>
                 ) : (
-                    <div className="rounded-xl border p-10 text-center">
+                    <div className="rounded-xl border bg-card p-10 text-center">
                         <h2 className="font-semibold">
                             No tasks match your search
                         </h2>

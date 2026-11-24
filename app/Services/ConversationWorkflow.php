@@ -7,7 +7,6 @@ use App\Models\Conversation;
 use App\Models\ConversationEvent;
 use App\Models\ConversationMessage;
 use App\Models\ConversationRead;
-use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
@@ -55,8 +54,7 @@ class ConversationWorkflow
             $this->scanner->flag($message, $sender, 'body', $message->body);
             $recipientId = $sender->id === $conversation->poster_id ? $conversation->applicant_id : $conversation->poster_id;
             $recipient = User::query()->findOrFail($recipientId);
-            $task = Task::query()->findOrFail($conversation->task_id);
-            $this->alerts->conversationMessage($recipient, $conversation, $task->title, $sender->id);
+            $this->alerts->conversationMessage($recipient, $conversation, $sender->id);
 
             return $message;
         });

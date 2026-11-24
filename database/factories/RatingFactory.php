@@ -36,10 +36,6 @@ class RatingFactory extends Factory
             $rating->rater_id = $agreement->poster_id;
             $rating->ratee_id = $agreement->student_id;
             $rating->direction = RatingDirection::PosterToStudent;
-        })->afterCreating(function (Rating $rating): void {
-            foreach (array_keys(config('taskmate.ratings.dimensions.'.$rating->direction->value, [])) as $dimension) {
-                $rating->scores()->create(['dimension' => $dimension, 'score' => fake()->numberBetween(1, 5)]);
-            }
         });
     }
 }

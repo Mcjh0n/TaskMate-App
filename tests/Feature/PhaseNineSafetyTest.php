@@ -13,6 +13,7 @@ use App\Services\OffPlatformScanner;
 use App\Services\SanctionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 class PhaseNineSafetyTest extends TestCase
@@ -21,6 +22,7 @@ class PhaseNineSafetyTest extends TestCase
 
     public function test_off_platform_scanner_flags_bypass_requests_but_not_payment_arrangements(): void
     {
+        config(['taskmate.offplatform.enabled' => true]);
         $scanner = app(OffPlatformScanner::class);
         $this->assertSame([], $scanner->scan('paid via GCash after completion'));
         $matches = $scanner->scan("Let's skip the agreement and start before we sign");
@@ -29,6 +31,7 @@ class PhaseNineSafetyTest extends TestCase
 
     public function test_content_flag_is_deduplicated_and_does_not_block_task_save(): void
     {
+        config(['taskmate.offplatform.enabled' => true]);
         $author = User::factory()->verified()->facultyStaff()->create();
         $admin = User::factory()->verified()->facultyStaff()->create();
         $admin->forceFill(['is_admin' => true])->save();
@@ -85,6 +88,16 @@ class PhaseNineSafetyTest extends TestCase
         $this->assertSame(0, $poster->notifications()->count(), 'A non-replyable report must not alert the reported user.');
         $this->assertSame('report.priority', $admin->notifications()->firstOrFail()->data['event']);
 
+        $this->actingAs($admin)->get(route('admin.reports.show', $report))->assertInertia(fn (Assert $page) => $page
+            ->where('decisionOptions', [
+                ['value' => 'start_review', 'label' => 'Start review'],
+                ['value' => 'resolve', 'label' => 'Resolve report'],
+                ['value' => 'dismiss', 'label' => 'Dismiss report'],
+            ])->where('canRemoveRelatedPost', true));
+        $this->post(route('admin.reports.decision', $report), ['decision' => 'escalate', 'note' => 'Synthetic escalation marker.'])->assertInvalid('decision');
+        $this->assertNull($report->fresh()->escalated_at);
+
+        config(['taskmate.moderation.escalation_enabled' => true]);
         $this->actingAs($admin)->post(route('admin.reports.decision', $report), [
             'decision' => 'escalate',
             'note' => 'Synthetic escalation marker.',
@@ -93,6 +106,39 @@ class PhaseNineSafetyTest extends TestCase
         $this->assertNotNull($report->escalated_at);
         $this->assertSame($admin->id, $report->escalated_by);
         $this->assertDatabaseHas('admin_actions', ['action' => 'report_escalated', 'subject_type' => $report->getMorphClass(), 'subject_id' => $report->id]);
+
+        $otherTask = Task::factory()->for($poster, 'poster')->approved()->create();
+        $action = [
+            'report_id' => $report->id, 'action' => 'remove_post',
+            'reason' => 'Synthetic reason for removal.', 'internal_note' => 'Synthetic admin note.',
+        ];
+        $this->post(route('admin.users.sanctions', $poster), $action + ['task_id' => $otherTask->id])->assertForbidden();
+        $this->post(route('admin.users.sanctions', $poster), $action + ['task_id' => $task->id])->assertRedirect();
+        $this->assertSame(TaskStatus::Approved, $otherTask->fresh()->status);
+        $this->assertSame(TaskStatus::Removed, $task->fresh()->status);
+    }
+
+    public function test_student_awaiting_verification_can_report_an_approved_listing_and_track_the_report(): void
+    {
+        $poster = User::factory()->verified()->facultyStaff()->create();
+        $student = User::factory()->create();
+        $task = Task::factory()->for($poster, 'poster')->approved()->create();
+        $pending = Task::factory()->for($poster, 'poster')->create(['status' => TaskStatus::PendingReview]);
+        $data = ['type' => 'unsafe_behavior', 'description' => 'Synthetic concern about the stated work location.'];
+        $url = route('tasks.problem-reports.store', $task);
+
+        $this->actingAs($student)->get(route('browse.show', $task))->assertInertia(fn (Assert $page) => $page
+            ->where('problemReport.action', $url)->where('canApply', false));
+        $this->post(route('tasks.problem-reports.store', $pending), $data)->assertForbidden();
+        $this->post($url, $data)->assertRedirect();
+        $report = Report::query()->sole();
+        $this->assertSame($student->id, $report->reporter_id);
+        $this->assertSame($task->id, $report->task_id);
+        $this->get(route('reports.show', $report))->assertOk();
+        $this->get(route('reports.mine'))->assertInertia(fn (Assert $page) => $page->where('reports.data.0.id', $report->id));
+
+        $this->actingAs(User::factory()->create())->get(route('reports.show', $report))->assertForbidden();
+        $this->actingAs(User::factory()->facultyStaff()->create())->post($url, $data)->assertForbidden();
     }
 
     public function test_suspended_verified_student_cannot_open_browse(): void

@@ -59,7 +59,10 @@ export function AppSidebar() {
             icon: BriefcaseBusiness,
         });
     }
-    if (page.props.auth.user?.verification_status === 'verified') {
+    if (
+        page.props.auth.user?.verification_status === 'verified' ||
+        page.props.auth.user?.can_browse_tasks
+    ) {
         mainNavItems.push({
             title: 'My Reports',
             href: reports.mine().url,

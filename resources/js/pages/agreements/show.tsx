@@ -37,7 +37,10 @@ export default function ShowAgreement(props: {
                     </p>
                 )}
                 {props.problemReport && (
-                    <div className="mx-auto mt-4 max-w-4xl px-4">
+                    <div
+                        id="report-a-problem"
+                        className="mx-auto mt-4 max-w-4xl px-4"
+                    >
                         <ProblemReportForm {...props.problemReport} />
                     </div>
                 )}

@@ -49,7 +49,7 @@ export default function MySanctions({
                     sanctions.map((item) => (
                         <article
                             key={item.id}
-                            className="space-y-2 rounded-lg border p-4"
+                            className="space-y-2 rounded-lg border bg-card p-4"
                         >
                             <h2 className="font-semibold">
                                 {item.type.replaceAll('_', ' ')}
@@ -83,7 +83,7 @@ export default function MySanctions({
                         </article>
                     ))
                 ) : (
-                    <p className="rounded-lg border p-5 text-sm">
+                    <p className="rounded-lg border bg-card p-5 text-sm">
                         There are no account actions to show.
                     </p>
                 )}

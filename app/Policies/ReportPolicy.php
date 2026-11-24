@@ -2,7 +2,6 @@
 
 namespace App\Policies;
 
-use App\Enums\ReportStatus;
 use App\Models\Agreement;
 use App\Models\Application;
 use App\Models\Report;
@@ -23,18 +22,22 @@ class ReportPolicy
     public function reply(User $user, Report $report): bool
     {
         return ($report->reporter_id === $user->id || ($report->reported_user_id === $user->id && $this->mayRespond($user, $report)))
-            && in_array($report->status, [ReportStatus::Open, ReportStatus::UnderReview], true);
+            && $report->isOpenForReview();
     }
 
     public function review(User $user, Report $report): bool
     {
         return $user->isAdmin()
             && ! in_array($user->id, [$report->reporter_id, $report->reported_user_id], true)
-            && in_array($report->status, [ReportStatus::Open, ReportStatus::UnderReview], true);
+            && $report->isOpenForReview();
     }
 
     private function mayRespond(User $user, Report $report): bool
     {
+        if (config('taskmate.require_verification', true) && ! $user->isVerified()) {
+            return false;
+        }
+
         if (! (bool) config('taskmate.reports.types.'.$report->type->value.'.respondent_can_reply', false)) {
             return false;
         }

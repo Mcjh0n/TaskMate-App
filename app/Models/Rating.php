@@ -29,7 +29,8 @@ use LogicException;
  * @property-read int|null $rater_id
  * @property-write int|null $rater_id
  * @property-read int|null $task_id
- * @property-write int|null $task_id*/
+ * @property-write int|null $task_id
+ */
 class Rating extends Model
 {
     /** @use HasFactory<RatingFactory> */
@@ -39,7 +40,7 @@ class Rating extends Model
 
     protected function casts(): array
     {
-        return ['direction' => RatingDirection::class, 'is_hidden' => 'boolean', 'hidden_at' => 'datetime'];
+        return ['direction' => RatingDirection::class, 'overall_experience' => 'integer', 'is_hidden' => 'boolean', 'hidden_at' => 'datetime'];
     }
 
     protected static function booted(): void
@@ -80,7 +81,7 @@ class Rating extends Model
         return $this->belongsTo(User::class, 'ratee_id');
     }
 
-    /** @return HasMany<RatingScore, $this> */
+    /** @return HasMany<RatingScore, $this> Historical dimension scores. */
     public function scores(): HasMany
     {
         return $this->hasMany(RatingScore::class);

@@ -62,7 +62,7 @@ export default function Dashboard({
                 )}
 
                 <section
-                    className="rounded-xl border p-5 md:p-6"
+                    className="rounded-xl border border-t-4 border-t-brand-gold bg-card p-5 shadow-sm md:p-6"
                     aria-labelledby="next-step-title"
                 >
                     <div className="max-w-3xl">
@@ -217,7 +217,7 @@ export default function Dashboard({
                 )}
 
                 <section
-                    className="flex flex-wrap items-center gap-3 rounded-xl border p-4"
+                    className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4"
                     aria-label="Account verification"
                 >
                     <VerificationStatusBadge
@@ -257,7 +257,7 @@ export default function Dashboard({
                 </section>
 
                 <section
-                    className="space-y-2 rounded-xl border p-5"
+                    className="space-y-2 rounded-xl border bg-card p-5"
                     aria-label="Your account details"
                 >
                     <h2 className="text-lg font-semibold">
@@ -277,7 +277,7 @@ export default function Dashboard({
                 <SafetyNotice />
 
                 {ratingsWaiting.length > 0 && (
-                    <section className="space-y-3 rounded-xl border p-5">
+                    <section className="space-y-3 rounded-xl border bg-card p-5">
                         <h2 className="text-lg font-semibold">
                             Ratings waiting for you
                         </h2>
@@ -307,7 +307,7 @@ export default function Dashboard({
                 )}
 
                 <section
-                    className="space-y-3 rounded-xl border p-5"
+                    className="space-y-3 rounded-xl border bg-card p-5"
                     aria-label="Recent activity"
                 >
                     <div className="flex items-center justify-between">

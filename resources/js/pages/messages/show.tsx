@@ -57,20 +57,30 @@ type Props = {
 };
 
 const PRIVATE_NOTICE =
-    'This conversation is private between you and the other person. Administrators can read a message only if one of you reports it or if the system flags it. Keep your agreement on record in TaskMate, and report anything that makes you uncomfortable. Do not share passwords or identity documents.';
+    'Use this private conversation to discuss the task. Confirm the terms on the agreement page before starting work. Administrators can see flagged messages or limited context from a report. Keep passwords and identity documents private.';
 const FLAG_NOTICE =
     'This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.';
 
 export default function ConversationShow(props: Props) {
+    return <ConversationThread key={props.conversation.id} {...props} />;
+}
+
+function ConversationThread(props: Props) {
     const { conversation } = props;
-    const [messages, setMessages] = useState(props.messages);
+    const [polledMessages, setPolledMessages] = useState<Message[]>([]);
     const listRef = useRef<HTMLDivElement>(null);
     const cursor = useRef(conversation.lastMessageId);
     const backoff = useRef(0);
+    const lastSavedMessage = props.messages.at(-1);
     const timeline = useMemo(
         () =>
             [
-                ...messages.map((message) => ({
+                ...[
+                    ...props.messages,
+                    ...polledMessages.filter(
+                        (message) => message.id > conversation.lastMessageId,
+                    ),
+                ].map((message) => ({
                     kind: 'message' as const,
                     at: message.createdAt,
                     id: message.id,
@@ -85,12 +95,24 @@ export default function ConversationShow(props: Props) {
             ].sort(
                 (a, b) => (a.at ?? '').localeCompare(b.at ?? '') || a.id - b.id,
             ),
-        [messages, props.events],
+        [
+            props.messages,
+            polledMessages,
+            conversation.lastMessageId,
+            props.events,
+        ],
     );
 
     useEffect(() => {
         listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
     }, []);
+
+    useEffect(() => {
+        cursor.current = Math.max(cursor.current, conversation.lastMessageId);
+        if (lastSavedMessage?.isMine) {
+            listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
+        }
+    }, [conversation.lastMessageId, lastSavedMessage?.isMine]);
 
     useEffect(() => {
         let timer: ReturnType<typeof setTimeout> | undefined;
@@ -135,7 +157,7 @@ export default function ConversationShow(props: Props) {
                         cursor.current,
                         ...data.messages.map((message) => message.id),
                     );
-                    setMessages((current) => [
+                    setPolledMessages((current) => [
                         ...current,
                         ...data.messages.filter(
                             (message) =>
@@ -233,7 +255,7 @@ export default function ConversationShow(props: Props) {
                 <div
                     ref={listRef}
                     aria-label="Conversation messages"
-                    className="max-h-[60vh] min-h-56 space-y-4 overflow-y-auto rounded-xl border p-4"
+                    className="max-h-[60vh] min-h-56 space-y-4 overflow-y-auto rounded-xl border bg-card p-4"
                 >
                     {timeline.length ? (
                         timeline.map((item) =>
@@ -298,24 +320,6 @@ export default function ConversationShow(props: Props) {
                     )}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    {conversation.canClose && (
-                        <Form
-                            action={`/messages/${conversation.id}/close`}
-                            method="post"
-                            onSubmit={(event) => {
-                                if (
-                                    !window.confirm(
-                                        'Close this conversation for both participants?',
-                                    )
-                                )
-                                    event.preventDefault();
-                            }}
-                        >
-                            <Button type="submit" variant="outline">
-                                Close conversation
-                            </Button>
-                        </Form>
-                    )}
                     {conversation.canReopen && (
                         <Form
                             action={`/messages/${conversation.id}/reopen`}
@@ -340,7 +344,8 @@ export default function ConversationShow(props: Props) {
                     <Form
                         action={`/messages/${conversation.id}/send`}
                         method="post"
-                        className="space-y-2 rounded-xl border p-4"
+                        resetOnSuccess={['body']}
+                        className="space-y-2 rounded-xl border bg-card p-4"
                     >
                         {({ errors, processing }) => (
                             <>
@@ -354,14 +359,14 @@ export default function ConversationShow(props: Props) {
                                     id="body"
                                     name="body"
                                     required
+                                    readOnly={processing}
                                     maxLength={props.messageMaxLength}
                                     rows={3}
                                     placeholder="Write a message about this task"
                                 />
                                 <InputError message={errors.body} />
                                 <p className="text-xs text-muted-foreground">
-                                    Text only. Links are shown as plain text. Do
-                                    not share passwords or identity documents.
+                                    Links appear as plain text.
                                 </p>
                                 <Button type="submit" disabled={processing}>
                                     {processing ? 'Sending…' : 'Send message'}
@@ -369,6 +374,27 @@ export default function ConversationShow(props: Props) {
                             </>
                         )}
                     </Form>
+                )}
+                {conversation.canClose && (
+                    <details className="rounded-lg border px-4 py-3 text-sm">
+                        <summary className="cursor-pointer font-medium">
+                            Conversation options
+                        </summary>
+                        <Form
+                            action={`/messages/${conversation.id}/close`}
+                            method="post"
+                            className="mt-3"
+                            onBefore={() =>
+                                window.confirm(
+                                    'Close this conversation for both participants?',
+                                )
+                            }
+                        >
+                            <Button type="submit" variant="outline">
+                                Close conversation
+                            </Button>
+                        </Form>
+                    </details>
                 )}
             </main>
         </>

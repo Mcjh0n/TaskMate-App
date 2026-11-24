@@ -42,7 +42,7 @@ export default function MyReports({
                         {page.data.map((item) => (
                             <article
                                 key={item.id}
-                                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4"
+                                className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4"
                             >
                                 <div>
                                     <h2 className="font-medium">
@@ -70,7 +70,7 @@ export default function MyReports({
                         ))}
                     </div>
                 ) : (
-                    <p className="rounded-xl border p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-xl border bg-card p-8 text-center text-sm text-muted-foreground">
                         You have not filed or received any reports.
                     </p>
                 )}

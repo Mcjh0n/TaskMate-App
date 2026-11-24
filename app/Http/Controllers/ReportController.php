@@ -107,8 +107,14 @@ class ReportController extends Controller
         /** @var array<string, array{respondent_can_reply?: bool}> $reportTypes */
         $reportTypes = (array) config('taskmate.reports.types', []);
         $replyable = collect($reportTypes)->filter(fn ($settings) => $settings['respondent_can_reply'] ?? false)->keys()->all();
+        $user = $request->user();
         $reports = Report::query()
-            ->where(fn ($query) => $query->where('reporter_id', $request->user()->id)->orWhere(fn ($respondent) => $respondent->where('reported_user_id', $request->user()->id)->whereIn('type', $replyable)))
+            ->where(function ($query) use ($user, $replyable): void {
+                $query->where('reporter_id', $user->id);
+                if ($user->isVerified() || ! config('taskmate.require_verification', true)) {
+                    $query->orWhere(fn ($respondent) => $respondent->where('reported_user_id', $user->id)->whereIn('type', $replyable));
+                }
+            })
             ->with(['task:id,title', 'reporter:id,name', 'reportedUser:id,name'])
             ->latest()
             ->paginate(12)

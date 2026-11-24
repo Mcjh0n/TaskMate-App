@@ -103,15 +103,11 @@ export default function TaskForm({
                         </div>
                     )}
 
-                    <section className="space-y-4 rounded-xl border p-5">
+                    <section className="space-y-4 rounded-xl border bg-card p-5">
                         <div>
                             <h2 className="text-lg font-semibold">
                                 Task basics
                             </h2>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                                Tell students what the work is and what result
-                                you need.
-                            </p>
                         </div>
                         <div className="grid gap-2">
                             <Label htmlFor="title">Task title</Label>
@@ -164,12 +160,15 @@ export default function TaskForm({
                                 name="description"
                                 maxLength={10000}
                                 defaultValue={task?.description}
-                                placeholder="Describe the work and what students should know before applying."
+                                aria-describedby="task-description-help"
                                 required
                             />
-                            <p className="text-xs text-muted-foreground">
-                                A clear description helps students decide
-                                whether to apply.
+                            <p
+                                id="task-description-help"
+                                className="text-xs text-muted-foreground"
+                            >
+                                List the main activities, the expected result,
+                                and any skills or tools the student needs.
                             </p>
                             <InputError message={errors.description} />
                         </div>
@@ -247,7 +246,7 @@ export default function TaskForm({
                         </div>
                     </section>
 
-                    <section className="space-y-4 rounded-xl border p-5">
+                    <section className="space-y-4 rounded-xl border bg-card p-5">
                         <h2 className="text-lg font-semibold">
                             Budget and work setup
                         </h2>
@@ -433,7 +432,7 @@ export default function TaskForm({
                         )}
                     </section>
 
-                    <section className="space-y-4 rounded-xl border p-5">
+                    <section className="space-y-4 rounded-xl border bg-card p-5">
                         <h2 className="text-lg font-semibold">
                             Platform rules
                         </h2>

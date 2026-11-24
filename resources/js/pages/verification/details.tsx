@@ -55,7 +55,7 @@ export default function VerificationDetails({
 
                 <Form
                     {...verificationDetails.update.form()}
-                    className="space-y-5"
+                    className="space-y-5 rounded-xl border bg-card p-4 sm:p-6"
                 >
                     {({ processing, errors }) => (
                         <>

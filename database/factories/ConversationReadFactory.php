@@ -13,8 +13,10 @@ class ConversationReadFactory extends Factory
 
     public function definition(): array
     {
-        $conversation = Conversation::factory()->create();
-
-        return ['conversation_id' => $conversation->id, 'user_id' => $conversation->poster_id, 'last_read_message_id' => null];
+        return [
+            'conversation_id' => Conversation::factory(),
+            'user_id' => fn (array $attributes) => Conversation::query()->findOrFail($attributes['conversation_id'])->poster_id,
+            'last_read_message_id' => null,
+        ];
     }
 }

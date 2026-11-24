@@ -12,6 +12,7 @@ use App\Models\Application;
 use App\Models\ContentFlag;
 use App\Models\Conversation;
 use App\Models\ConversationMessage;
+use App\Models\ConversationRead;
 use App\Models\Report;
 use App\Models\Task;
 use App\Models\User;
@@ -26,9 +27,31 @@ class ConversationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_sending_redirects_to_the_thread_with_the_saved_message(): void
+    {
+        [$poster, $applicant, , , $conversation] = $this->conversation();
+        $threadUrl = route('messages.show', $conversation);
+        $this->actingAs($applicant)->followingRedirects()->from(route('messages.index'))
+            ->post(route('messages.send', $conversation), ['body' => 'Can we confirm the room?'])
+            ->assertInertia(fn (Assert $page) => $page->component('messages/show')
+                ->has('messages', 1)
+                ->where('messages.0.body', 'Can we confirm the room?')
+                ->where('messages.0.isMine', true));
+
+        $messageId = $conversation->messages()->sole()->id;
+        $this->assertDatabaseHas('conversation_reads', ['conversation_id' => $conversation->id, 'user_id' => $applicant->id, 'last_read_message_id' => $messageId]);
+        $this->actingAs($poster)->getJson(route('messages.updates', [$conversation, 'after_id' => 0]))
+            ->assertJsonPath('messages.0.id', $messageId)
+            ->assertJsonPath('messages.0.isMine', false);
+        $this->from(route('messages.index'))->post(route('messages.send', $conversation), ['body' => 'Room confirmed.'])
+            ->assertStatus(303)->assertRedirect($threadUrl);
+    }
+
     public function test_only_the_two_task_roles_can_read_and_send_and_alerts_never_include_message_text(): void
     {
+        config(['taskmate.offplatform.enabled' => true]);
         [$poster, $applicant, $task, $application, $conversation] = $this->conversation();
+        ConversationRead::factory()->for($conversation)->create();
         $outsider = User::factory()->verified()->create();
         $admin = User::factory()->verified()->create();
         $admin->forceFill(['is_admin' => true])->save();
@@ -50,13 +73,17 @@ class ConversationTest extends TestCase
         $notificationData = $poster->notifications()->where('data->event', 'conversation.message')->firstOrFail()->data;
         $this->assertSame('conversation.message', $notificationData['event']);
         $this->assertSame(2, $notificationData['count']);
+        $this->assertSame('New message', $notificationData['title']);
+        $this->assertStringNotContainsString($task->title, json_encode($notificationData));
         $this->assertStringNotContainsString('Telegram', json_encode($notificationData));
         $this->assertStringNotContainsString('GCash', json_encode($notificationData));
 
         $summary = $this->actingAs($poster)->getJson(route('notifications.summary'))->assertOk()->assertJsonPath('unreadMessages', 1);
         $this->assertSame(1, $summary->json('unreadCount'));
+        $this->get(route('messages.index'))->assertInertia(fn (Assert $page) => $page->where('conversations.data.0.hasUnreadMessages', true));
         $this->get(route('messages.show', $conversation))->assertOk();
         $this->assertSame(0, app(ConversationWorkflow::class)->unreadCount($poster));
+        $this->get(route('messages.index'))->assertInertia(fn (Assert $page) => $page->where('conversations.data.0.hasUnreadMessages', false));
         $this->actingAs($outsider)->get(route('messages.updates', [$conversation, 'after_id' => 0]))->assertForbidden();
         $this->actingAs($applicant)->getJson(route('messages.updates', [$conversation, 'after_id' => 1]))
             ->assertOk()->assertJsonCount(2, 'messages')->assertJsonPath('messages.0.id', 2)->assertJsonPath('messages.1.id', 3);
@@ -204,17 +231,33 @@ class ConversationTest extends TestCase
             ->where('report.messageSnapshots', fn ($snapshots) => count($snapshots) === 3)
             ->missing('report.agreement.messages'));
 
-        $flag = new ContentFlag;
-        $flag->flaggable()->associate($conversation->messages()->whereKey($ids[2])->firstOrFail());
-        $flag->source_user_id = $poster->id;
-        $flag->category = 'bypass_agreement';
-        $flag->matched = ['Skip agreement'];
-        $flag->field = 'body';
-        $flag->save();
+        $flag = ContentFlag::factory()->forMessage($conversation->messages()->whereKey($ids[2])->firstOrFail())->create();
+        $this->get(route('admin.flags.index', ['category' => $flag->category, 'status' => 'open']))->assertInertia(fn (Assert $page) => $page
+            ->where('scanningEnabled', false)->where('flags.data.0.id', $flag->id));
         $this->get(route('admin.flags.show', $flag))->assertInertia(fn (Assert $page) => $page
             ->where('flag.content', 'Reported content')
             ->missing('messages')
             ->missing('conversation'));
+    }
+
+    public function test_keyword_flagging_is_off_by_default_and_messages_can_still_be_reported(): void
+    {
+        [$poster, $applicant, , , $conversation] = $this->conversation();
+
+        $this->actingAs($poster)->post(route('messages.send', $conversation), [
+            'body' => 'Please message me on Telegram.',
+        ])->assertRedirect();
+        $message = $conversation->messages()->sole();
+        $this->assertDatabaseCount('content_flags', 0);
+
+        $this->actingAs($applicant)->get(route('messages.show', $conversation))->assertInertia(fn (Assert $page) => $page
+            ->where('messages.0.flaggedForRecipient', false));
+        $this->post(route('messages.report', [$conversation, $message]), [
+            'type' => 'off_platform_transaction',
+            'description' => 'Synthetic request to move the conversation outside TaskMate.',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('reports', ['reporter_id' => $applicant->id, 'subject_id' => $message->id]);
+        $this->assertDatabaseCount('content_flags', 0);
     }
 
     public function test_pending_applicant_remains_able_to_message_while_another_application_is_accepted(): void

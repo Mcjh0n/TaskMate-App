@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\ContentFlagStatus;
 use App\Models\ContentFlag;
+use App\Models\ConversationMessage;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -28,7 +29,17 @@ class ContentFlagFactory extends Factory
     public function configure(): static
     {
         return $this->afterMaking(function (ContentFlag $flag): void {
-            $flag->flaggable()->associate(Task::factory()->create());
+            if ($flag->flaggable_id === null) {
+                $flag->flaggable()->associate(Task::factory()->create());
+            }
         });
+    }
+
+    public function forMessage(ConversationMessage $message): static
+    {
+        return $this->for($message, 'flaggable')->state([
+            'source_user_id' => $message->sender_id,
+            'field' => 'body',
+        ]);
     }
 }

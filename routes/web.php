@@ -115,16 +115,17 @@ Route::middleware(['auth', 'account.active', 'account.verified'])->group(functio
     Route::post('/agreements/{agreement}/payments/not-received', [CompletionPaymentController::class, 'reportNotReceived'])->name('agreements.payments.not-received');
     Route::post('/agreements/{agreement}/reports', [ReportController::class, 'store'])->name('agreements.reports.store');
     Route::post('/agreements/{agreement}/problem-reports', [GeneralReportController::class, 'agreement'])->name('agreements.problem-reports.store');
-    Route::post('/tasks/{task}/problem-reports', [GeneralReportController::class, 'task'])->name('tasks.problem-reports.store');
     Route::post('/tasks/{task}/applications/{application}/problem-reports', [GeneralReportController::class, 'applicant'])->name('applications.problem-reports.store');
     Route::post('/users/{user}/problem-reports', [GeneralReportController::class, 'profile'])->name('users.problem-reports.store');
+});
+
+Route::middleware(['auth', 'account.active'])->group(function () {
+    Route::post('/tasks/{task}/problem-reports', [GeneralReportController::class, 'task'])->name('tasks.problem-reports.store');
     Route::get('/my-reports', [ReportController::class, 'mine'])->name('reports.mine');
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
     Route::post('/reports/{report}/statements', [ReportController::class, 'reply'])->name('reports.reply');
     Route::get('/reports/{report}/evidence/{evidence}', [ReportController::class, 'evidence'])->name('reports.evidence');
-});
 
-Route::middleware(['auth', 'account.active'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/summary', [NotificationController::class, 'summary'])->name('notifications.summary');
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');

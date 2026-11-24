@@ -79,7 +79,7 @@ export default function UserProfile({
                         ratings.map((rating) => (
                             <article
                                 key={rating.id}
-                                className="space-y-2 rounded-xl border p-4"
+                                className="space-y-2 rounded-xl border bg-card p-4"
                             >
                                 <div className="flex justify-between gap-2">
                                     <p className="font-medium">

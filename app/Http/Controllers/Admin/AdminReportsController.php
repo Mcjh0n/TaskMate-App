@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\ReportStatus;
 use App\Enums\ReportType;
+use App\Enums\TaskStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\AdminReportDecisionRequest;
 use App\Http\Requests\Admin\AdminReportIndexRequest;
 use App\Models\Report;
 use App\Models\User;
@@ -26,9 +28,10 @@ class AdminReportsController extends Controller
             ->when($filters['priority'] ?? null, fn ($query, string $priority) => $query->where('priority', $priority))
             ->when(isset($filters['escalated']), fn ($query) => $filters['escalated'] === '1' ? $query->whereNotNull('escalated_at') : $query->whereNull('escalated_at'))
             ->when(isset($filters['has_evidence']), fn ($query) => $filters['has_evidence'] === '1' ? $query->whereHas('evidence') : $query->whereDoesntHave('evidence'))
-            ->orderByRaw("CASE priority WHEN 'high' THEN 0 ELSE 1 END")
-            ->orderByRaw("CASE status WHEN 'open' THEN 0 WHEN 'under_review' THEN 1 ELSE 2 END")
-            ->orderBy('created_at')
+            ->when(empty($filters['status']), fn ($query) => $query->orderByRaw("CASE WHEN status IN ('open', 'under_review') THEN 0 ELSE 1 END"))
+            ->when(empty($filters['priority']), fn ($query) => $query->orderByRaw("CASE priority WHEN 'high' THEN 0 ELSE 1 END"))
+            ->when(empty($filters['status']), fn ($query) => $query->orderByRaw("CASE status WHEN 'open' THEN 0 WHEN 'under_review' THEN 1 ELSE 2 END"))
+            ->orderBy('created_at')->orderBy('id')
             ->paginate(15)->withQueryString()
             ->through(fn (Report $report) => [
                 'id' => $report->id,
@@ -61,6 +64,8 @@ class AdminReportsController extends Controller
         ]);
         $agreement = $report->agreement;
         $version = $agreement?->currentVersion;
+
+        $canReview = request()->user()->can('review', $report);
 
         return Inertia::render('admin/reports/show', [
             'report' => [
@@ -109,7 +114,10 @@ class AdminReportsController extends Controller
                 ])->values(),
                 'evidence' => $report->evidence->map(fn ($evidence) => ['id' => $evidence->id, 'name' => $evidence->original_name, 'mime' => $evidence->mime, 'sizeBytes' => $evidence->size_bytes, 'downloadUrl' => route('reports.evidence', [$report, $evidence])])->values(),
             ],
-            'canReview' => request()->user()->can('review', $report),
+            'canReview' => $canReview,
+            'decisionOptions' => $canReview ? collect(AdminReportDecisionRequest::decisions($report))->map(fn ($label, $value) => compact('value', 'label'))->values() : [],
+            'canRemoveRelatedPost' => $report->task->poster_id === $report->reported_user_id && $report->task->status === TaskStatus::Approved,
+            'status' => session('status'),
             'types' => collect(ReportType::cases())->map(fn (ReportType $item) => ['value' => $item->value, 'label' => $item->label()])->values(),
             'admin' => true,
             'notice' => 'TaskMate records completion and payment status only. Payments are made directly between the poster and the student. TaskMate does not hold, process, recover, or guarantee payment. This review records the information provided and is not a ruling on repayment.',

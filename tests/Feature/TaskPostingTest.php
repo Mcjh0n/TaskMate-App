@@ -25,7 +25,6 @@ class TaskPostingTest extends TestCase
             'estimated_duration_value' => 3,
             'estimated_duration_unit' => 'days',
             'skill_requirements' => 'Organized and reliable.',
-            'complexity' => 'low',
             'budget_mode' => 'single',
             'budget' => 1500,
             'work_mode' => 'on_campus',
@@ -94,6 +93,7 @@ class TaskPostingTest extends TestCase
             'work_mode' => 'online',
             'estimated_duration_value' => 2,
             'estimated_duration_unit' => 'days',
+            'complexity' => 'high',
             'guidelines_confirmed' => '1',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
@@ -159,6 +159,7 @@ class TaskPostingTest extends TestCase
             'workplace_address' => 'Synthetic campus room 101',
             'estimated_duration_value' => 5,
             'estimated_duration_unit' => 'hours',
+            'complexity' => 'low',
             'guidelines_confirmed' => '1',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
@@ -195,7 +196,6 @@ class TaskPostingTest extends TestCase
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 60000, 'estimated_duration_unit' => 'minutes']))->assertSessionHasErrors('estimated_duration_unit');
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 5000, 'estimated_duration_unit' => 'hours']))->assertSessionHasErrors('estimated_duration_value');
         $this->post(route('tasks.store'), $this->taskData(['guidelines_confirmed' => '0']))->assertSessionHasErrors('guidelines_confirmed');
-        $this->post(route('tasks.store'), $this->taskData(['complexity' => 'invented']))->assertSessionHasErrors('complexity');
         $this->post(route('tasks.store'), $this->taskData(['physical_demand' => 'invented']))->assertSessionHasErrors('physical_demand');
     }
 

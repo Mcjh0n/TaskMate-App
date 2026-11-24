@@ -214,7 +214,7 @@ export function AgreementDetails({
             {agreement.status === 'negotiating' &&
                 !readOnly &&
                 !actionsAllowed && (
-                    <p className="rounded-xl border p-4 text-sm">
+                    <p className="rounded-xl border bg-card p-4 text-sm">
                         Agreement actions are unavailable while your account is
                         suspended. You can still review the current terms.
                     </p>
@@ -329,7 +329,7 @@ export function AgreementDetails({
                 </section>
             )}
             {agreement.status === 'cancelled' && (
-                <section className="rounded-xl border p-5">
+                <section className="rounded-xl border bg-card p-5">
                     <h2 className="font-semibold">Agreement cancelled</h2>
                     <p className="mt-1 text-sm">
                         Reason: {agreement.cancellationReason}
@@ -354,7 +354,7 @@ export function AgreementDetails({
                 </section>
             )}
             {current && (
-                <section className="space-y-4 rounded-xl border p-5">
+                <section className="space-y-4 rounded-xl border bg-card p-5">
                     <div className="flex flex-wrap justify-between gap-2">
                         <div>
                             <h2 className="text-lg font-semibold">
@@ -396,7 +396,7 @@ export function AgreementDetails({
                 !readOnly &&
                 current &&
                 actionsAllowed && (
-                    <section className="space-y-4 rounded-xl border p-5 print:hidden">
+                    <section className="space-y-4 rounded-xl border bg-card p-5 print:hidden">
                         <h2 className="text-lg font-semibold">
                             Review and respond
                         </h2>
@@ -728,7 +728,7 @@ export function AgreementDetails({
                     </section>
                 )}
             {agreement.versions.length > 0 && (
-                <section className="space-y-4 rounded-xl border p-5">
+                <section className="space-y-4 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Version history</h2>
                     {agreement.versions.map((version) => (
                         <article
@@ -764,7 +764,7 @@ export function AgreementDetails({
                 </section>
             )}
             {ratings && (
-                <section className="space-y-3 rounded-xl border p-5">
+                <section className="space-y-3 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Ratings</h2>
                     <p className="text-sm text-muted-foreground">
                         {ratingNotice}
@@ -839,7 +839,7 @@ export function AgreementDetails({
                 data={completionPayment}
                 readOnly={readOnly}
             />
-            <section className="space-y-3 rounded-xl border p-5">
+            <section className="space-y-3 rounded-xl border bg-card p-5">
                 <h2 className="text-lg font-semibold">Messages</h2>
                 {agreement.messages.length ? (
                     agreement.messages.map((message) => (

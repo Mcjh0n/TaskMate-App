@@ -18,6 +18,10 @@ class OffPlatformScanner
     /** @return list<array{category:string,label:string}> */
     public function scan(string $text): array
     {
+        if (! config('taskmate.offplatform.enabled', false)) {
+            return [];
+        }
+
         $matches = [];
         foreach ((array) config('taskmate.offplatform.patterns', []) as $category => $patterns) {
             foreach ($patterns as $item) {

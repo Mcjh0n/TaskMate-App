@@ -176,7 +176,7 @@ export default function AdminTaskReview({
                     it can be approved.
                 </p>
                 <section className="grid gap-4 lg:grid-cols-3">
-                    <div className="space-y-4 rounded-xl border p-5 lg:col-span-2">
+                    <div className="space-y-4 rounded-xl border bg-card p-5 lg:col-span-2">
                         <h2 className="text-lg font-semibold">Task details</h2>
                         <p>
                             <strong>Category:</strong> {task.category}
@@ -199,7 +199,7 @@ export default function AdminTaskReview({
                             </p>
                         )}
                     </div>
-                    <aside className="space-y-3 rounded-xl border p-5">
+                    <aside className="space-y-3 rounded-xl border bg-card p-5">
                         <h2 className="text-lg font-semibold">Poster</h2>
                         <p>{task.poster.name}</p>
                         <p>{task.poster.type}</p>
@@ -211,7 +211,7 @@ export default function AdminTaskReview({
                         </p>
                     </aside>
                 </section>
-                <section className="space-y-3 rounded-xl border p-5">
+                <section className="space-y-3 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Work details</h2>
                     <p>
                         <strong>Work mode:</strong> {task.workMode}
@@ -236,7 +236,7 @@ export default function AdminTaskReview({
                         locations or collect coordinates.
                     </p>
                 </section>
-                <section className="space-y-3 rounded-xl border p-5">
+                <section className="space-y-3 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">
                         Off-platform content flags
                     </h2>
@@ -271,7 +271,7 @@ export default function AdminTaskReview({
                     )}
                 </section>
                 {agreement && (
-                    <section className="space-y-2 rounded-xl border p-5">
+                    <section className="space-y-2 rounded-xl border bg-card p-5">
                         <h2 className="text-lg font-semibold">Agreement</h2>
                         <p>Status: {agreement.status.replaceAll('_', ' ')}</p>
                         {agreement.locked_at && (
@@ -323,7 +323,7 @@ export default function AdminTaskReview({
                         readOnly
                     />
                 )}
-                <section className="space-y-3 rounded-xl border p-5">
+                <section className="space-y-3 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Applications</h2>
                     {applications.length ? (
                         applications.map((application) => (
@@ -351,7 +351,7 @@ export default function AdminTaskReview({
                         </p>
                     )}
                 </section>
-                <section className="space-y-3 rounded-xl border p-5">
+                <section className="space-y-3 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">
                         Admin action history
                     </h2>
@@ -382,7 +382,7 @@ export default function AdminTaskReview({
                     )}
                 </section>
                 {canReview ? (
-                    <section className="space-y-4 rounded-xl border p-5">
+                    <section className="space-y-4 rounded-xl border bg-card p-5">
                         <h2 className="text-lg font-semibold">
                             Review decision
                         </h2>

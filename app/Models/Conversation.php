@@ -157,11 +157,14 @@ class Conversation extends Model
         return null;
     }
 
-    public function unreadCountFor(User $user): int
+    public function hasUnreadMessagesFor(User $user): bool
     {
-        $lastRead = $this->reads()->where('user_id', $user->id)->value('last_read_message_id') ?? 0;
+        $read = $this->relationLoaded('reads')
+            ? $this->reads->firstWhere('user_id', $user->id)
+            : $this->reads()->where('user_id', $user->id)->first();
+        $lastRead = $read?->last_read_message_id ?? 0;
 
-        return $this->messages()->where('sender_id', '!=', $user->id)->where('id', '>', $lastRead)->count();
+        return $this->messages()->where('sender_id', '!=', $user->id)->where('id', '>', $lastRead)->exists();
     }
 
     public static function displayName(User $user): string

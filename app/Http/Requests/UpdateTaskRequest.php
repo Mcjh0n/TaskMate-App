@@ -56,7 +56,6 @@ class UpdateTaskRequest extends FormRequest
             'estimated_duration_value' => array_filter(['required', 'integer', 'min:1', $maximum === null ? null : 'max:'.$maximum]),
             'estimated_duration_unit' => ['required', 'string', Rule::in(array_keys($durationLimits))],
             'skill_requirements' => ['nullable', 'string', 'max:5000'],
-            'complexity' => ['nullable', 'string', Rule::in(array_keys(config('taskmate.complexity_levels', [])))],
             'budget_mode' => ['required', Rule::in(['single', 'range'])],
             'budget' => ['exclude_unless:budget_mode,single', 'required', 'numeric', 'decimal:0,2', 'min:1', 'max:999999.99'],
             'budget_min' => ['exclude_unless:budget_mode,range', 'required', 'numeric', 'decimal:0,2', 'min:1', 'max:999999.99'],

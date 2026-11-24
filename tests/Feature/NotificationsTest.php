@@ -48,7 +48,7 @@ class NotificationsTest extends TestCase
         $this->assertNotSame($firstAdmin->notifications()->first()->id, $secondAdmin->notifications()->first()->id);
     }
 
-    public function test_new_application_and_acceptance_alert_only_the_intended_other_party(): void
+    public function test_application_and_agreement_alerts_arrive_when_the_other_party_can_act(): void
     {
         $poster = $this->poster();
         $applicant = $this->student();
@@ -62,9 +62,12 @@ class NotificationsTest extends TestCase
         $application = $task->applications()->firstOrFail();
 
         $this->actingAs($poster)->post(route('tasks.applications.accept', [$task, $application]))->assertRedirect();
-        $this->assertSame('application.accepted', $applicant->notifications()->firstOrFail()->data['event']);
+        $this->assertSame(0, $applicant->notifications()->count());
+        $this->post(route('agreements.store', $task))->assertRedirect();
+        $alert = $applicant->notifications()->sole()->data;
+        $this->assertSame('agreement.proposed', $alert['event']);
+        $this->assertSame(route('agreements.show', $task->agreement()->firstOrFail(), false), $alert['url']);
         $this->assertSame(1, $poster->notifications()->count());
-        $this->assertSame('/my-applications', $applicant->notifications()->first()->data['url']);
     }
 
     public function test_notification_page_and_summary_are_private_and_read_actions_are_owner_scoped(): void

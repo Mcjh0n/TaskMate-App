@@ -17,16 +17,25 @@ export default function Information({
     return (
         <>
             <Head title={title} />
-            <header className="mx-auto flex max-w-4xl justify-between px-4 py-6">
-                <Link href="/" className="font-bold">
+            <header className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-6">
+                <Link
+                    href="/"
+                    className="flex items-center gap-2 text-2xl font-bold tracking-tight"
+                >
+                    <img src="/favicon.svg" width="36" height="36" alt="" />
                     TaskMate
                 </Link>
-                <nav className="flex gap-4">
+                <nav
+                    aria-label="Main navigation"
+                    className="flex items-center gap-4 text-sm font-semibold"
+                >
                     <Link href={login()}>Log in</Link>
-                    <Link href={register()}>Register</Link>
+                    <Link href={register()} className="brand-nav-action">
+                        Register
+                    </Link>
                 </nav>
             </header>
-            <main className="mx-auto max-w-4xl px-4 pb-16">
+            <article className="mx-auto max-w-4xl px-4 pt-6 pb-16">
                 <h1 className="text-3xl font-bold">{title}</h1>
                 {page === 'how-it-works' && (
                     <div className="mt-6 space-y-6">
@@ -36,7 +45,7 @@ export default function Information({
                             workplace details.
                         </p>
                         <ol className="space-y-4">
-                            <li className="rounded-lg border p-4">
+                            <li className="rounded-lg border bg-card p-4">
                                 <h2 className="font-semibold">
                                     1. Create an account and verify it
                                 </h2>
@@ -47,7 +56,7 @@ export default function Information({
                                     begins after account approval.
                                 </p>
                             </li>
-                            <li className="rounded-lg border p-4">
+                            <li className="rounded-lg border bg-card p-4">
                                 <h2 className="font-semibold">
                                     2. Post a task for review
                                 </h2>
@@ -59,7 +68,7 @@ export default function Information({
                                     see them.
                                 </p>
                             </li>
-                            <li className="rounded-lg border p-4">
+                            <li className="rounded-lg border bg-card p-4">
                                 <h2 className="font-semibold">
                                     3. Students review and apply
                                 </h2>
@@ -70,7 +79,7 @@ export default function Information({
                                     apply.
                                 </p>
                             </li>
-                            <li className="rounded-lg border p-4">
+                            <li className="rounded-lg border bg-card p-4">
                                 <h2 className="font-semibold">
                                     4. Agree before work begins
                                 </h2>
@@ -80,7 +89,7 @@ export default function Information({
                                     confirm the same version before work begins.
                                 </p>
                             </li>
-                            <li className="rounded-lg border p-4">
+                            <li className="rounded-lg border bg-card p-4">
                                 <h2 className="font-semibold">
                                     5. Record completion and payment status
                                 </h2>
@@ -90,7 +99,7 @@ export default function Information({
                                     between them.
                                 </p>
                             </li>
-                            <li className="rounded-lg border p-4">
+                            <li className="rounded-lg border bg-card p-4">
                                 <h2 className="font-semibold">
                                     6. Share feedback or report a concern
                                 </h2>
@@ -151,7 +160,7 @@ export default function Information({
                         </pre>
                     </>
                 )}
-            </main>
+            </article>
         </>
     );
 }

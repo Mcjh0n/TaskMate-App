@@ -17,7 +17,7 @@ type Item = {
     };
     preview: string | null;
     latestAt: string | null;
-    unreadCount: number;
+    hasUnreadMessages: boolean;
     status: 'open' | 'closed' | 'read_only';
 };
 
@@ -46,7 +46,7 @@ export default function MessagesIndex({
                             <Link
                                 key={item.id}
                                 href={`/messages/${item.id}`}
-                                className="block rounded-xl border p-4 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                                className="block rounded-xl border bg-card p-4 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                             >
                                 <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
@@ -67,16 +67,16 @@ export default function MessagesIndex({
                                                     .verificationStatus
                                             }
                                         />
-                                        <span className="rounded border px-2 py-1 text-xs">
-                                            {item.status === 'closed'
-                                                ? 'Closed'
-                                                : item.status === 'read_only'
-                                                  ? 'Read-only'
-                                                  : 'Open'}
-                                        </span>
-                                        {item.unreadCount > 0 && (
+                                        {item.status !== 'open' && (
+                                            <span className="rounded border px-2 py-1 text-xs">
+                                                {item.status === 'closed'
+                                                    ? 'Closed'
+                                                    : 'Read-only'}
+                                            </span>
+                                        )}
+                                        {item.hasUnreadMessages && (
                                             <span className="rounded-full bg-primary px-2 py-1 text-xs text-primary-foreground">
-                                                {item.unreadCount} unread
+                                                Unread
                                             </span>
                                         )}
                                     </div>
@@ -96,7 +96,7 @@ export default function MessagesIndex({
                         ))}
                     </div>
                 ) : (
-                    <section className="rounded-xl border p-8 text-center">
+                    <section className="rounded-xl border bg-card p-8 text-center">
                         <h2 className="font-semibold">No conversations yet</h2>
                         <p className="mt-2 text-sm text-muted-foreground">
                             A private conversation opens when someone applies to

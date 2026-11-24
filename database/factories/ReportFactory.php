@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ReportOutcome;
 use App\Enums\ReportStatus;
 use App\Enums\ReportType;
 use App\Models\Agreement;
@@ -26,5 +27,10 @@ class ReportFactory extends Factory
             'description' => 'Synthetic description for a non-payment report.',
             'status' => ReportStatus::Open,
         ];
+    }
+
+    public function resolved(): static
+    {
+        return $this->state(['status' => ReportStatus::Resolved, 'outcome' => ReportOutcome::Supported]);
     }
 }

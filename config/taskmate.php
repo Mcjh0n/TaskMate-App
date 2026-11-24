@@ -29,6 +29,7 @@ return [
     'notifications' => [
         'poll_seconds' => 10,
         'per_page' => 20,
+        'deferred_events' => ['application.accepted', 'rating.waiting', 'rating.visible'],
         'retention_days' => null,
         // Supports several visible tabs polling every 10 seconds without limiting normal use.
         'throttle_per_minute' => 120,
@@ -65,12 +66,6 @@ return [
         'remote' => 'Online',
         'onsite' => 'On-campus',
         'hybrid' => 'Hybrid (legacy task)',
-    ],
-
-    'complexity_levels' => [
-        'low' => 'Low',
-        'medium' => 'Medium',
-        'high' => 'High',
     ],
 
     // Labels retained for previously saved work condition details. Automated screening is no longer active.
@@ -151,11 +146,13 @@ return [
         'evidence_max_files' => 5,
         'evidence_max_kb' => 5120,
         'evidence_mimes' => ['jpg', 'jpeg', 'png', 'pdf'],
+        // For agreements without a due date, delivery starts the wait when it is recorded.
         'non_payment_wait_days' => 3,
         'statement_max_length' => 3000,
     ],
 
     'moderation' => [
+        'escalation_enabled' => env('TASKMATE_REPORT_ESCALATION', false),
         // PROVISIONAL: designated office, response targets, appeal process, and escalation rules are undecided.
         'sanction_notice_contact' => 'Contact the TaskMate administrators through the designated office. The appeals process has not been decided.',
         'response_target_days' => null,
@@ -163,6 +160,7 @@ return [
     ],
 
     'offplatform' => [
+        'enabled' => env('TASKMATE_OFFPLATFORM_SCANNING', false),
         // PROVISIONAL: sample patterns for testing only; the team must approve detection rules. Payment arrangements are excluded.
         'patterns' => [
             'move_chat_outside' => [
@@ -194,6 +192,7 @@ return [
 
     'ratings' => [
         // PROVISIONAL: rating visibility, moderation, and appeals are not decided by the team.
+        // Labels for dimension scores recorded before the overall-only form.
         'dimensions' => [
             'poster_to_student' => [
                 'work_quality' => 'Work quality',

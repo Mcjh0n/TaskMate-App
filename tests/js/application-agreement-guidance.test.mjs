@@ -35,7 +35,7 @@ function loadPage(path, modules, label, exportName = 'default') {
     const loaded = { exports: {} };
     const mockRequire = (name) => {
         if (name === 'react/jsx-runtime') return require('react/jsx-runtime');
-        if (name === 'react') return React;
+        if (name === 'react') return modules.react ?? React;
         if (!(name in modules))
             throw new Error(
                 `Unexpected module in ${label} render test: ${name}`,
@@ -61,6 +61,68 @@ const Link = ({ href, children, ...props }) =>
     });
 const Button = ({ asChild: _asChild, ...props }) => element('button', props);
 const Form = ({ onSubmit: _onSubmit, ...props }) => element('form', props);
+
+void test('message thread displays a new server snapshot and avoids a duplicate from polling', () => {
+    const sent = {
+        id: 2,
+        senderName: 'Test sender',
+        isMine: true,
+        body: 'Newly saved reply',
+        createdAt: null,
+    };
+    const polled = { ...sent, id: 3, body: 'Other reply', isMine: false };
+    const Conversation = loadPage(
+        'resources/js/pages/messages/show.tsx',
+        {
+            react: {
+                ...React,
+                useState: () => [
+                    [{ ...sent, body: 'Older polling copy' }, polled],
+                    () => {},
+                ],
+            },
+            '@inertiajs/react': {
+                Form: ({ resetOnSuccess, ...props }) =>
+                    element('form', {
+                        ...props,
+                        'data-reset-on-success': resetOnSuccess?.join(','),
+                    }),
+                Head: () => null,
+                Link,
+            },
+            '@/layouts/app-layout': ({ children }) => children,
+            '@/components/ui/button': { Button },
+            '@/components/ui/textarea': {
+                Textarea: (props) => element('textarea', props),
+            },
+            '@/components/input-error': () => null,
+            '@/components/verification-status-badge': {
+                VerificationStatusBadge: () => null,
+            },
+            '@/components/problem-report-form': {
+                ProblemReportForm: () => null,
+            },
+            '@/lib/format': { formatDateTime: (value) => value ?? '-' },
+        },
+        'messages',
+    );
+    const markup = renderToStaticMarkup(
+        React.createElement(Conversation, {
+            conversation: {
+                id: 7,
+                lastMessageId: 2,
+                otherPerson: {},
+                canSend: true,
+            },
+            messages: [sent],
+            events: [],
+        }),
+    );
+    assert.equal(markup.match(/Newly saved reply/g)?.length, 1);
+    assert.doesNotMatch(markup, /Older polling copy/);
+    assert.match(markup, /Other reply/);
+    assert.match(markup, /data-reset-on-success="body"/);
+});
 
 const MyApplications = loadPage(
     'resources/js/pages/applications/index.tsx',

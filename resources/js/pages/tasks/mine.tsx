@@ -61,7 +61,7 @@ export default function MyTasks({ tasks, status }: Props) {
                     </div>
                 )}
                 {tasks.data.length === 0 ? (
-                    <div className="rounded-xl border p-8 text-center">
+                    <div className="rounded-xl border bg-card p-8 text-center">
                         <h2 className="font-semibold">
                             You have not posted any tasks yet
                         </h2>
@@ -77,7 +77,7 @@ export default function MyTasks({ tasks, status }: Props) {
                         {tasks.data.map((task) => (
                             <article
                                 key={task.id}
-                                className="space-y-3 rounded-xl border p-5"
+                                className="space-y-3 rounded-xl border bg-card p-5"
                             >
                                 <div className="flex flex-wrap items-start justify-between gap-2">
                                     <h2 className="font-semibold">

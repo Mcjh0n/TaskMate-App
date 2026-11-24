@@ -55,7 +55,7 @@ export function CompletionPaymentPanel({
     return (
         <section
             id="completion-payment"
-            className="space-y-5 rounded-xl border p-5 print:break-inside-avoid"
+            className="space-y-5 rounded-xl border bg-card p-5 print:break-inside-avoid"
         >
             <div>
                 <h2 className="text-lg font-semibold">
@@ -385,6 +385,10 @@ export function CompletionPaymentPanel({
                     {({ errors, processing }) => (
                         <>
                             <h3 className="font-medium">Report non-payment</h3>
+                            <p className="text-sm text-muted-foreground">
+                                Tell us if payment is missing or if the amount
+                                received differs from the agreed amount.
+                            </p>
                             <label
                                 htmlFor="non-payment-description"
                                 className="sr-only"

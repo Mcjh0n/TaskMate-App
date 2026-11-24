@@ -89,7 +89,7 @@ export default function MyApplications({ applications, status }: Props) {
                             return (
                                 <article
                                     key={application.id}
-                                    className="space-y-3 rounded-xl border p-5"
+                                    className="space-y-3 rounded-xl border bg-card p-5"
                                 >
                                     <div className="flex flex-wrap items-start justify-between gap-2">
                                         <h2 className="font-semibold">
@@ -224,7 +224,7 @@ export default function MyApplications({ applications, status }: Props) {
                         })}
                     </div>
                 ) : (
-                    <div className="rounded-xl border p-8 text-center">
+                    <div className="rounded-xl border bg-card p-8 text-center">
                         <h2 className="font-semibold">
                             You have not applied to any tasks
                         </h2>

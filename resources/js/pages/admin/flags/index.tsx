@@ -4,15 +4,29 @@ import AdminLayout from '@/layouts/admin-layout';
 export default function FlagQueue({
     flags,
     filters,
+    categories,
+    scanningEnabled,
 }: {
     flags: { data: any[]; links: any[] };
     filters: any;
+    categories: { value: string; label: string }[];
+    scanningEnabled: boolean;
 }) {
     return (
         <>
             <Head title="Content flags" />
             <main className="space-y-4">
                 <h1 className="text-2xl font-semibold">Content flags</h1>
+                {!scanningEnabled && (
+                    <p className="text-sm text-muted-foreground">
+                        Automatic flagging is paused. Review past flags here
+                        and open{' '}
+                        <Link href="/admin/reports" className="underline">
+                            Reports
+                        </Link>{' '}
+                        for concerns submitted by users.
+                    </p>
+                )}
                 <form className="flex flex-wrap gap-2">
                     <select
                         name="category"
@@ -20,13 +34,8 @@ export default function FlagQueue({
                         className="h-10 rounded border bg-background px-3"
                     >
                         <option value="">All categories</option>
-                        {Object.entries({
-                            move_chat_outside: 'Move chat outside TaskMate',
-                            bypass_agreement: 'Bypass agreement',
-                            bypass_review: 'Bypass review',
-                            share_contact_details: 'Share contact details',
-                        }).map(([key, label]) => (
-                            <option key={key} value={key}>
+                        {categories.map(({ value, label }) => (
+                            <option key={value} value={value}>
                                 {label}
                             </option>
                         ))}
@@ -44,7 +53,7 @@ export default function FlagQueue({
                     <button className="rounded border px-4">Filter</button>
                 </form>
                 {flags.data.length ? (
-                    <div className="overflow-x-auto rounded border">
+                    <div className="overflow-x-auto rounded border bg-card">
                         <table className="w-full text-left text-sm">
                             <thead>
                                 <tr>
@@ -80,7 +89,7 @@ export default function FlagQueue({
                         </table>
                     </div>
                 ) : (
-                    <p className="rounded border p-6">
+                    <p className="rounded border bg-card p-6">
                         No content flags match these filters.
                     </p>
                 )}

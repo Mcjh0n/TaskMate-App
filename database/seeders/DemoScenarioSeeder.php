@@ -65,7 +65,6 @@ class DemoScenarioSeeder extends Seeder
             $task->estimated_duration_value = 2;
             $task->estimated_duration_unit = 'days';
             $task->skill_requirements = null;
-            $task->complexity = 'low';
             $task->budget = 500;
             $task->work_mode = 'online';
             $task->workplace_name = null;
@@ -221,7 +220,6 @@ class DemoScenarioSeeder extends Seeder
             $task->deliverables = 'Synthetic deliverable.';
             $task->estimated_duration_value = 1;
             $task->estimated_duration_unit = 'days';
-            $task->complexity = 'low';
             $task->budget = 500;
             $task->work_mode = 'online';
             $task->status = TaskStatus::InProgress;
@@ -329,9 +327,6 @@ class DemoScenarioSeeder extends Seeder
                     $rating->overall_experience = 5;
                     $rating->comment = 'Synthetic local feedback.';
                     $rating->save();
-                    foreach (array_keys(config('taskmate.ratings.dimensions.poster_to_student')) as $dimension) {
-                        $rating->scores()->create(['dimension' => $dimension, 'score' => 5]);
-                    }
                 }
             } elseif ($paymentCase === 'unpaid') {
                 $completion = $agreement->completion()->firstOrNew();

@@ -344,9 +344,8 @@ class AgreementWorkflowTest extends TestCase
         $this->actingAs($studentPoster)->post(route('agreements.completion.complete', $agreement), ['note' => 'Synthetic completion.'])->assertRedirect();
         $this->assertSame(TaskStatus::Completed, $task->fresh()->status);
 
-        $dimensions = array_fill_keys(array_keys(config('taskmate.ratings.dimensions.student_to_poster')), 4);
         $this->actingAs($worker)->post(route('agreements.rate.store', $agreement), [
-            'scores' => $dimensions, 'overall_experience' => 4, 'comment' => 'Clear synthetic work brief.',
+            'overall_experience' => 4, 'comment' => 'Clear synthetic work brief.',
         ])->assertRedirect();
         $rating = Rating::query()->where('agreement_id', $agreement->id)->firstOrFail();
         $this->assertSame($studentPoster->id, $rating->ratee_id);

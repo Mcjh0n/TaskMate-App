@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Enums\AgreementStatus;
 use App\Enums\PaymentEventType;
-use App\Enums\PaymentStatus;
 use App\Enums\ReportStatus;
 use App\Enums\ReportType;
 use App\Models\Agreement;
@@ -107,12 +106,15 @@ class ReportWorkflow
 
     public function canReportNonPayment(Agreement $agreement): bool
     {
-        if ($agreement->status !== AgreementStatus::Agreed || ! $agreement->locked_at
-            || $agreement->paymentStatus() === PaymentStatus::ConfirmedReceived || $agreement->paymentIsSettled()) {
+        if ($agreement->status !== AgreementStatus::Agreed || ! $agreement->locked_at || $agreement->paymentIsSettled()) {
             return false;
         }
 
         $latest = $agreement->paymentEvents()->reorder()->latest('id')->first();
+        if ($latest?->event === PaymentEventType::ConfirmedReceived) {
+            return true;
+        }
+
         $hasPriorPaidEvent = $agreement->paymentEvents()->where('event', PaymentEventType::MarkedPaid->value)->exists();
         $studentReportedNotReceived = $latest?->event === PaymentEventType::ReportedNotReceived
             && $hasPriorPaidEvent
@@ -126,12 +128,15 @@ class ReportWorkflow
         }
 
         $waitDays = (int) config('taskmate.reports.non_payment_wait_days', 3);
-        $completionDate = $agreement->completion?->completed_at;
-        $waitAfterCompletion = $completionDate && now()->greaterThanOrEqualTo($completionDate->copy()->addDays($waitDays));
         $dueDate = $agreement->currentVersion?->due_date;
+        $completion = $agreement->completion;
+        $workRecordedAt = $dueDate
+            ? $completion?->completed_at
+            : ($completion?->delivered_at ?? $completion?->completed_at);
+        $waitAfterWork = $workRecordedAt && now()->greaterThanOrEqualTo($workRecordedAt->copy()->addDays($waitDays));
         $waitAfterDueDate = $dueDate && today()->greaterThanOrEqualTo($dueDate->copy()->addDays($waitDays));
 
-        return (bool) ($waitAfterCompletion || $waitAfterDueDate);
+        return (bool) ($waitAfterWork || $waitAfterDueDate);
     }
 
     /** @param array<int, UploadedFile> $files */
@@ -161,7 +166,7 @@ class ReportWorkflow
                 $report->save();
 
                 $latest = $agreement->paymentEvents()->reorder()->latest('id')->first();
-                if ($latest?->event !== PaymentEventType::ReportedNotReceived) {
+                if (! in_array($latest?->event, [PaymentEventType::ReportedNotReceived, PaymentEventType::ConfirmedReceived], true)) {
                     $event = new PaymentEvent;
                     $event->agreement_id = $agreement->id;
                     $event->actor_id = $student->id;

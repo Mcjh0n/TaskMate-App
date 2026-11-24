@@ -45,6 +45,11 @@ class Report extends Model
 
     protected $fillable = ['description'];
 
+    public function isOpenForReview(): bool
+    {
+        return in_array($this->status, [ReportStatus::Open, ReportStatus::UnderReview], true);
+    }
+
     protected function casts(): array
     {
         return ['type' => ReportType::class, 'status' => ReportStatus::class, 'outcome' => ReportOutcome::class, 'reviewed_at' => 'datetime', 'escalated_at' => 'datetime'];

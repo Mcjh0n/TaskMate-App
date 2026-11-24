@@ -1,4 +1,3 @@
-import { formatAmount } from '@/lib/format';
 import { Form, Head, Link } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,17 +5,12 @@ import InputError from '@/components/input-error';
 import agreements from '@/routes/agreements';
 import { ratingNotice } from '@/components/rating-summary';
 
-type Dimension = { key: string; label: string };
 type Props = {
     agreement: {
         id: number;
         taskTitle: string;
-        agreedAmount: string;
-        paymentStatus: string;
     };
-    direction: string;
     rateeName: string;
-    dimensions: Dimension[];
     commentMaxLength: number;
     visibility: string;
     reportUrl: string;
@@ -25,9 +19,7 @@ type Props = {
 
 export default function RateAgreement({
     agreement,
-    direction,
     rateeName,
-    dimensions,
     commentMaxLength,
     visibility,
     reportUrl,
@@ -42,12 +34,8 @@ export default function RateAgreement({
                         Rate your experience
                     </h1>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Your feedback about {rateeName} and “
-                        {agreement.taskTitle}”. Direction:{' '}
-                        {direction === 'poster_to_student'
-                            ? 'Poster to worker'
-                            : 'Worker to poster'}
-                        .
+                        Share your experience working with {rateeName} on
+                        “{agreement.taskTitle}”.
                     </p>
                 </div>
                 {status && (
@@ -55,107 +43,65 @@ export default function RateAgreement({
                         {status}
                     </p>
                 )}
-                <section className="rounded-xl border p-4 text-sm">
-                    <p>
-                        Agreed amount: ₱{formatAmount(agreement.agreedAmount)}
-                    </p>
-                    <p>Current payment status: {agreement.paymentStatus}</p>
-                </section>
                 <p className="rounded-lg border bg-muted/40 p-4 text-sm">
                     {ratingNotice}
                 </p>
                 <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
-                    Rating comments are not a way to report serious problems. If
-                    something went wrong (non-payment, harassment, fraud, unsafe
-                    behavior), report it instead.{' '}
+                    Use the agreement page to{' '}
                     <Link
                         className="underline"
                         href={`${reportUrl}#completion-payment`}
                     >
-                        Open the report flow for this agreement
+                        report non-payment
+                    </Link>
+                    {' or '}
+                    <Link
+                        className="underline"
+                        href={`${reportUrl}#report-a-problem`}
+                    >
+                        report a safety or conduct concern
                     </Link>
                     .
                 </p>
                 <Form
                     {...agreements.rate.store.form(agreement.id)}
-                    className="space-y-5 rounded-xl border p-5"
+                    className="space-y-5 rounded-xl border bg-card p-5"
                 >
                     {({ errors, processing }) => (
                         <>
-                            <fieldset className="space-y-4">
-                                <legend className="text-lg font-semibold">
-                                    Your ratings
-                                </legend>
-                                <div className="grid gap-3 sm:grid-cols-2">
-                                    {dimensions.map((dimension) => (
-                                        <label
-                                            key={dimension.key}
-                                            className="grid gap-1 text-sm"
-                                        >
-                                            {dimension.label}
-                                            <select
-                                                name={`scores[${dimension.key}]`}
-                                                required
-                                                defaultValue=""
-                                                className="h-10 rounded-md border bg-background px-3"
-                                            >
-                                                <option value="" disabled>
-                                                    Select 1 to 5
-                                                </option>
-                                                {[1, 2, 3, 4, 5].map(
-                                                    (score) => (
-                                                        <option
-                                                            key={score}
-                                                            value={score}
-                                                        >
-                                                            {score}
-                                                        </option>
-                                                    ),
-                                                )}
-                                            </select>
-                                            <InputError
-                                                message={
-                                                    (
-                                                        errors as Record<
-                                                            string,
-                                                            string
-                                                        >
-                                                    )[`scores.${dimension.key}`]
-                                                }
-                                            />
-                                        </label>
-                                    ))}
-                                </div>
-                                <label className="grid gap-1 text-sm font-medium">
-                                    Overall experience
-                                    <select
-                                        name="overall_experience"
-                                        required
-                                        defaultValue=""
-                                        className="h-10 rounded-md border bg-background px-3"
-                                    >
-                                        <option value="" disabled>
-                                            Select 1 to 5
+                            <label className="grid gap-1 text-sm font-medium">
+                                Overall experience
+                                <select
+                                    name="overall_experience"
+                                    required
+                                    defaultValue=""
+                                    className="h-10 rounded-md border bg-background px-3"
+                                >
+                                    <option value="" disabled>
+                                        Select 1 to 5
+                                    </option>
+                                    {[1, 2, 3, 4, 5].map((score) => (
+                                        <option key={score} value={score}>
+                                            {score === 1
+                                                ? '1 (Very poor)'
+                                                : score === 5
+                                                  ? '5 (Excellent)'
+                                                  : score}
                                         </option>
-                                        {[1, 2, 3, 4, 5].map((score) => (
-                                            <option key={score} value={score}>
-                                                {score}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <InputError
-                                        message={errors.overall_experience}
-                                    />
-                                </label>
-                                <label className="grid gap-1 text-sm font-medium">
-                                    Comment (optional)
-                                    <Textarea
-                                        name="comment"
-                                        maxLength={commentMaxLength}
-                                    />
-                                    <InputError message={errors.comment} />
-                                </label>
-                            </fieldset>
+                                    ))}
+                                </select>
+                                <InputError
+                                    message={errors.overall_experience}
+                                />
+                            </label>
+                            <label className="grid gap-1 text-sm font-medium">
+                                Comment (optional)
+                                <Textarea
+                                    name="comment"
+                                    maxLength={commentMaxLength}
+                                />
+                                <InputError message={errors.comment} />
+                            </label>
                             <p className="text-sm text-muted-foreground">
                                 {visibility === 'immediate'
                                     ? 'Your rating is visible as soon as it is submitted.'

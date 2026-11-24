@@ -24,7 +24,6 @@ class TaskFactory extends Factory
             'estimated_duration_value' => fake()->numberBetween(1, config('taskmate.duration_limits.days')),
             'estimated_duration_unit' => 'days',
             'skill_requirements' => fake()->optional()->sentence(),
-            'complexity' => 'medium',
             'budget' => fake()->randomFloat(2, 500, 10000),
             'work_mode' => 'on_campus',
             'workplace_name' => 'Synthetic Campus Office',

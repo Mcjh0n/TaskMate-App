@@ -55,8 +55,8 @@ use Illuminate\Support\Carbon;
  * @property-write string $category
  * @property-read string $work_mode
  * @property-write string $work_mode
- * @property-read string $complexity
- * @property-write string $complexity*/
+ * @property-read string|null $complexity Historical task label.
+ */
 class Task extends Model
 {
     /** @use HasFactory<TaskFactory> */
@@ -73,7 +73,6 @@ class Task extends Model
         'estimated_duration_value',
         'estimated_duration_unit',
         'skill_requirements',
-        'complexity',
         'budget',
         'budget_min',
         'budget_max',

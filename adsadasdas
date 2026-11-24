@@ -1,0 +1,56 @@
+[33mc6ab9b5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Limit task estimates to 30 days or 720 hours
+[33m0cebc7e[m Support minute, hour, and day task durations
+[33me703b95[m Simplify registration form guidance
+[33m7b3aa75[m Fix PHPStan typing and nullable report outcomes
+[33m2d00943[m Apply Laravel Pint formatting
+[33m61e7a00[m Fix formatting and JavaScript lint warnings
+[33m56247d5[m Generate Wayfinder types before TypeScript check
+[33m4a10dfc[m Use PHP 8.4 in GitHub Actions
+[33m15761f7[m Replace task deadlines with duration days
+[33m8ffbd30[m Update task work modes and locations
+[33m970a994[m Prepare agreement when applicant is accepted
+[33mfe752f5[m Hide removed task details in admin review
+[33m78f6219[m Remove note field from task approval
+[33m640d19c[m Add single or ranged task budgets
+[33mbc86b55[m Link verification counts to user filters
+[33ma42e65d[m Constrain task budget input to six digits
+[33md78ea70[m Use a single full name and sanitize student IDs
+[33m35452e2[m Allow unverified students to browse tasks
+[33m12cf78c[m Redirect sign-ins to role dashboards
+[33mc4ee936[m Remove empty work conditions section
+[33m6b28f4f[m Remove automated task risk screening
+[33mff0e626[m show newest pending tasks to admins
+[33m49478b6[m simplify task posting details
+[33mcafb135[m add sidebar navigation to admin pages
+[33m96b4e24[m fix faculty dashboard without team record
+[33m67c620a[m add account menu to admin layout
+[33m83dca47[m fix admin login redirect without team
+[33m270f267[m polish workflow accessibility for phase 8
+[33m1d97397[m feat: clarify TaskMate first-version journey
+[33m9539af7[m docs: record phase 6 verification
+[33m3b5109a[m feat: simplify public rating summaries
+[33ma6d484f[m feat: clarify application and agreement steps
+[33mde287f6[m feat: clarify account verification flow
+[33m041d788[m feat: simplify task posting form
+[33mae23dfe[m feat: simplify TaskMate task browsing
+[33m198659e[m fix: simplify dashboard actions and demo purge
+[33m468a15a[m docs: add TaskMate simplification plan
+[33m1d8ff2e[m Make demo seeders safe to rerun
+[33mffa69f4[m Add private in-app conversations
+[33ma1e84a8[m Add in-app notifications
+[33m1478275[m Implement agreement cancellation and student posters
+[33m1e662f6[m Fix agreement rendering and exception diagnostics
+[33md1411de[m Fix admin task review rendering and type checks
+[33mb2dae33[m Complete TaskMate privacy and polish phase
+[33mf9d4cb0[m Implement Phase 9 reports and sanctions
+[33m43760f4[m Add contextual task ratings
+[33m2084484[m Add completion and payment workflows
+[33m166ee73[m Add TaskMate agreement workflow
+[33m7280ae8[m Add TaskMate task browsing and applications
+[33mff4eaee[m Add TaskMate risk screening and task moderation
+[33mba254e7[m Add TaskMate task posting
+[33ma29a745[m Add TaskMate verification admin review
+[33m5081170[m Reconcile TaskMate account roles and registration
+[33m0bcd410[m Add TaskMate project foundation
+[33m2ceafbf[m Build TaskMate account types and admin access
+[33m6fe0169[m Initial Laravel + React setup

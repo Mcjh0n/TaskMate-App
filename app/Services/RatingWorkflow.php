@@ -35,9 +35,6 @@ class RatingWorkflow
             $rating->overall_experience = $data['overall_experience'];
             $rating->comment = $data['comment'] ?? null;
             $rating->save();
-            foreach ($data['scores'] as $dimension => $score) {
-                $rating->scores()->create(['dimension' => $dimension, 'score' => $score]);
-            }
             if ($otherRatingExists) {
                 $parties = User::query()->whereKey([$agreement->poster_id, $agreement->student_id])->get();
                 $task = $agreement->task()->firstOrFail();

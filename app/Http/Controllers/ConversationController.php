@@ -34,7 +34,8 @@ class ConversationController extends Controller
         Gate::authorize('view', $conversation);
         $user = $request->user();
         $conversation->load(['task:id,title,status', 'poster:id,name,user_type,organization_name,verification_status', 'applicant:id,name,user_type,organization_name,verification_status', 'messages.sender:id,name,user_type,organization_name', 'messages.contentFlags', 'events.user:id,name,user_type,organization_name', 'closer:id,name,user_type,organization_name']);
-        $workflow->markRead($conversation, $user);
+        $lastMessageId = $conversation->messages->last()->id ?? 0;
+        $workflow->markRead($conversation, $user, $lastMessageId);
         $other = $user->id === $conversation->poster_id ? $conversation->applicant : $conversation->poster;
         $reason = $conversation->sendingBlockedReason($user);
 
@@ -58,7 +59,7 @@ class ConversationController extends Controller
                 'canSend' => $reason === null,
                 'canClose' => $user->can('close', $conversation),
                 'canReopen' => $user->can('reopen', $conversation),
-                'lastMessageId' => $conversation->messages->last()->id ?? 0,
+                'lastMessageId' => $lastMessageId,
             ],
             'messages' => $conversation->messages->map(fn (ConversationMessage $message) => $this->messageItem($message, $user))->values(),
             'events' => $conversation->events->map(fn ($event) => [
@@ -78,7 +79,7 @@ class ConversationController extends Controller
     {
         $workflow->send($conversation, $request->user(), $request->validated('body'));
 
-        return back();
+        return redirect()->route('messages.show', $conversation, 303);
     }
 
     public function updates(Request $request, Conversation $conversation, ConversationWorkflow $workflow): JsonResponse
@@ -126,7 +127,7 @@ class ConversationController extends Controller
             'otherPerson' => ['name' => Conversation::displayName($other), 'type' => config('taskmate.user_types.'.$other->user_type->value), 'verificationStatus' => $other->verification_status->value],
             'preview' => $latest?->body,
             'latestAt' => $latest?->created_at?->toDateTimeString(),
-            'unreadCount' => $conversation->unreadCountFor($user),
+            'hasUnreadMessages' => $conversation->hasUnreadMessagesFor($user),
             'status' => $conversation->closed_at ? 'closed' : ($reason ? 'read_only' : 'open'),
         ];
     }

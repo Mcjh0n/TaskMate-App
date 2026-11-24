@@ -35,7 +35,7 @@ function Page({ rating, notice }: { rating: Rating; notice: string }) {
                 <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
                     {notice}
                 </p>
-                <section className="space-y-2 rounded-xl border p-5">
+                <section className="space-y-2 rounded-xl border bg-card p-5">
                     <p>
                         {rating.rater} rated {rating.ratee}
                     </p>
@@ -97,7 +97,7 @@ function Page({ rating, notice }: { rating: Rating; notice: string }) {
                     <Form
                         action={`/admin/ratings/${rating.id}/moderate`}
                         method="post"
-                        className="space-y-3 rounded-xl border p-5"
+                        className="space-y-3 rounded-xl border bg-card p-5"
                     >
                         <input type="hidden" name="action" value="hide" />
                         <label

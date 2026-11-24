@@ -119,7 +119,7 @@ export default function ShowTask({
                     </div>
                     <TaskStatusBadge status={task.status} label={statusLabel} />
                 </div>
-                <section className="space-y-4 rounded-xl border p-5">
+                <section className="space-y-4 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Task details</h2>
                     <p className="whitespace-pre-wrap">{task.description}</p>
                     {task.requiredActivities && (
@@ -151,7 +151,7 @@ export default function ShowTask({
                         </p>
                     )}
                 </section>
-                <section className="space-y-2 rounded-xl border p-5">
+                <section className="space-y-2 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Work details</h2>
                     <p>{task.workMode}</p>
                     {task.workplaceName && <p>{task.workplaceName}</p>}
@@ -162,7 +162,7 @@ export default function ShowTask({
                         work, not a home address.
                     </p>
                 </section>
-                <section className="space-y-2 rounded-xl border p-5">
+                <section className="space-y-2 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">Compensation</h2>
                     <p>Estimated budget: {task.budgetDisplay}</p>
                     <p className="text-sm text-muted-foreground">
@@ -181,7 +181,7 @@ export default function ShowTask({
                     </div>
                 )}
                 {agreement && (
-                    <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border p-5">
+                    <section className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-5">
                         <div>
                             <h2 className="font-semibold">Agreement</h2>
                             <p className="text-sm">
@@ -211,7 +211,7 @@ export default function ShowTask({
                     </Button>
                 )}
                 {applicants.length > 0 && (
-                    <section className="space-y-4 rounded-xl border p-5">
+                    <section className="space-y-4 rounded-xl border bg-card p-5">
                         <h2 className="text-lg font-semibold">
                             Applicants ({applicants.length})
                         </h2>

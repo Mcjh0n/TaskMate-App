@@ -138,14 +138,24 @@ export default function BrowseTaskDetail({
                             {PAYMENT_BOUNDARY_NOTICE}
                         </p>
                     </div>
-                    <div className="rounded-xl border p-4">
+                    <div className="rounded-xl border bg-card p-4">
                         <p className="text-sm text-muted-foreground">
                             Work mode
                         </p>
                         <p className="mt-1 font-medium">{task.workMode}</p>
                     </div>
+                    {task.estimatedDurationLabel && (
+                        <div className="rounded-xl border bg-card p-4">
+                            <p className="text-sm text-muted-foreground">
+                                Estimated duration
+                            </p>
+                            <p className="mt-1 font-medium">
+                                {task.estimatedDurationLabel}
+                            </p>
+                        </div>
+                    )}
                     {(task.workplaceName || task.workplaceAddress) && (
-                        <div className="rounded-xl border p-4 sm:col-span-2">
+                        <div className="rounded-xl border bg-card p-4 sm:col-span-2">
                             <p className="text-sm text-muted-foreground">
                                 Workplace
                             </p>
@@ -162,7 +172,7 @@ export default function BrowseTaskDetail({
                         </div>
                     )}
                 </section>
-                <section className="space-y-4 rounded-xl border p-5">
+                <section className="space-y-4 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">About the work</h2>
                     <p className="whitespace-pre-wrap">{task.description}</p>
                     {task.requiredActivities && (
@@ -186,14 +196,8 @@ export default function BrowseTaskDetail({
                             <strong>Skills:</strong> {task.skillRequirements}
                         </p>
                     )}
-                    {task.estimatedDurationLabel && (
-                        <p>
-                            <strong>Estimated duration:</strong>{' '}
-                            {task.estimatedDurationLabel}
-                        </p>
-                    )}
                 </section>
-                <section className="space-y-2 rounded-xl border p-5">
+                <section className="space-y-2 rounded-xl border bg-card p-5">
                     <h2 className="text-lg font-semibold">About the poster</h2>
                     <p className="font-medium">
                         <Link href={poster.profileUrl} className="underline">
@@ -233,7 +237,7 @@ export default function BrowseTaskDetail({
                     </div>
                 )}
                 {application ? (
-                    <section className="space-y-2 rounded-xl border p-5">
+                    <section className="space-y-2 rounded-xl border bg-card p-5">
                         <h2 className="font-semibold">Your application</h2>
                         <ApplicationStatusBadge
                             status={application.status}
@@ -263,7 +267,7 @@ export default function BrowseTaskDetail({
                 ) : canApply ? (
                     <section
                         id="application-form"
-                        className="space-y-4 rounded-xl border p-5"
+                        className="space-y-4 rounded-xl border bg-card p-5"
                     >
                         <h2 className="text-lg font-semibold">
                             Apply to this task
@@ -342,7 +346,7 @@ export default function BrowseTaskDetail({
                     </section>
                 ) : applicantVerificationStatus &&
                   applicantVerificationStatus !== 'verified' ? (
-                    <div role="status" className="rounded-xl border p-5">
+                    <div role="status" className="rounded-xl border bg-card p-5">
                         <h2 className="font-semibold">
                             You can browse this task
                         </h2>

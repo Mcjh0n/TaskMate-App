@@ -75,7 +75,7 @@ export default function AdminUsersIndex({
 
                 <form
                     onSubmit={applyFilters}
-                    className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-4"
+                    className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
                 >
                     <input
                         className="h-10 rounded-md border bg-background px-3 text-sm"
@@ -122,7 +122,7 @@ export default function AdminUsersIndex({
 
                 {users.data.length ? (
                     <div className="space-y-4">
-                        <div className="overflow-x-auto rounded-lg border">
+                        <div className="overflow-x-auto rounded-lg border bg-card">
                             <table className="w-full text-left text-sm">
                                 <thead className="bg-muted/50 text-muted-foreground">
                                     <tr>
@@ -187,7 +187,7 @@ export default function AdminUsersIndex({
                         </div>
                     </div>
                 ) : (
-                    <p className="rounded-lg border p-6 text-sm text-muted-foreground">
+                    <p className="rounded-lg border bg-card p-6 text-sm text-muted-foreground">
                         No accounts match these filters.
                     </p>
                 )}

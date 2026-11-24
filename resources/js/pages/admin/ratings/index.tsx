@@ -35,7 +35,7 @@ function Page({ ratings, filters }: Props) {
                 <h1 className="text-2xl font-semibold">Ratings</h1>
                 <p className="rounded-lg border p-4 text-sm">{ratingNotice}</p>
                 <form
-                    className="grid gap-3 rounded-xl border p-4 sm:grid-cols-2 lg:grid-cols-5"
+                    className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5"
                     onSubmit={(e) => {
                         e.preventDefault();
                         router.get('/admin/ratings', values);
@@ -106,7 +106,7 @@ function Page({ ratings, filters }: Props) {
                         Apply filters
                     </button>
                 </form>
-                <div className="overflow-x-auto rounded-xl border">
+                <div className="overflow-x-auto rounded-xl border bg-card">
                     <table className="w-full text-left text-sm">
                         <thead>
                             <tr className="border-b">

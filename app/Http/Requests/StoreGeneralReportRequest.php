@@ -3,6 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Enums\ReportType;
+use App\Enums\TaskStatus;
+use App\Models\Task;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -10,7 +12,21 @@ class StoreGeneralReportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()?->isVerified() === true && ! $this->user()->isAdmin();
+        $user = $this->user();
+        if (! $user || $user->isAdmin()) {
+            return false;
+        }
+
+        if ($user->isVerified()) {
+            return true;
+        }
+
+        $task = $this->route('task');
+
+        return $this->routeIs('tasks.problem-reports.store')
+            && $user->canBrowse()
+            && $task instanceof Task
+            && $task->status === TaskStatus::Approved;
     }
 
     /**

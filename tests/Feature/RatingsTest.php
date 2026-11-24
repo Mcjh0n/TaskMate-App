@@ -74,7 +74,6 @@ class RatingsTest extends TestCase
         return array_merge([
             'overall_experience' => 5,
             'comment' => 'Clear communication on this synthetic task.',
-            'scores' => ['work_quality' => 5, 'reliability' => 4, 'communication' => 5, 'professionalism' => 4, 'timeliness' => 5],
         ], $replace);
     }
 
@@ -102,18 +101,23 @@ class RatingsTest extends TestCase
         $this->actingAs($pair['student'])->get(route('agreements.rate', $pair['agreement']))->assertForbidden();
     }
 
-    public function test_direction_specific_dimensions_are_required_and_unknown_dimensions_rejected(): void
+    public function test_overall_rating_is_required_and_comment_is_optional(): void
     {
         $pair = $this->completedPair();
-        $this->actingAs($pair['student'])->post(route('agreements.rate.store', $pair['agreement']), [
+        $this->actingAs($pair['student'])->get(route('agreements.rate', $pair['agreement']))->assertInertia(fn (Assert $page) => $page
+            ->component('ratings/create')->missing('dimensions'));
+        $url = route('agreements.rate.store', $pair['agreement']);
+        $this->post($url, [])->assertInvalid('overall_experience');
+        $this->post($url, ['overall_experience' => 6])->assertInvalid('overall_experience');
+        $this->post($url, ['overall_experience' => 3, 'comment' => str_repeat('a', 1001)])->assertInvalid('comment');
+        $this->post($url, [
             'overall_experience' => 3,
-            'scores' => ['job_description_accuracy' => 4, 'reliability' => 4, 'communication' => 4, 'professionalism' => 4, 'work_quality' => 5],
-        ])->assertInvalid('scores');
-        $this->actingAs($pair['student'])->post(route('agreements.rate.store', $pair['agreement']), [
-            'overall_experience' => 3,
-            'scores' => ['job_description_accuracy' => 4, 'reliability' => 4, 'communication' => 4, 'professionalism' => 4],
-        ])->assertRedirect();
-        $this->assertSame(RatingDirection::StudentToPoster, Rating::firstOrFail()->direction);
+        ])->assertRedirect(route('agreements.show', $pair['agreement']));
+        $rating = Rating::sole();
+        $this->assertSame(RatingDirection::StudentToPoster, $rating->direction);
+        $this->assertSame(3, $rating->overall_experience);
+        $this->assertNull($rating->comment);
+        $this->assertDatabaseCount('rating_scores', 0);
     }
 
     public function test_after_both_visibility_hides_ratee_rating_until_second_submission(): void
@@ -127,10 +131,11 @@ class RatingsTest extends TestCase
             ->where('ratings.waiting', true)
             ->missing('ratings.other.comment'));
         $this->assertSame(0, $pair['student']->notifications()->count());
-        $studentPayload = ['overall_experience' => 4, 'scores' => ['job_description_accuracy' => 4, 'reliability' => 4, 'communication' => 4, 'professionalism' => 4]];
+        $studentPayload = ['overall_experience' => 4, 'scores' => ['reliability' => 4]];
         $this->actingAs($pair['student'])->post(route('agreements.rate.store', $pair['agreement']), $studentPayload)->assertRedirect();
-        $this->assertSame('rating.visible', $pair['poster']->notifications()->firstOrFail()->data['event']);
+        $this->assertSame(0, $pair['poster']->notifications()->count());
         $this->assertSame(0, $pair['student']->notifications()->count());
+        $this->assertDatabaseCount('rating_scores', 0);
         $this->actingAs($pair['poster'])->get(route('agreements.show', $pair['agreement']))->assertInertia(fn (Assert $page) => $page->where('ratings.other.overall', 4));
     }
 
@@ -151,7 +156,9 @@ class RatingsTest extends TestCase
         $summary = app(RatingSummary::class)->forUser($pair['student']);
         $this->assertSame(1, $summary['count']);
         $this->assertNull($summary['average']);
-        $this->actingAs($pair['student'])->get(route('agreements.show', $pair['agreement']))->assertInertia(fn (Assert $page) => $page->where('ratings.other.overall', 4));
+        $this->actingAs($pair['student'])->get(route('agreements.show', $pair['agreement']))->assertInertia(fn (Assert $page) => $page
+            ->where('ratings.other.overall', 4)->has('ratings.other.scores', 5)
+            ->where('ratings.other.scores', fn ($scores) => $scores->contains(fn ($score) => $score['label'] === 'Work quality' && $score['score'] === 4)));
     }
 
     public function test_immediate_visibility_and_averages_exclude_hidden_ratings(): void
@@ -162,7 +169,7 @@ class RatingsTest extends TestCase
         $summary = app(RatingSummary::class)->forUser($pair['student']);
         $this->assertSame(5.0, $summary['average']);
         $this->assertArrayNotHasKey('dimensions', $summary);
-        $this->assertDatabaseHas('rating_scores', ['rating_id' => $pair['agreement']->ratings()->firstOrFail()->id, 'dimension' => 'work_quality', 'score' => 5]);
+        $this->assertDatabaseCount('rating_scores', 0);
         $pair['agreement']->ratings()->first()->forceFill([]);
         $rating = Rating::firstOrFail();
         $admin = $pair['admin'];
@@ -198,7 +205,7 @@ class RatingsTest extends TestCase
         $pair = $this->completedPair();
         $this->actingAs($pair['poster'])->post(route('agreements.rate.store', $pair['agreement']), $this->payload());
         $rating = Rating::firstOrFail();
-        $score = $rating->scores()->firstOrFail();
+        $score = $rating->scores()->create(['dimension' => 'work_quality', 'score' => 5]);
         try {
             $rating->comment = 'Changed';
             $rating->save();

@@ -41,6 +41,9 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
     const [priority, setPriority] = useState(filters.priority ?? '');
     const [escalated, setEscalated] = useState(filters.escalated ?? '');
     const [hasEvidence, setHasEvidence] = useState(filters.has_evidence ?? '');
+    const [moreFiltersOpen, setMoreFiltersOpen] = useState(
+        Boolean(filters.escalated || filters.has_evidence),
+    );
     const filter = (event: React.FormEvent) => {
         event.preventDefault();
         router.get(
@@ -68,13 +71,13 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                         Review reports and related TaskMate records.
                     </p>
                 </div>
-                <p className="rounded-lg border p-4 text-sm">
+                <p className="rounded-lg border bg-card p-4 text-sm">
                     This review is a platform record, not a legal ruling.
                     TaskMate cannot recover or guarantee payment.
                 </p>
                 <form
                     onSubmit={filter}
-                    className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2 lg:grid-cols-3"
+                    className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2 lg:grid-cols-3"
                 >
                     <input
                         aria-label="Search parties"
@@ -119,26 +122,43 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                         <option value="high">High</option>
                         <option value="normal">Normal</option>
                     </select>
-                    <select
-                        aria-label="Filter escalation"
-                        value={escalated}
-                        onChange={(event) => setEscalated(event.target.value)}
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
+                    <details
+                        open={moreFiltersOpen}
+                        onToggle={(event) =>
+                            setMoreFiltersOpen(event.currentTarget.open)
+                        }
+                        className="rounded-md border p-3 sm:col-span-2 lg:col-span-3"
                     >
-                        <option value="">Any escalation</option>
-                        <option value="1">Escalated</option>
-                        <option value="0">Not escalated</option>
-                    </select>
-                    <select
-                        aria-label="Filter evidence"
-                        value={hasEvidence}
-                        onChange={(event) => setHasEvidence(event.target.value)}
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                    >
-                        <option value="">Any evidence</option>
-                        <option value="1">Has evidence</option>
-                        <option value="0">No evidence</option>
-                    </select>
+                        <summary className="cursor-pointer text-sm font-medium">
+                            More filters
+                        </summary>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            <select
+                                aria-label="Filter escalation"
+                                value={escalated}
+                                onChange={(event) =>
+                                    setEscalated(event.target.value)
+                                }
+                                className="h-10 rounded-md border bg-background px-3 text-sm"
+                            >
+                                <option value="">Any escalation</option>
+                                <option value="1">Escalated</option>
+                                <option value="0">Not escalated</option>
+                            </select>
+                            <select
+                                aria-label="Filter evidence"
+                                value={hasEvidence}
+                                onChange={(event) =>
+                                    setHasEvidence(event.target.value)
+                                }
+                                className="h-10 rounded-md border bg-background px-3 text-sm"
+                            >
+                                <option value="">Any evidence</option>
+                                <option value="1">Has evidence</option>
+                                <option value="0">No evidence</option>
+                            </select>
+                        </div>
+                    </details>
                     <button
                         className="h-10 rounded-md border px-4 text-sm font-medium"
                         type="submit"
@@ -147,7 +167,7 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                     </button>
                 </form>
                 {reports.data.length ? (
-                    <div className="overflow-x-auto rounded-lg border">
+                    <div className="overflow-x-auto rounded-lg border bg-card">
                         <table className="w-full text-left text-sm">
                             <thead className="bg-muted/50">
                                 <tr>
@@ -202,7 +222,7 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                         </table>
                     </div>
                 ) : (
-                    <p className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
+                    <p className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
                         No reports match these filters.
                     </p>
                 )}

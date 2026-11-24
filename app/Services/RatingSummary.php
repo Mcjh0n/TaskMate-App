@@ -11,7 +11,7 @@ class RatingSummary
      */
     public function forUser(User $user): array
     {
-        $ratings = app(RatingVisibility::class)->visibleQuery()->where('ratee_id', $user->id)->get();
+        $ratings = app(RatingVisibility::class)->visibleQuery()->where('ratee_id', $user->id)->get(['overall_experience']);
         $minimum = (int) config('taskmate.ratings.min_count_for_average', 3);
         $summary = ['count' => $ratings->count(), 'average' => null];
         if ($ratings->count() >= $minimum) {

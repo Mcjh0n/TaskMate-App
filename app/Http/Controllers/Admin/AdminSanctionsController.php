@@ -29,10 +29,11 @@ class AdminSanctionsController extends Controller
             abort_if($user->isAdmin() || $user->id === $request->user()->id, 403);
             $report = $request->filled('report_id') ? Report::lockForUpdate()->findOrFail($request->integer('report_id')) : null;
             if ($report) {
-                abort_unless($request->user()->can('review', $report), 403);
+                abort_unless($report->reported_user_id === $user->id && $request->user()->can('review', $report), 403);
             }
             $action = $request->validated('action');
             if ($action === 'remove_post') {
+                abort_if($report && $report->task_id !== $request->integer('task_id'), 403);
                 $task = Task::query()->lockForUpdate()->where('poster_id', $user->id)->whereKey($request->integer('task_id'))->firstOrFail();
                 $agreement = $task->agreement;
                 if (in_array($task->status, [TaskStatus::InProgress, TaskStatus::Completed], true)
