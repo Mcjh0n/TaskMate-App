@@ -17,6 +17,8 @@ class ContentFlagFactory extends Factory
     public function definition(): array
     {
         return [
+            'flaggable_type' => Task::class,
+            'flaggable_id' => Task::factory(),
             'source_user_id' => User::factory()->verified()->facultyStaff(),
             'category' => 'bypass_agreement',
             'matched' => ['Skip the agreement'],
@@ -24,15 +26,6 @@ class ContentFlagFactory extends Factory
             'status' => ContentFlagStatus::Open,
             'created_at' => now(),
         ];
-    }
-
-    public function configure(): static
-    {
-        return $this->afterMaking(function (ContentFlag $flag): void {
-            if ($flag->flaggable_id === null) {
-                $flag->flaggable()->associate(Task::factory()->create());
-            }
-        });
     }
 
     public function forMessage(ConversationMessage $message): static

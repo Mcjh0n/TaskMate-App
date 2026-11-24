@@ -154,7 +154,7 @@ class Conversation extends Model
         $read = $this->relationLoaded('reads')
             ? $this->reads->firstWhere('user_id', $user->id)
             : $this->reads()->where('user_id', $user->id)->first();
-        $lastRead = $read?->last_read_message_id ?? 0;
+        $lastRead = $read->last_read_message_id ?? 0;
 
         return $this->messages()->where('sender_id', '!=', $user->id)->where('id', '>', $lastRead)->exists();
     }

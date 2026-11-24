@@ -132,7 +132,7 @@ class ReportWorkflow
         $completion = $agreement->completion;
         $workRecordedAt = $dueDate
             ? $completion?->completed_at
-            : ($completion?->delivered_at ?? $completion?->completed_at);
+            : ($completion->delivered_at ?? $completion?->completed_at);
         $waitAfterWork = $workRecordedAt && now()->greaterThanOrEqualTo($workRecordedAt->copy()->addDays($waitDays));
         $waitAfterDueDate = $dueDate && today()->greaterThanOrEqualTo($dueDate->copy()->addDays($waitDays));
 
