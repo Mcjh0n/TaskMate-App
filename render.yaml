@@ -11,7 +11,11 @@ services:
           - key: APP_DEBUG
             value: 'false'
           - key: APP_URL
-            value: https://taskmate.onrender.com
+            value: https://taskmate-app-2ied.onrender.com
+          - key: ASSET_URL
+            value: https://taskmate-app-2ied.onrender.com
+          - key: LOG_CHANNEL
+            value: stderr
           - key: APP_KEY
             generateValue: true
           - key: DB_CONNECTION
