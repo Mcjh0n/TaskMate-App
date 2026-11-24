@@ -223,11 +223,6 @@ export default function Welcome() {
                             </li>
                         ))}
                     </ol>
-                    <p className="mt-7 text-sm leading-relaxed text-muted-foreground">
-                        Verified faculty and staff and approved organizations
-                        can post tasks. Students can also post when student
-                        posting is enabled.
-                    </p>
                 </div>
             </section>
         </>

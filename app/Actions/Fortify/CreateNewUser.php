@@ -46,7 +46,7 @@ class CreateNewUser implements CreatesNewUsers
             $allowedDomains = array_map(fn (string $emailDomain) => Str::lower($emailDomain), config('taskmate.institutional_email_domains', []));
 
             if (! in_array($domain, $allowedDomains, true)) {
-                $fail('Use your CMU institutional email address.');
+                $fail('Use an email address ending in @'.implode(' or @', $allowedDomains).'.');
             }
         };
 

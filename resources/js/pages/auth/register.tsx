@@ -16,28 +16,19 @@ type UserType = 'student' | 'faculty_staff' | 'organization';
 
 type Props = {
     passwordRules: string;
-    institutionalEmailDomains: string[];
 };
 
 export function sanitizeStudentId(value: string): string {
     return value.replace(/[^0-9]/g, '').slice(0, 10);
 }
 
-export default function Register({
-    passwordRules,
-    institutionalEmailDomains,
-}: Props) {
+export default function Register({ passwordRules }: Props) {
     const [userType, setUserType] = useState<UserType>('student');
     const [idNumber, setIdNumber] = useState('');
     const affiliationLabel =
         userType === 'student' ? 'College and program' : 'College or office';
     const idLabel =
         userType === 'student' ? 'Student ID number' : 'Employee ID number';
-    const accountTypeGuidance = {
-        student: 'Browse approved tasks now. Verification is required to post or apply.',
-        faculty_staff: 'Verification is required to post. Faculty and staff cannot apply.',
-        organization: 'Verification is required to post. Organizations cannot browse or apply.',
-    }[userType];
 
     return (
         <>
@@ -46,12 +37,12 @@ export default function Register({
                 {...store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
                 disableWhileProcessing
-                className="flex flex-col gap-6"
+                className="registration-form flex flex-col gap-3"
             >
                 {({ processing, errors }) => (
                     <>
-                        <div className="grid gap-6">
-                            <div className="grid gap-2">
+                        <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
+                            <div className="grid content-start gap-1.5 sm:col-span-2">
                                 <Label htmlFor="user_type">
                                     Choose your account type
                                 </Label>
@@ -77,16 +68,11 @@ export default function Register({
                                     </option>
                                 </select>
                                 <InputError message={errors.user_type} />
-                                <p className="text-sm text-muted-foreground">
-                                    {accountTypeGuidance}
-                                </p>
                             </div>
-
-                            <SafetyNotice />
 
                             {userType === 'organization' ? (
                                 <>
-                                    <div className="grid gap-2">
+                                    <div className="grid content-start gap-1.5">
                                         <Label htmlFor="organization_name">
                                             Organization name
                                         </Label>
@@ -94,13 +80,12 @@ export default function Register({
                                             id="organization_name"
                                             name="organization_name"
                                             required
-                                            placeholder="Organization name"
                                         />
                                         <InputError
                                             message={errors.organization_name}
                                         />
                                     </div>
-                                    <div className="grid gap-2">
+                                    <div className="grid content-start gap-1.5">
                                         <Label htmlFor="position">
                                             Your position
                                         </Label>
@@ -108,11 +93,10 @@ export default function Register({
                                             id="position"
                                             name="position"
                                             required
-                                            placeholder="Representative position"
                                         />
                                         <InputError message={errors.position} />
                                     </div>
-                                    <div className="grid gap-2">
+                                    <div className="grid content-start gap-1.5 sm:col-span-2">
                                         <Label htmlFor="supporting_info">
                                             About the organization and why it
                                             posts tasks
@@ -122,10 +106,10 @@ export default function Register({
                                             name="supporting_info"
                                             required
                                             maxLength={1000}
-                                            placeholder="Briefly describe your organization and why you want to post tasks."
                                         />
                                         <p className="text-xs text-muted-foreground">
-                                            Visible only to you and administrators.
+                                            Visible only to you and
+                                            administrators.
                                         </p>
                                         <InputError
                                             message={errors.supporting_info}
@@ -134,7 +118,7 @@ export default function Register({
                                 </>
                             ) : (
                                 <>
-                                    <div className="grid gap-2">
+                                    <div className="grid content-start gap-1.5">
                                         <Label htmlFor="id_number">
                                             {idLabel}
                                         </Label>
@@ -142,7 +126,6 @@ export default function Register({
                                             id="id_number"
                                             name="id_number"
                                             required
-                                            placeholder={idLabel}
                                             value={idNumber}
                                             onChange={(event) =>
                                                 setIdNumber(
@@ -172,14 +155,14 @@ export default function Register({
                                         />
                                         <p className="text-xs text-muted-foreground">
                                             {userType === 'student'
-                                                ? 'Enter exactly 10 digits. Letters are removed automatically.'
+                                                ? 'Enter exactly 10 digits.'
                                                 : 'Only you and administrators can see this ID number.'}
                                         </p>
                                         <InputError
                                             message={errors.id_number}
                                         />
                                     </div>
-                                    <div className="grid gap-2">
+                                    <div className="grid content-start gap-1.5">
                                         <Label htmlFor="affiliation">
                                             {affiliationLabel}
                                         </Label>
@@ -187,7 +170,6 @@ export default function Register({
                                             id="affiliation"
                                             name="affiliation"
                                             required
-                                            placeholder={affiliationLabel}
                                         />
                                         <InputError
                                             message={errors.affiliation}
@@ -196,7 +178,7 @@ export default function Register({
                                 </>
                             )}
 
-                            <div className="grid gap-2">
+                            <div className="grid content-start gap-1.5 sm:col-span-2">
                                 <Label htmlFor="name">Full name</Label>
                                 <Input
                                     id="name"
@@ -204,12 +186,11 @@ export default function Register({
                                     required
                                     autoFocus
                                     autoComplete="name"
-                                    placeholder="Full name"
                                 />
                                 <InputError message={errors.name} />
                             </div>
 
-                            <div className="grid gap-2">
+                            <div className="grid content-start gap-1.5 sm:col-span-2">
                                 <Label htmlFor="email">Email address</Label>
                                 <Input
                                     id="email"
@@ -217,38 +198,23 @@ export default function Register({
                                     required
                                     autoComplete="email"
                                     name="email"
-                                    placeholder="email@example.com"
                                 />
                                 <InputError message={errors.email} />
-                                {userType !== 'organization' && (
-                                    <p className="text-sm text-muted-foreground">
-                                        Use your CMU institutional email address
-                                        (
-                                        {institutionalEmailDomains
-                                            .map((domain) => `@${domain}`)
-                                            .join(', ')}
-                                        ).
-                                    </p>
-                                )}
-                                <p className="text-xs text-muted-foreground">
-                                    Confirm your email address. Account approval is a separate step.
-                                </p>
                             </div>
 
-                            <div className="grid gap-2">
+                            <div className="grid content-start gap-1.5">
                                 <Label htmlFor="password">Password</Label>
                                 <PasswordInput
                                     id="password"
                                     required
                                     autoComplete="new-password"
                                     name="password"
-                                    placeholder="Password"
                                     passwordrules={passwordRules}
                                 />
                                 <InputError message={errors.password} />
                             </div>
 
-                            <div className="grid gap-2">
+                            <div className="grid content-start gap-1.5">
                                 <Label htmlFor="password_confirmation">
                                     Confirm password
                                 </Label>
@@ -257,7 +223,6 @@ export default function Register({
                                     required
                                     autoComplete="new-password"
                                     name="password_confirmation"
-                                    placeholder="Confirm password"
                                     passwordrules={passwordRules}
                                 />
                                 <InputError
@@ -265,9 +230,12 @@ export default function Register({
                                 />
                             </div>
 
+                            <div className="sm:col-span-2">
+                                <SafetyNotice />
+                            </div>
                             <Button
                                 type="submit"
-                                className="mt-2 w-full"
+                                className="w-full sm:col-span-2"
                                 disabled={processing}
                                 data-test="register-user-button"
                             >
@@ -291,5 +259,4 @@ export default function Register({
 
 Register.layout = {
     title: 'Create an account',
-    description: 'Enter your details below to create your account',
 };

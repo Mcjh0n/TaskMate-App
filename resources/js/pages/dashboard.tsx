@@ -51,7 +51,7 @@ export default function Dashboard({
     return (
         <>
             <Head title="Dashboard" />
-            <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-5 p-4 md:p-6">
+            <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 p-4 sm:p-6 lg:p-8">
                 {status && (
                     <div
                         role="status"
@@ -62,18 +62,18 @@ export default function Dashboard({
                 )}
 
                 <section
-                    className="rounded-xl border border-t-4 border-t-brand-gold bg-card p-5 shadow-sm md:p-6"
+                    className="relative overflow-hidden rounded-2xl border border-t-4 border-t-brand-gold bg-card p-5 shadow-sm md:p-7"
                     aria-labelledby="next-step-title"
                 >
-                    <div className="max-w-3xl">
-                        <p className="text-sm font-medium text-muted-foreground">
-                            TaskMate
+                    <div className="max-w-4xl">
+                        <p className="text-sm font-semibold tracking-wide text-primary uppercase">
+                            Your TaskMate workspace
                         </p>
                         <h1
                             id="next-step-title"
-                            className="mt-1 text-2xl font-semibold"
+                            className="mt-1 text-3xl font-semibold tracking-tight"
                         >
-                            What would you like to do next?
+                            Good day, {user.name}
                         </h1>
 
                         {user.is_admin ? (
@@ -83,7 +83,7 @@ export default function Dashboard({
                                     need administrator attention.
                                 </p>
                                 <Link
-                                    className="mt-4 inline-flex min-h-10 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground underline-offset-4 hover:underline"
+                                    className="mt-4 inline-flex min-h-11 items-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     href={admin.dashboard().url}
                                 >
                                     Open admin dashboard
@@ -98,7 +98,7 @@ export default function Dashboard({
                                     records.
                                 </p>
                                 <Link
-                                    className="mt-4 inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline"
+                                    className="mt-4 inline-flex min-h-11 items-center rounded-md border bg-card px-5 py-2.5 text-sm font-semibold transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     href="/my-sanctions"
                                 >
                                     View account actions
@@ -118,7 +118,7 @@ export default function Dashboard({
                                 {user.user_type === 'student' &&
                                     user.can_browse_tasks && (
                                         <Link
-                                            className="mt-4 inline-flex min-h-10 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
+                                            className="mt-4 inline-flex min-h-11 items-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                             href={browse.index().url}
                                         >
                                             Browse tasks
@@ -144,7 +144,7 @@ export default function Dashboard({
                                 <div className="mt-4 flex flex-wrap gap-3">
                                     {user.can_browse_tasks && (
                                         <Link
-                                            className="inline-flex min-h-10 items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground underline-offset-4 hover:underline"
+                                            className="inline-flex min-h-11 items-center rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                             href={browse.index().url}
                                         >
                                             Browse tasks
@@ -152,7 +152,7 @@ export default function Dashboard({
                                     )}
                                     {user.can_post_tasks && (
                                         <Link
-                                            className="inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline"
+                                            className="inline-flex min-h-11 items-center rounded-md border bg-card px-5 py-2.5 text-sm font-semibold transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                             href={createTask().url}
                                         >
                                             Post a task
@@ -160,7 +160,7 @@ export default function Dashboard({
                                     )}
                                     {user.can_apply_tasks && (
                                         <Link
-                                            className="inline-flex min-h-10 items-center rounded-md border px-4 py-2 text-sm font-medium underline-offset-4 hover:underline"
+                                            className="inline-flex min-h-11 items-center rounded-md border bg-card px-5 py-2.5 text-sm font-semibold transition hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                             href={applications.mine().url}
                                         >
                                             My applications
@@ -217,7 +217,7 @@ export default function Dashboard({
                 )}
 
                 <section
-                    className="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4"
+                    className="flex flex-wrap items-center gap-3 rounded-2xl border bg-card p-4 shadow-sm"
                     aria-label="Account verification"
                 >
                     <VerificationStatusBadge
@@ -257,7 +257,7 @@ export default function Dashboard({
                 </section>
 
                 <section
-                    className="space-y-2 rounded-xl border bg-card p-5"
+                    className="space-y-2 rounded-2xl border bg-card p-5 shadow-sm"
                     aria-label="Your account details"
                 >
                     <h2 className="text-lg font-semibold">
@@ -277,7 +277,7 @@ export default function Dashboard({
                 <SafetyNotice />
 
                 {ratingsWaiting.length > 0 && (
-                    <section className="space-y-3 rounded-xl border bg-card p-5">
+                    <section className="space-y-3 rounded-2xl border bg-card p-5 shadow-sm">
                         <h2 className="text-lg font-semibold">
                             Ratings waiting for you
                         </h2>
@@ -307,7 +307,7 @@ export default function Dashboard({
                 )}
 
                 <section
-                    className="space-y-3 rounded-xl border bg-card p-5"
+                    className="space-y-3 rounded-2xl border bg-card p-5 shadow-sm"
                     aria-label="Recent activity"
                 >
                     <div className="flex items-center justify-between">

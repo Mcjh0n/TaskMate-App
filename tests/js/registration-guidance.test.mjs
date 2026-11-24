@@ -93,18 +93,18 @@ void test('registration keeps only short guidance needed to complete the form', 
     const markup = renderToStaticMarkup(
         React.createElement(Register, {
             passwordRules: '',
-            institutionalEmailDomains: ['cmu.edu.ph'],
+            institutionalEmailDomains: ['cmu.edu.ph', 'google.com'],
         }),
     );
 
     assert.doesNotMatch(markup, /How account review works/);
-    assert.match(markup, /Browse approved tasks now/);
-    assert.match(markup, /Verification is required to post or apply/);
-    assert.match(markup, /Account approval is a separate step/);
+    assert.doesNotMatch(markup, /Browse approved tasks now/);
+    assert.doesNotMatch(markup, /Accepted domains|@cmu\.edu\.ph|@google\.com/);
+    assert.doesNotMatch(markup, /Account approval is a separate step/);
     assert.match(markup, /Student ID number/);
     assert.match(markup, /Full name/);
     assert.doesNotMatch(markup, /First name|Middle name|Last name/);
     assert.match(markup, /inputMode="numeric"/);
     assert.match(markup, /maxLength="10"/);
-    assert.match(markup, /Letters are removed automatically/);
+    assert.match(markup, /Enter exactly 10 digits/);
 });
