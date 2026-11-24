@@ -5,6 +5,7 @@ import { store } from '@/routes/tasks';
 type Option = { value: string; label: string };
 type Props = {
     options: {
+        durationLimits: Record<string, number>;
         categories: Option[];
         workModes: Option[];
         guidelines: string[];

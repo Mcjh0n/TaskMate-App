@@ -217,6 +217,7 @@ class TaskController extends Controller
     {
         return [
             'categories' => $this->optionsFor(config('taskmate.categories', [])),
+            'durationLimits' => config('taskmate.duration_limits'),
             'workModes' => $this->optionsFor(config('taskmate.work_modes', [])),
             'guidelines' => config('taskmate.task_guidelines', []),
         ];

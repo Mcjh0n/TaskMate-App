@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Form } from '@inertiajs/react';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -25,6 +25,7 @@ type TaskData = {
 type Props = {
     action: { action: string; method: 'post' | 'put' };
     options: {
+        durationLimits: Record<string, number>;
         categories: Option[];
         workModes: Option[];
         guidelines: string[];
@@ -32,6 +33,15 @@ type Props = {
     task: TaskData | null;
     resetWarning: boolean;
 };
+
+export function canEditDuration(
+    next: string,
+    previous: string,
+    maximum: number,
+): boolean {
+    const fits = next.length <= String(maximum).length;
+    return /^\d*$/.test(next) && (fits || next.length < previous.length);
+}
 
 export function sanitizeTaskBudget(value: string): string {
     const filtered = value.replace(/[^0-9.]/g, '');
@@ -59,12 +69,24 @@ export default function TaskForm({
     const [budget, setBudget] = useState(task?.budget ?? '');
     const [budgetMin, setBudgetMin] = useState(task?.budgetMin ?? '');
     const [budgetMax, setBudgetMax] = useState(task?.budgetMax ?? '');
-    const [durationValue, setDurationValue] = useState(
-        task?.estimatedDurationValue?.toString() ?? '',
+    const previousUnit = task?.estimatedDurationUnit;
+    const legacyMinutes = previousUnit === 'minutes';
+    const [durationUnit, setDurationUnit] = useState<string>(
+        legacyMinutes ? 'hours' : (previousUnit ?? 'days'),
     );
-    const [durationUnit, setDurationUnit] = useState<
-        'minutes' | 'hours' | 'days'
-    >(task?.estimatedDurationUnit ?? 'days');
+    const [durationValue, setDurationValue] = useState(
+        legacyMinutes ? '' : (task?.estimatedDurationValue?.toString() ?? ''),
+    );
+    const maximum = options.durationLimits[durationUnit];
+    const durationInput = useRef<HTMLInputElement>(null);
+    const durationError =
+        durationValue !== '' &&
+        (!/^[1-9]\d*$/.test(durationValue) || Number(durationValue) > maximum)
+            ? `Enter a whole number from 1 to ${maximum} ${durationUnit}.`
+            : '';
+    useEffect(() => {
+        durationInput.current?.setCustomValidity(durationError);
+    }, [durationError]);
     const hasWorkplace = workMode === 'on_campus' || workMode === 'off_campus';
 
     return (
@@ -161,15 +183,25 @@ export default function TaskForm({
                                     name="estimated_duration_value"
                                     type="text"
                                     inputMode="numeric"
-                                    maxLength={6}
+                                    ref={durationInput}
+                                    aria-describedby="duration-help duration-error"
+                                    aria-invalid={Boolean(
+                                        durationError ||
+                                        errors.estimated_duration_value,
+                                    )}
                                     value={durationValue}
-                                    onChange={(event) =>
-                                        setDurationValue(
-                                            event.target.value
-                                                .replace(/\D/g, '')
-                                                .slice(0, 6),
-                                        )
-                                    }
+                                    onChange={(event) => {
+                                        const next = event.target.value;
+                                        if (
+                                            canEditDuration(
+                                                next,
+                                                durationValue,
+                                                maximum,
+                                            )
+                                        ) {
+                                            setDurationValue(next);
+                                        }
+                                    }}
                                     required
                                 />
                                 <select
@@ -177,28 +209,38 @@ export default function TaskForm({
                                     aria-label="Duration unit"
                                     value={durationUnit}
                                     onChange={(event) =>
-                                        setDurationUnit(
-                                            event.target.value as
-                                                | 'minutes'
-                                                | 'hours'
-                                                | 'days',
-                                        )
+                                        setDurationUnit(event.target.value)
                                     }
                                     className="h-10 rounded-md border bg-background px-3 text-sm"
                                     required
                                 >
-                                    <option value="minutes">Minutes</option>
-                                    <option value="hours">Hours</option>
-                                    <option value="days">Days</option>
+                                    {Object.keys(options.durationLimits).map(
+                                        (unit) => (
+                                            <option key={unit} value={unit}>
+                                                {unit.charAt(0).toUpperCase() +
+                                                    unit.slice(1)}
+                                            </option>
+                                        ),
+                                    )}
                                 </select>
                             </div>
-                            <p className="text-xs text-muted-foreground">
-                                Enter a whole number. Maximum: 525,600 minutes,
-                                8,760 hours, or 365 days.
+                            <p
+                                id="duration-help"
+                                className="text-xs text-muted-foreground"
+                            >
+                                {legacyMinutes &&
+                                    `Previous estimate: ${task?.estimatedDurationValue} minutes. `}
+                                Enter a whole number from 1 to {maximum}{' '}
+                                {durationUnit}.
                             </p>
-                            <InputError
-                                message={errors.estimated_duration_value}
-                            />
+                            <div id="duration-error" aria-live="polite">
+                                <InputError
+                                    message={
+                                        durationError ||
+                                        errors.estimated_duration_value
+                                    }
+                                />
+                            </div>
                             <InputError
                                 message={errors.estimated_duration_unit}
                             />

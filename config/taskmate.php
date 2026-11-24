@@ -1,6 +1,9 @@
 <?php
 
+$maxDurationDays = 30;
+
 return [
+    'duration_limits' => ['hours' => $maxDurationDays * 24, 'days' => $maxDurationDays],
     // Prototype features are enabled for local evaluation unless explicitly disabled.
     'prototype_mode' => env('TASKMATE_PROTOTYPE_MODE', true),
     'rate_limits' => [

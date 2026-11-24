@@ -26,6 +26,7 @@ type TaskData = {
 };
 type Props = {
     options: {
+        durationLimits: Record<string, number>;
         categories: Option[];
         workModes: Option[];
         guidelines: string[];

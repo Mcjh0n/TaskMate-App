@@ -113,18 +113,23 @@ class TaskPostingTest extends TestCase
         $this->assertNull($task->risk_score);
     }
 
-    public function test_task_duration_can_be_entered_in_minutes(): void
+    public function test_duration_boundaries_on_create_and_edit(): void
     {
         $poster = $this->verifiedPoster();
-        $this->actingAs($poster)->post(route('tasks.store'), $this->taskData([
-            'estimated_duration_value' => 45,
-            'estimated_duration_unit' => 'minutes',
-        ]))->assertRedirect()->assertSessionHasNoErrors();
-
-        $task = $poster->tasks()->latest('id')->firstOrFail();
-        $this->assertSame(45, $task->estimated_duration_value);
-        $this->assertSame('minutes', $task->estimated_duration_unit);
-        $this->assertSame('45 minutes', $task->durationLabel());
+        $this->actingAs($poster);
+        foreach (['hours' => 720, 'days' => 30] as $unit => $limit) {
+            $data = $this->taskData(['estimated_duration_unit' => $unit, 'estimated_duration_value' => $limit]);
+            $this->post(route('tasks.store'), $data)->assertSessionHasNoErrors();
+            $task = $poster->tasks()->latest('id')->firstOrFail();
+            $this->assertSame($limit, $task->estimated_duration_value);
+            $this->put(route('tasks.update', $task), $data)->assertSessionHasNoErrors();
+            $data['estimated_duration_value']++;
+            $this->put(route('tasks.update', $task), $data)->assertSessionHasErrors('estimated_duration_value');
+            $this->post(route('tasks.store'), $data)->assertSessionHasErrors('estimated_duration_value');
+            $data['estimated_duration_unit'] = 'minutes';
+            $this->put(route('tasks.update', $task), $data)->assertSessionHasErrors('estimated_duration_unit');
+            $this->assertSame($limit, $task->fresh()->estimated_duration_value);
+        }
     }
 
     public function test_simplified_edit_keeps_optional_details_already_saved_on_the_task(): void
@@ -187,8 +192,8 @@ class TaskPostingTest extends TestCase
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 1.5]))->assertSessionHasErrors('estimated_duration_value');
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => null]))->assertSessionHasErrors('estimated_duration_value');
         $this->post(route('tasks.store'), $this->taskData(['estimated_duration_unit' => 'weeks']))->assertSessionHasErrors('estimated_duration_unit');
-        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 525601, 'estimated_duration_unit' => 'minutes']))->assertSessionHasErrors('estimated_duration_value');
-        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 8761, 'estimated_duration_unit' => 'hours']))->assertSessionHasErrors('estimated_duration_value');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 60000, 'estimated_duration_unit' => 'minutes']))->assertSessionHasErrors('estimated_duration_unit');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 5000, 'estimated_duration_unit' => 'hours']))->assertSessionHasErrors('estimated_duration_value');
         $this->post(route('tasks.store'), $this->taskData(['guidelines_confirmed' => '0']))->assertSessionHasErrors('guidelines_confirmed');
         $this->post(route('tasks.store'), $this->taskData(['complexity' => 'invented']))->assertSessionHasErrors('complexity');
         $this->post(route('tasks.store'), $this->taskData(['physical_demand' => 'invented']))->assertSessionHasErrors('physical_demand');

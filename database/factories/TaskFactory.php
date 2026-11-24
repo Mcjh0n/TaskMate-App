@@ -21,7 +21,7 @@ class TaskFactory extends Factory
             'description' => fake()->paragraph(),
             'required_activities' => fake()->paragraph(),
             'deliverables' => fake()->sentence(),
-            'estimated_duration_value' => fake()->numberBetween(1, 14),
+            'estimated_duration_value' => fake()->numberBetween(1, config('taskmate.duration_limits.days')),
             'estimated_duration_unit' => 'days',
             'skill_requirements' => fake()->optional()->sentence(),
             'complexity' => 'medium',

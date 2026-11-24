@@ -73,6 +73,7 @@ void test('task form keeps only the essentials and required workplace details', 
         React.createElement(TaskForm, {
             action: { action: '/tasks', method: 'post' },
             options: {
+                durationLimits: { hours: 720, days: 30 },
                 categories: [{ value: 'other', label: 'Other' }],
                 workModes: [
                     { value: 'online', label: 'Online' },
@@ -110,7 +111,7 @@ void test('task form keeps only the essentials and required workplace details', 
     );
     assert.match(markup, /name="estimated_duration_value"/);
     assert.match(markup, /name="estimated_duration_unit"/);
-    assert.match(markup, /<option value="minutes">Minutes<\/option>/);
+    assert.doesNotMatch(markup, /<option value="minutes">Minutes<\/option>/);
     assert.match(markup, /<option value="hours">Hours<\/option>/);
     assert.match(markup, /<option value="days"[^>]*>Days<\/option>/);
     assert.doesNotMatch(markup, /name="deadline"/);
@@ -132,6 +133,17 @@ void test('task form keeps only the essentials and required workplace details', 
             `The simplified form should not ask for ${field}.`,
         );
     }
+});
+
+void test('duration input stops extra digits and lets posters shorten an old estimate', () => {
+    const { canEditDuration } = loadTaskForm();
+    assert.equal(canEditDuration('720', '72', 720), true);
+    assert.equal(canEditDuration('5000', '500', 720), false);
+    assert.equal(canEditDuration('60000', '', 720), false);
+    assert.equal(canEditDuration('30', '3', 30), true);
+    assert.equal(canEditDuration('300', '30', 30), false);
+    assert.equal(canEditDuration('500', '5000', 30), true);
+    assert.equal(canEditDuration('1.5', '', 720), false);
 });
 
 void test('budget input rejects exponent letters and limits whole and decimal digits', () => {
