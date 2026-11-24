@@ -20,7 +20,7 @@ return [
     ],
 
     // The project team must confirm CMU's real institutional email domain(s).
-    'institutional_email_domains' => ['cmu.edu.ph', 'google.com'],
+    'institutional_email_domains' => ['cmu.edu.ph', 'gmail.com'],
 
     'students_can_post' => true,
     'require_verification' => true,

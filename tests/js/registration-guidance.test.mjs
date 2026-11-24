@@ -93,7 +93,7 @@ void test('registration keeps only short guidance needed to complete the form', 
     const markup = renderToStaticMarkup(
         React.createElement(Register, {
             passwordRules: '',
-            institutionalEmailDomains: ['cmu.edu.ph', 'google.com'],
+            institutionalEmailDomains: ['cmu.edu.ph', 'gmail.com'],
         }),
     );
 
