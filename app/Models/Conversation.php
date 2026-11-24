@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\ApplicationStatus;
-use App\Enums\ReportStatus;
 use App\Enums\TaskStatus;
 use App\Services\SanctionService;
 use Carbon\CarbonImmutable;
@@ -145,13 +144,6 @@ class Conversation extends Model
                 TaskStatus::Rejected => 'This conversation is read-only because the task was rejected.',
                 default => 'This conversation is read-only because the task was removed.',
             };
-        }
-        if ($task->status === TaskStatus::Completed) {
-            $agreement = $application->agreement()->first();
-            $hasOpenReport = $agreement && $agreement->reports()->whereIn('status', [ReportStatus::Open->value, ReportStatus::UnderReview->value])->exists();
-            if (! $hasOpenReport) {
-                return 'This conversation is read-only because the task is complete.';
-            }
         }
 
         return null;

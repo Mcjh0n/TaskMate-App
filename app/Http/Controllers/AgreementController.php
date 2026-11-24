@@ -65,7 +65,9 @@ class AgreementController extends Controller
             'completion',
             'paymentEvents.actor:id,name',
             'reports',
+            'application.conversation',
         ]);
+        $conversation = $agreement->application->conversation;
 
         /** @var array<string, array{label: string, priority?: string, respondent_can_reply?: bool}> $reportTypes */
         $reportTypes = (array) config('taskmate.reports.types', []);
@@ -79,6 +81,9 @@ class AgreementController extends Controller
             'termsMaxLength' => config('taskmate.agreement.terms_max_length', 3000),
             'notice' => 'This agreement records what the poster and worker agreed. It is not a legal contract. TaskMate does not process, hold, or guarantee payment. Payment is made directly between the two of you.',
             'status' => $request->session()->get('status'),
+            'conversationUrl' => $conversation && $request->user()->can('view', $conversation)
+                ? route('messages.show', $conversation)
+                : null,
             'problemReport' => ['action' => route('agreements.problem-reports.store', $agreement), 'types' => collect($reportTypes)->except('non_payment')->map(fn ($settings, $value) => ['value' => $value, 'label' => $settings['label']])->values()],
             'offPlatformWarning' => $agreement->versions()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->exists()
                 || $agreement->messages()->whereHas('contentFlags', fn ($q) => $q->where('source_user_id', '!=', $request->user()->id)->where('status', 'open'))->exists(),

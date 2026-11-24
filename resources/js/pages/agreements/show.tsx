@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { AgreementDetails } from '@/components/agreement-details';
 import { ProblemReportForm } from '@/components/problem-report-form';
 
@@ -10,6 +10,7 @@ export default function ShowAgreement(props: {
     notice: string;
     termsMaxLength: number;
     status?: string | null;
+    conversationUrl?: string | null;
     problemReport?: {
         action: string;
         types: { value: string; label: string }[];
@@ -42,6 +43,16 @@ export default function ShowAgreement(props: {
                         className="mx-auto mt-4 max-w-4xl px-4"
                     >
                         <ProblemReportForm {...props.problemReport} />
+                    </div>
+                )}
+                {props.conversationUrl && (
+                    <div className="mx-auto mt-4 max-w-4xl px-4">
+                        <Link
+                            href={props.conversationUrl}
+                            className="text-sm font-medium underline underline-offset-4"
+                        >
+                            Open conversation
+                        </Link>
                     </div>
                 )}
             </div>

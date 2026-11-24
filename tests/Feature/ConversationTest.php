@@ -2,12 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Enums\AgreementStatus;
 use App\Enums\ApplicationStatus;
-use App\Enums\ReportStatus;
 use App\Enums\SanctionType;
 use App\Enums\TaskStatus;
-use App\Models\Agreement;
 use App\Models\Application;
 use App\Models\ContentFlag;
 use App\Models\Conversation;
@@ -135,7 +132,7 @@ class ConversationTest extends TestCase
         $message->save();
     }
 
-    public function test_read_only_reasons_follow_application_and_task_state_and_completed_reports(): void
+    public function test_read_only_reasons_follow_application_and_task_state(): void
     {
         [, $applicant, $task, $application, $conversation] = $this->conversation();
         $application->status = ApplicationStatus::Declined;
@@ -156,23 +153,48 @@ class ConversationTest extends TestCase
             $this->assertNotNull($conversation->fresh()->sendingBlockedReason($applicant));
         }
 
-        $task->status = TaskStatus::Completed;
-        $task->save();
-        $this->assertStringContainsString('task is complete', $conversation->fresh()->sendingBlockedReason($applicant));
-        $agreement = Agreement::factory()->for($task)->for($application)->for($task->poster, 'poster')->for($applicant, 'student')->create([
-            'status' => AgreementStatus::Agreed,
-            'locked_at' => now(),
-        ]);
-        Report::factory()->create([
-            'reporter_id' => $applicant->id,
-            'reported_user_id' => $task->poster_id,
-            'task_id' => $task->id,
-            'agreement_id' => $agreement->id,
-            'status' => ReportStatus::Open,
-        ]);
-        $this->assertNull($conversation->fresh()->sendingBlockedReason($applicant));
-        Report::query()->update(['status' => ReportStatus::Resolved]);
-        $this->assertStringContainsString('task is complete', $conversation->fresh()->sendingBlockedReason($applicant));
+    }
+
+    public function test_participants_can_send_after_acceptance_and_completion(): void
+    {
+        [$poster, $applicant, $task, $application, $conversation] = $this->conversation();
+        $this->actingAs($poster)->post(route('tasks.applications.accept', [$task, $application]))->assertRedirect();
+        $agreement = $application->agreement()->firstOrFail();
+        $threadUrl = route('messages.show', $conversation);
+        $sendUrl = route('messages.send', $conversation);
+        $this->actingAs($applicant)->get(route('applications.mine'))->assertInertia(fn (Assert $page) => $page
+            ->where('applications.data.0.conversationId', $conversation->id)
+            ->where('applications.data.0.messageBlockedReason', null));
+        $this->post($sendUrl, ['body' => 'Can we confirm the work details?'])->assertRedirect($threadUrl);
+
+        $this->actingAs($poster)->post(route('agreements.store', $task))->assertRedirect();
+        $this->actingAs($applicant)->post(route('agreements.confirm', $agreement), ['version_id' => $agreement->current_version_id])->assertRedirect();
+        $this->actingAs($poster)->post(route('agreements.completion.complete', $agreement))->assertRedirect();
+        $this->assertSame(TaskStatus::Completed, $task->fresh()->status);
+
+        $this->actingAs($applicant)->get(route('agreements.show', $agreement))->assertInertia(fn (Assert $page) => $page
+            ->where('conversationUrl', $threadUrl));
+        $this->get($threadUrl)->assertInertia(fn (Assert $page) => $page->where('conversation.canSend', true));
+        $this->post($sendUrl, ['body' => 'Can you confirm the payment timing?'])->assertRedirect($threadUrl);
+        $this->actingAs($poster)->post($sendUrl, ['body' => 'I will confirm shortly.'])->assertRedirect($threadUrl);
+        $this->assertSame(3, $conversation->messages()->count());
+    }
+
+    public function test_backfill_restores_missing_threads_without_replacing_existing_threads(): void
+    {
+        [$poster, $applicant, $task, , $conversation] = $this->conversation();
+        $legacy = Application::factory()->for($task)->for(User::factory()->verified(), 'applicant')->create(['status' => ApplicationStatus::Accepted]);
+        $this->actingAs($applicant)->post(route('messages.send', $conversation), ['body' => 'Keep this existing message.'])->assertRedirect();
+
+        $migration = require database_path('migrations/2026_11_24_000010_backfill_missing_application_conversations.php');
+        $migration->up();
+        $migration->up();
+
+        $restored = $legacy->conversation()->sole();
+        $this->assertSame($poster->id, $restored->poster_id);
+        $this->assertSame($legacy->applicant_id, $restored->applicant_id);
+        $this->assertDatabaseCount('conversations', 2);
+        $this->assertSame('Keep this existing message.', $conversation->messages()->sole()->body);
     }
 
     public function test_suspended_participant_can_read_but_cannot_send_and_unverified_users_are_blocked(): void
