@@ -49,6 +49,7 @@ type Task = {
     requiredActivities: string | null;
     deliverables: string | null;
     estimatedDurationDays: number | null;
+    estimatedDurationLabel: string | null;
     skillRequirements: string | null;
     workplaceName: string | null;
     workplaceAddress: string | null;
@@ -139,11 +140,9 @@ export default function ShowTask({
                             </p>
                         </div>
                     )}
-                    {task.estimatedDurationDays && (
+                    {task.estimatedDurationLabel && (
                         <p className="text-sm">
-                            Estimated duration: {task.estimatedDurationDays}{' '}
-                            {task.estimatedDurationDays === 1 ? 'day' : 'days'}{' '}
-                            total
+                            Estimated duration: {task.estimatedDurationLabel}
                         </p>
                     )}
                     {task.skillRequirements && (

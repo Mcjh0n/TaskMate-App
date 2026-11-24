@@ -118,6 +118,7 @@ const task = {
     workplaceName: null,
     workplaceAddress: null,
     estimatedDurationDays: 3,
+    estimatedDurationLabel: '3 days',
     budgetDisplay: '₱500.00',
     status: 'pending_review',
     statusLabel: 'Pending review',
@@ -145,7 +146,7 @@ void test('admin task review renders a task for manual review without automated 
         markup,
         /Main activities|Expected result or deliverables|Skills:|Complexity:/,
     );
-    assert.match(markup, /Estimated duration:<\/strong> 3 days total/);
+    assert.match(markup, /Estimated duration:<\/strong> 3 days/);
     assert.doesNotMatch(markup, /Deadline|Due date/);
     assert.match(
         markup,

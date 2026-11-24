@@ -66,6 +66,7 @@ class ReportController extends Controller
                     'finalAmount' => $version?->final_amount,
                     'paymentArrangement' => $version?->payment_arrangement,
                     'durationDays' => $version?->duration_days,
+                    'durationLabel' => $version?->durationLabel(),
                     'recordReference' => $version?->content_hash,
                 ] : null,
                 'completion' => $agreement?->completion ? [

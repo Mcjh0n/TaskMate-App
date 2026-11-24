@@ -14,6 +14,7 @@ type Task = {
     budgetDisplay: string;
     workMode: string;
     estimatedDurationDays: number | null;
+    estimatedDurationLabel: string | null;
     status: string;
     statusLabel: string;
     reviewNote: string | null;
@@ -103,9 +104,7 @@ export default function MyTasks({ tasks, status }: Props) {
                                 </p>
                                 <p className="text-sm">
                                     Estimated duration:{' '}
-                                    {task.estimatedDurationDays
-                                        ? `${task.estimatedDurationDays} ${task.estimatedDurationDays === 1 ? 'day' : 'days'} total`
-                                        : 'Not provided'}
+                                    {task.estimatedDurationLabel ?? 'Not provided'}
                                 </p>
                                 <p className="font-medium">
                                     {task.budgetDisplay}

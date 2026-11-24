@@ -121,7 +121,7 @@ class BrowseApplicationsTest extends TestCase
             ->where('tasks.data.0.descriptionPreview', 'Help prepare general learning materials.')
             ->where('tasks.data.0.workplaceName', 'Synthetic Learning Center')
             ->where('tasks.data.0.workplaceAddress', 'Synthetic campus location')
-            ->where('tasks.data.0.estimatedDurationDays', $expensive->estimated_duration_days)
+            ->where('tasks.data.0.estimatedDurationLabel', $expensive->durationLabel())
             ->where('tasks.data.0.posterType', 'CMU Faculty / Staff')
             ->where('tasks.data.0.deliverablesPreview', $expensive->deliverables)
             ->missing('tasks.data.0.deadline'));

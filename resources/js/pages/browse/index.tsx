@@ -13,6 +13,7 @@ type Listing = {
     budgetDisplay: string;
     workMode: string;
     estimatedDurationDays: number | null;
+    estimatedDurationLabel: string | null;
     deliverablesPreview: string | null;
     workplaceName: string | null;
     workplaceAddress: string | null;
@@ -308,9 +309,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                     <span className="font-medium">
                                         Estimated duration:
                                     </span>{' '}
-                                    {task.estimatedDurationDays
-                                        ? `${task.estimatedDurationDays} ${task.estimatedDurationDays === 1 ? 'day' : 'days'} total`
-                                        : 'Not provided'}
+                                    {task.estimatedDurationLabel ?? 'Not provided'}
                                 </p>
                                 {(task.workplaceName ||
                                     task.workplaceAddress) && (

@@ -90,7 +90,7 @@ void test('task form keeps only the essentials and required workplace details', 
         'Task title',
         'Category',
         'What needs to be done?',
-        'Estimated duration (calendar days)',
+        'Estimated duration',
         'Estimated budget format',
         'Single amount',
         'Budget range',
@@ -108,7 +108,11 @@ void test('task form keeps only the essentials and required workplace details', 
         markup,
         /Maximum budget: ₱999,999\.99|TaskMate records agreements and payment status only/,
     );
-    assert.match(markup, /name="estimated_duration_days"/);
+    assert.match(markup, /name="estimated_duration_value"/);
+    assert.match(markup, /name="estimated_duration_unit"/);
+    assert.match(markup, /<option value="minutes">Minutes<\/option>/);
+    assert.match(markup, /<option value="hours">Hours<\/option>/);
+    assert.match(markup, /<option value="days"[^>]*>Days<\/option>/);
     assert.doesNotMatch(markup, /name="deadline"/);
     for (const field of [
         'complexity',

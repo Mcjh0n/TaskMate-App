@@ -22,7 +22,8 @@ class TaskPostingTest extends TestCase
             'description' => 'Help prepare and organize a synthetic campus workshop.',
             'required_activities' => 'Arrange chairs and prepare sign-in sheets.',
             'deliverables' => 'A ready workshop room and completed sign-in sheets.',
-            'estimated_duration_days' => 3,
+            'estimated_duration_value' => 3,
+            'estimated_duration_unit' => 'days',
             'skill_requirements' => 'Organized and reliable.',
             'complexity' => 'low',
             'budget_mode' => 'single',
@@ -91,7 +92,8 @@ class TaskPostingTest extends TestCase
             'budget_mode' => 'single',
             'budget' => 1200,
             'work_mode' => 'online',
-            'estimated_duration_days' => 2,
+            'estimated_duration_value' => 2,
+            'estimated_duration_unit' => 'days',
             'guidelines_confirmed' => '1',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
@@ -100,13 +102,29 @@ class TaskPostingTest extends TestCase
         $this->assertNull($task->required_activities);
         $this->assertNull($task->deliverables);
         $this->assertNull($task->estimated_duration_hours);
-        $this->assertSame(2, $task->estimated_duration_days);
+        $this->assertSame(2, $task->estimated_duration_value);
+        $this->assertSame('days', $task->estimated_duration_unit);
+        $this->assertSame('2 days', $task->durationLabel());
         $this->assertNull($task->complexity);
         $this->assertNull($task->hazard_exposure);
         $this->assertNull($task->private_meeting_required);
         $this->assertSame(0, $task->screenings()->count());
         $this->assertNull($task->risk_level);
         $this->assertNull($task->risk_score);
+    }
+
+    public function test_task_duration_can_be_entered_in_minutes(): void
+    {
+        $poster = $this->verifiedPoster();
+        $this->actingAs($poster)->post(route('tasks.store'), $this->taskData([
+            'estimated_duration_value' => 45,
+            'estimated_duration_unit' => 'minutes',
+        ]))->assertRedirect()->assertSessionHasNoErrors();
+
+        $task = $poster->tasks()->latest('id')->firstOrFail();
+        $this->assertSame(45, $task->estimated_duration_value);
+        $this->assertSame('minutes', $task->estimated_duration_unit);
+        $this->assertSame('45 minutes', $task->durationLabel());
     }
 
     public function test_simplified_edit_keeps_optional_details_already_saved_on_the_task(): void
@@ -117,7 +135,8 @@ class TaskPostingTest extends TestCase
             'required_activities' => 'Previously saved activity details.',
             'deliverables' => 'Previously saved deliverables.',
             'estimated_duration_hours' => 3,
-            'estimated_duration_days' => 4,
+            'estimated_duration_value' => 4,
+            'estimated_duration_unit' => 'days',
             'skill_requirements' => 'Previously saved skills.',
             'complexity' => 'medium',
             'hazard_exposure' => true,
@@ -133,15 +152,19 @@ class TaskPostingTest extends TestCase
             'work_mode' => 'on_campus',
             'workplace_name' => 'Synthetic Student Center',
             'workplace_address' => 'Synthetic campus room 101',
-            'estimated_duration_days' => 5,
+            'estimated_duration_value' => 5,
+            'estimated_duration_unit' => 'hours',
             'guidelines_confirmed' => '1',
         ])->assertRedirect()->assertSessionHasNoErrors();
 
         $task->refresh();
         $this->assertSame('Previously saved activity details.', $task->required_activities);
         $this->assertSame('Previously saved deliverables.', $task->deliverables);
-        $this->assertSame('3.0', $task->estimated_duration_hours);
-        $this->assertSame(5, $task->estimated_duration_days);
+        $this->assertNull($task->estimated_duration_hours);
+        $this->assertNull($task->estimated_duration_days);
+        $this->assertSame(5, $task->estimated_duration_value);
+        $this->assertSame('hours', $task->estimated_duration_unit);
+        $this->assertSame('5 hours', $task->durationLabel());
         $this->assertSame('Previously saved skills.', $task->skill_requirements);
         $this->assertSame('medium', $task->complexity);
         $this->assertTrue($task->hazard_exposure);
@@ -159,10 +182,13 @@ class TaskPostingTest extends TestCase
         $this->post(route('tasks.store'), $this->taskData(['budget' => 0]))->assertSessionHasErrors('budget');
         $this->post(route('tasks.store'), $this->taskData(['budget' => 1000000]))->assertSessionHasErrors('budget');
         $this->post(route('tasks.store'), $this->taskData(['budget' => '100.123']))->assertSessionHasErrors('budget');
-        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_days' => 0]))->assertSessionHasErrors('estimated_duration_days');
-        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_days' => 366]))->assertSessionHasErrors('estimated_duration_days');
-        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_days' => 1.5]))->assertSessionHasErrors('estimated_duration_days');
-        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_days' => null]))->assertSessionHasErrors('estimated_duration_days');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 0]))->assertSessionHasErrors('estimated_duration_value');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 366]))->assertSessionHasErrors('estimated_duration_value');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 1.5]))->assertSessionHasErrors('estimated_duration_value');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => null]))->assertSessionHasErrors('estimated_duration_value');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_unit' => 'weeks']))->assertSessionHasErrors('estimated_duration_unit');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 525601, 'estimated_duration_unit' => 'minutes']))->assertSessionHasErrors('estimated_duration_value');
+        $this->post(route('tasks.store'), $this->taskData(['estimated_duration_value' => 8761, 'estimated_duration_unit' => 'hours']))->assertSessionHasErrors('estimated_duration_value');
         $this->post(route('tasks.store'), $this->taskData(['guidelines_confirmed' => '0']))->assertSessionHasErrors('guidelines_confirmed');
         $this->post(route('tasks.store'), $this->taskData(['complexity' => 'invented']))->assertSessionHasErrors('complexity');
         $this->post(route('tasks.store'), $this->taskData(['physical_demand' => 'invented']))->assertSessionHasErrors('physical_demand');
@@ -262,6 +288,8 @@ class TaskPostingTest extends TestCase
             'deliverables' => null,
             'estimated_duration_hours' => null,
             'estimated_duration_days' => null,
+            'estimated_duration_value' => null,
+            'estimated_duration_unit' => null,
             'complexity' => null,
             'physical_demand' => null,
             'academic_involvement' => null,

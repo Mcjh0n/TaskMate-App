@@ -27,6 +27,7 @@ type Task = {
     workplaceName: string | null;
     workplaceAddress: string | null;
     estimatedDurationDays: number | null;
+    estimatedDurationLabel: string | null;
     status: string;
     statusLabel: string;
     reviewNote: string | null;
@@ -217,9 +218,7 @@ export default function AdminTaskReview({
                     </p>
                     <p>
                         <strong>Estimated duration:</strong>{' '}
-                        {task.estimatedDurationDays
-                            ? `${task.estimatedDurationDays} ${task.estimatedDurationDays === 1 ? 'day' : 'days'} total`
-                            : 'Not provided'}
+                        {task.estimatedDurationLabel ?? 'Not provided'}
                     </p>
                     {task.workplaceName && (
                         <p>

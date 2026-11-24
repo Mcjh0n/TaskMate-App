@@ -22,6 +22,7 @@ type Version = {
     finalAmount: string;
     startDate: string | null;
     durationDays: number | null;
+    durationLabel: string | null;
     workMode: string;
     workplaceName: string | null;
     workplaceAddress: string | null;
@@ -87,8 +88,8 @@ function WorkTerms({ version }: { version: Version }) {
                 <p className="mt-1">
                     Start: {version.startDate ?? 'Not set'} · Estimated
                     duration:{' '}
-                    {version.durationDays
-                        ? `${version.durationDays} ${version.durationDays === 1 ? 'day' : 'days'}`
+                    {version.durationLabel || version.durationDays
+                        ? version.durationLabel ?? `${version.durationDays} ${version.durationDays === 1 ? 'day' : 'days'}`
                         : 'Not provided'}
                 </p>
             </div>
@@ -596,8 +597,8 @@ export function AgreementDetails({
                                             Work mode, workplace, and estimated
                                             duration stay as listed:{' '}
                                             {current.workMode}
-                                            {current.durationDays
-                                                ? ` · ${current.durationDays} ${current.durationDays === 1 ? 'day' : 'days'}`
+                                            {current.durationLabel || current.durationDays
+                                                ? ` · ${current.durationLabel ?? `${current.durationDays} ${current.durationDays === 1 ? 'day' : 'days'}`}`
                                                 : ''}
                                             {current.workplaceName
                                                 ? ` · ${current.workplaceName}`

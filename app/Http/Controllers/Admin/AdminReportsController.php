@@ -84,6 +84,7 @@ class AdminReportsController extends Controller
                     'finalAmount' => $version?->final_amount,
                     'paymentArrangement' => $version?->payment_arrangement,
                     'durationDays' => $version?->duration_days,
+                    'durationLabel' => $version?->durationLabel(),
                     'recordReference' => $version?->content_hash,
                 ] : null,
                 'completion' => $agreement?->completion ? [
@@ -99,7 +100,7 @@ class AdminReportsController extends Controller
                     'amountMismatch' => $event->amount !== null && (float) $event->amount !== (float) ($version->final_amount ?? 0),
                 ])->values() ?? [],
                 'statements' => $report->statements->map(fn ($statement) => ['id' => $statement->id, 'name' => $statement->user->name, 'role' => $statement->role, 'body' => $statement->body, 'createdAt' => $statement->created_at?->toDateTimeString()])->values(),
-                'versions' => $agreement?->versions->map(fn ($item) => ['version' => $item->version_number, 'proposer' => $item->proposer->name, 'deliverables' => $item->deliverables, 'terms' => $item->terms, 'finalAmount' => $item->final_amount, 'startDate' => $item->start_date?->toDateString(), 'durationDays' => $item->duration_days, 'workMode' => $item->work_mode, 'workplaceName' => $item->workplace_name, 'workplaceAddress' => $item->workplace_address, 'paymentArrangement' => $item->payment_arrangement, 'comment' => $item->comment, 'hash' => $item->content_hash, 'confirmations' => $item->confirmations->map(fn ($confirmation) => ['name' => $confirmation->user->name, 'at' => $confirmation->confirmed_at?->toDateTimeString()])->values()])->values() ?? [],
+                'versions' => $agreement?->versions->map(fn ($item) => ['version' => $item->version_number, 'proposer' => $item->proposer->name, 'deliverables' => $item->deliverables, 'terms' => $item->terms, 'finalAmount' => $item->final_amount, 'startDate' => $item->start_date?->toDateString(), 'durationDays' => $item->duration_days, 'durationLabel' => $item->durationLabel(), 'workMode' => $item->work_mode, 'workplaceName' => $item->workplace_name, 'workplaceAddress' => $item->workplace_address, 'paymentArrangement' => $item->payment_arrangement, 'comment' => $item->comment, 'hash' => $item->content_hash, 'confirmations' => $item->confirmations->map(fn ($confirmation) => ['name' => $confirmation->user->name, 'at' => $confirmation->confirmed_at?->toDateTimeString()])->values()])->values() ?? [],
                 'messageSnapshots' => $report->messageSnapshots->map(fn ($snapshot) => [
                     'sender' => $snapshot->sender_display_name,
                     'body' => $snapshot->body,

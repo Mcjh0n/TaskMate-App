@@ -24,8 +24,11 @@ class AgreementContentHasher
             'payment_arrangement' => $version->payment_arrangement,
         ] : $version;
 
-        // Preserve old immutable hashes: duration was not part of earlier versions.
-        if ($version instanceof AgreementVersion && $version->duration_days !== null) {
+        // Keep legacy hashes stable while including flexible duration in new versions.
+        if ($version instanceof AgreementVersion && $version->duration_value !== null && $version->duration_unit !== null) {
+            $fields['duration_value'] = $version->duration_value;
+            $fields['duration_unit'] = $version->duration_unit;
+        } elseif ($version instanceof AgreementVersion && $version->duration_days !== null) {
             $fields['duration_days'] = $version->duration_days;
         }
 

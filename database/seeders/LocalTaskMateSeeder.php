@@ -64,7 +64,8 @@ class LocalTaskMateSeeder extends Seeder
             $task->description = 'Synthetic demonstration task for local testing only. This task contains no real offer or location.';
             $task->required_activities = 'Complete a clearly described sample activity for this local demo.';
             $task->deliverables = 'Provide the synthetic sample deliverable described for this local test.';
-            $task->estimated_duration_days = ($index % 5) + 1;
+            $task->estimated_duration_value = ($index % 5) + 1;
+            $task->estimated_duration_unit = 'days';
             $task->skill_requirements = 'Synthetic general skills only.';
             $task->complexity = ['low', 'medium', 'high'][($index - 1) % 3];
             $task->budget = 500 + ($index * 250);

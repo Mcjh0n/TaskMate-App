@@ -33,6 +33,7 @@ type Report = {
         finalAmount: string | null;
         paymentArrangement: string | null;
         durationDays: number | null;
+        durationLabel: string | null;
         recordReference: string | null;
     } | null;
     completion: {
@@ -226,8 +227,8 @@ export function ReportDetails({
                     </p>
                     <p>
                         Estimated duration:{' '}
-                        {report.agreement.durationDays
-                            ? `${report.agreement.durationDays} ${report.agreement.durationDays === 1 ? 'day' : 'days'}`
+                        {report.agreement.durationLabel || report.agreement.durationDays
+                            ? report.agreement.durationLabel ?? `${report.agreement.durationDays} ${report.agreement.durationDays === 1 ? 'day' : 'days'}`
                             : 'Not provided'}
                     </p>
                     <p className="whitespace-pre-wrap">
@@ -256,8 +257,8 @@ export function ReportDetails({
                     </p>
                     <p>
                         <strong>Estimated duration:</strong>{' '}
-                        {version.durationDays
-                            ? `${version.durationDays} ${version.durationDays === 1 ? 'day' : 'days'}`
+                        {version.durationLabel || version.durationDays
+                            ? version.durationLabel ?? `${version.durationDays} ${version.durationDays === 1 ? 'day' : 'days'}`
                             : 'Not provided'}
                     </p>
                     <p>

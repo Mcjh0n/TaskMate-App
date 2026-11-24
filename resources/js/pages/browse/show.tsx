@@ -24,6 +24,7 @@ type Task = {
     requiredActivities: string | null;
     deliverables: string | null;
     estimatedDurationDays: number | null;
+    estimatedDurationLabel: string | null;
     skillRequirements: string | null;
     budget: string | null;
     budgetMin: string | null;
@@ -185,12 +186,10 @@ export default function BrowseTaskDetail({
                             <strong>Skills:</strong> {task.skillRequirements}
                         </p>
                     )}
-                    {task.estimatedDurationDays && (
+                    {task.estimatedDurationLabel && (
                         <p>
                             <strong>Estimated duration:</strong>{' '}
-                            {task.estimatedDurationDays}{' '}
-                            {task.estimatedDurationDays === 1 ? 'day' : 'days'}{' '}
-                            total
+                            {task.estimatedDurationLabel}
                         </p>
                     )}
                 </section>

@@ -47,6 +47,17 @@ class StoreTaskRequest extends FormRequest
                 && (float) $this->input('budget_max') < (float) $this->input('budget_min')) {
                 $validator->errors()->add('budget_max', 'The maximum budget must be at least the minimum budget.');
             }
+
+            $maximum = match ($this->input('estimated_duration_unit')) {
+                'minutes' => 525600,
+                'hours' => 8760,
+                'days' => 365,
+                default => null,
+            };
+            if ($maximum !== null && is_numeric($this->input('estimated_duration_value'))
+                && (int) $this->input('estimated_duration_value') > $maximum) {
+                $validator->errors()->add('estimated_duration_value', 'The duration exceeds the maximum for the selected unit.');
+            }
         }];
     }
 
@@ -66,7 +77,8 @@ class StoreTaskRequest extends FormRequest
             'description' => ['required', 'string', 'max:10000'],
             'required_activities' => ['nullable', 'string', 'max:10000'],
             'deliverables' => ['nullable', 'string', 'max:10000'],
-            'estimated_duration_days' => ['required', 'integer', 'min:1', 'max:365'],
+            'estimated_duration_value' => ['required', 'integer', 'min:1', 'max:525600'],
+            'estimated_duration_unit' => ['required', Rule::in(['minutes', 'hours', 'days'])],
             'skill_requirements' => ['nullable', 'string', 'max:5000'],
             'complexity' => ['nullable', 'string', Rule::in(array_keys(config('taskmate.complexity_levels', [])))],
             'budget_mode' => ['required', Rule::in(['single', 'range'])],

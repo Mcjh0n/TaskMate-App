@@ -39,6 +39,7 @@ class AdminTasksController extends Controller
                 'statusLabel' => $task->status->label(),
                 'workMode' => config('taskmate.work_modes.'.$task->work_mode, config('taskmate.legacy_work_modes.'.$task->work_mode, $task->work_mode)),
                 'estimatedDurationDays' => $task->estimated_duration_days,
+                'estimatedDurationLabel' => $task->durationLabel(),
                 'submittedAt' => $task->created_at?->toDateTimeString(),
             ]);
 
@@ -73,6 +74,7 @@ class AdminTasksController extends Controller
                 'workplaceName' => $task->work_mode === 'online' ? null : $task->workplace_name,
                 'workplaceAddress' => $task->work_mode === 'online' ? null : $task->workplace_address,
                 'estimatedDurationDays' => $task->estimated_duration_days,
+                'estimatedDurationLabel' => $task->durationLabel(),
                 'status' => $task->status->value,
                 'statusLabel' => $task->status->label(),
                 'reviewNote' => $task->review_note,

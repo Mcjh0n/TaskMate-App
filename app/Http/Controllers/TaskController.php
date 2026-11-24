@@ -160,6 +160,8 @@ class TaskController extends Controller
         DB::transaction(function () use ($request, $task, $submission, $scanner): void {
             $validated = $request->safe()->except(['guidelines_confirmed', 'budget_mode', 'budget', 'budget_min', 'budget_max']);
             $task->fill($validated);
+            $task->estimated_duration_days = null;
+            $task->estimated_duration_hours = null;
             $this->applyBudget($task, $request->validated());
             $task->guidelines_confirmed_at = now()->toMutable();
             $task->save();
@@ -261,6 +263,7 @@ class TaskController extends Controller
             'budgetMax' => $task->budget_max,
             'budgetDisplay' => $task->budgetDisplay(),
             'estimatedDurationDays' => $task->estimated_duration_days,
+            'estimatedDurationLabel' => $task->durationLabel(),
             'workMode' => config('taskmate.work_modes.'.$task->work_mode, config('taskmate.legacy_work_modes.'.$task->work_mode, $task->work_mode)),
             'status' => $task->status->value,
             'statusLabel' => $task->status->label(),
@@ -291,6 +294,8 @@ class TaskController extends Controller
             'budgetMax' => $task->budget_max,
             'budgetMode' => $task->budget !== null ? 'single' : 'range',
             'budgetDisplay' => $task->budgetDisplay(),
+            'estimatedDurationValue' => $task->estimated_duration_value ?? $task->estimated_duration_days,
+            'estimatedDurationUnit' => $task->estimated_duration_unit ?? ($task->estimated_duration_days !== null ? 'days' : null),
         ];
     }
 }

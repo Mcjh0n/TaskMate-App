@@ -56,7 +56,8 @@ class AgreementWorkflow
                 'terms' => 'Complete the work described in the task listing and provide the listed deliverables within the agreed duration.',
                 'final_amount' => $amount,
                 'start_date' => null,
-                'duration_days' => $task->estimated_duration_days,
+                'duration_value' => $task->estimated_duration_value ?? $task->estimated_duration_days,
+                'duration_unit' => $task->estimated_duration_unit ?? ($task->estimated_duration_days !== null ? 'days' : null),
                 'payment_arrangement' => 'The poster and worker will agree directly on the payment method and timing before payment.',
             ], null, 1, false);
 
@@ -214,7 +215,9 @@ class AgreementWorkflow
         $version->final_amount = $data['final_amount'];
         $version->start_date = $data['start_date'] ?? null;
         $version->due_date = null;
-        $version->duration_days = $task->estimated_duration_days;
+        $version->duration_days = null;
+        $version->duration_value = $task->estimated_duration_value ?? $task->estimated_duration_days;
+        $version->duration_unit = $task->estimated_duration_unit ?? ($task->estimated_duration_days !== null ? 'days' : null);
         $version->work_mode = $task->work_mode;
         $version->workplace_name = $task->work_mode === 'online' ? null : $task->workplace_name;
         $version->workplace_address = $task->work_mode === 'online' ? null : $task->workplace_address;
@@ -227,7 +230,8 @@ class AgreementWorkflow
             'final_amount' => number_format((float) $version->final_amount, 2, '.', ''),
             'start_date' => $version->start_date?->toDateString(),
             'due_date' => $version->due_date?->toDateString(),
-            'duration_days' => $version->duration_days,
+            'duration_value' => $version->duration_value,
+            'duration_unit' => $version->duration_unit,
             'work_mode' => $version->work_mode,
             'workplace_name' => $version->workplace_name,
             'workplace_address' => $version->workplace_address,

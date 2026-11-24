@@ -11,6 +11,8 @@ type TaskData = {
     requiredActivities: string | null;
     deliverables: string | null;
     estimatedDurationDays: number | null;
+    estimatedDurationValue: number | null;
+    estimatedDurationUnit: 'minutes' | 'hours' | 'days' | null;
     skillRequirements: string | null;
     complexity: string | null;
     budget: string | null;

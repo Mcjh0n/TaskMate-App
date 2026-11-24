@@ -62,7 +62,8 @@ class DemoScenarioSeeder extends Seeder
             $task->description = 'Synthetic scenario record for local testing only.';
             $task->required_activities = 'Review the clearly synthetic scenario details.';
             $task->deliverables = 'A synthetic sample deliverable.';
-            $task->estimated_duration_days = 2;
+            $task->estimated_duration_value = 2;
+            $task->estimated_duration_unit = 'days';
             $task->skill_requirements = null;
             $task->complexity = 'low';
             $task->budget = 500;
@@ -218,7 +219,8 @@ class DemoScenarioSeeder extends Seeder
             $task->description = 'Synthetic payment-status scenario.';
             $task->required_activities = 'Synthetic activity.';
             $task->deliverables = 'Synthetic deliverable.';
-            $task->estimated_duration_days = 1;
+            $task->estimated_duration_value = 1;
+            $task->estimated_duration_unit = 'days';
             $task->complexity = 'low';
             $task->budget = 500;
             $task->work_mode = 'online';
@@ -267,7 +269,8 @@ class DemoScenarioSeeder extends Seeder
                 $version->final_amount = 500;
                 $version->start_date = today()->subDay();
                 $version->due_date = null;
-                $version->duration_days = $task->estimated_duration_days;
+                $version->duration_value = $task->estimated_duration_value ?? $task->estimated_duration_days;
+                $version->duration_unit = $task->estimated_duration_unit ?? ($task->estimated_duration_days !== null ? 'days' : null);
                 $version->work_mode = 'online';
                 $version->payment_arrangement = 'Synthetic direct payment arrangement after completion.';
                 $version->comment = 'Synthetic demo proposal.';

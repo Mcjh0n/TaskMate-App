@@ -27,7 +27,7 @@ class AgreementWorkflowTest extends TestCase
         $poster = User::factory()->verified()->facultyStaff()->create();
         $student = User::factory()->verified()->create();
         $outsider = User::factory()->verified()->create();
-        $task = Task::factory()->assigned()->create(['poster_id' => $poster->id, 'estimated_duration_days' => 3]);
+        $task = Task::factory()->assigned()->create(['poster_id' => $poster->id, 'estimated_duration_value' => 3, 'estimated_duration_unit' => 'days']);
         $application = Application::factory()->accepted()->create([
             'task_id' => $task->id,
             'applicant_id' => $student->id,
@@ -89,13 +89,14 @@ class AgreementWorkflowTest extends TestCase
         $this->assertSame('Three edited poster designs', $version->deliverables);
         $this->assertSame('1250.00', $version->final_amount);
         $this->assertNull($version->due_date);
-        $this->assertSame(3, $version->duration_days);
+        $this->assertSame(3, $version->duration_value);
+        $this->assertSame('days', $version->duration_unit);
         $this->assertSame('off_campus', $version->work_mode);
         $this->assertSame('Synthetic campus library', $version->workplace_name);
         $this->assertSame('Synthetic campus address', $version->workplace_address);
         $this->assertSame(0, $version->confirmations()->count());
         $this->actingAs($pair['poster'])->get(route('agreements.show', $agreement))->assertOk()
-            ->assertInertia(fn (Assert $page) => $page->where('agreement.status', 'draft')->where('agreement.currentVersion.deliverables', 'Three edited poster designs')->where('agreement.currentVersion.durationDays', 3)->missing('agreement.currentVersion.dueDate'));
+            ->assertInertia(fn (Assert $page) => $page->where('agreement.status', 'draft')->where('agreement.currentVersion.deliverables', 'Three edited poster designs')->where('agreement.currentVersion.durationLabel', '3 days')->missing('agreement.currentVersion.dueDate'));
         $this->actingAs($pair['student'])->get(route('agreements.show', $agreement))->assertForbidden();
 
         $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']))->assertRedirect();
@@ -124,6 +125,20 @@ class AgreementWorkflowTest extends TestCase
         $this->assertNull($version->workplace_address);
     }
 
+    public function test_agreement_snapshots_minute_duration_and_hashes_the_unit(): void
+    {
+        $pair = $this->assignedTask();
+        $pair['task']->update(['estimated_duration_value' => 45, 'estimated_duration_unit' => 'minutes']);
+
+        $this->actingAs($pair['poster'])->get(route('agreements.create', $pair['task']))->assertRedirect();
+        $version = AgreementVersion::query()->firstOrFail();
+
+        $this->assertSame(45, $version->duration_value);
+        $this->assertSame('minutes', $version->duration_unit);
+        $this->assertSame('45 minutes', $version->durationLabel());
+        $this->assertSame($version->content_hash, app(AgreementContentHasher::class)->hash($version));
+    }
+
     public function test_applicant_amount_and_task_budget_are_used_without_a_second_manual_proposal_form(): void
     {
         $pair = $this->assignedTask();
@@ -131,7 +146,8 @@ class AgreementWorkflowTest extends TestCase
         $agreement = Agreement::query()->where('task_id', $pair['task']->id)->firstOrFail();
         $this->assertSame('1250.00', $agreement->currentVersion->final_amount);
         $this->assertNull($agreement->currentVersion->due_date);
-        $this->assertSame(3, $agreement->currentVersion->duration_days);
+        $this->assertSame(3, $agreement->currentVersion->duration_value);
+        $this->assertSame('days', $agreement->currentVersion->duration_unit);
         $this->assertNotEmpty($agreement->currentVersion->terms);
         $this->assertNotEmpty($agreement->currentVersion->payment_arrangement);
         $this->actingAs($pair['poster'])->post(route('agreements.store', $pair['task']), ['final_amount' => '1', 'terms' => 'forged'])->assertRedirect();

@@ -19,6 +19,8 @@ type TaskData = {
     workplaceName: string | null;
     workplaceAddress: string | null;
     estimatedDurationDays: number | null;
+    estimatedDurationValue: number | null;
+    estimatedDurationUnit: 'minutes' | 'hours' | 'days' | null;
 };
 type Props = {
     action: { action: string; method: 'post' | 'put' };
@@ -57,6 +59,12 @@ export default function TaskForm({
     const [budget, setBudget] = useState(task?.budget ?? '');
     const [budgetMin, setBudgetMin] = useState(task?.budgetMin ?? '');
     const [budgetMax, setBudgetMax] = useState(task?.budgetMax ?? '');
+    const [durationValue, setDurationValue] = useState(
+        task?.estimatedDurationValue?.toString() ?? '',
+    );
+    const [durationUnit, setDurationUnit] = useState<
+        'minutes' | 'hours' | 'days'
+    >(task?.estimatedDurationUnit ?? 'days');
     const hasWorkplace = workMode === 'on_campus' || workMode === 'off_campus';
 
     return (
@@ -144,26 +152,55 @@ export default function TaskForm({
                             <InputError message={errors.description} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="estimated_duration_days">
-                                Estimated duration (calendar days)
+                            <Label htmlFor="estimated_duration_value">
+                                Estimated duration
                             </Label>
-                            <Input
-                                id="estimated_duration_days"
-                                name="estimated_duration_days"
-                                type="number"
-                                inputMode="numeric"
-                                min="1"
-                                max="365"
-                                step="1"
-                                defaultValue={task?.estimatedDurationDays ?? ''}
-                                required
-                            />
+                            <div className="grid grid-cols-[1fr_9rem] gap-2">
+                                <Input
+                                    id="estimated_duration_value"
+                                    name="estimated_duration_value"
+                                    type="text"
+                                    inputMode="numeric"
+                                    maxLength={6}
+                                    value={durationValue}
+                                    onChange={(event) =>
+                                        setDurationValue(
+                                            event.target.value
+                                                .replace(/\D/g, '')
+                                                .slice(0, 6),
+                                        )
+                                    }
+                                    required
+                                />
+                                <select
+                                    name="estimated_duration_unit"
+                                    aria-label="Duration unit"
+                                    value={durationUnit}
+                                    onChange={(event) =>
+                                        setDurationUnit(
+                                            event.target.value as
+                                                | 'minutes'
+                                                | 'hours'
+                                                | 'days',
+                                        )
+                                    }
+                                    className="h-10 rounded-md border bg-background px-3 text-sm"
+                                    required
+                                >
+                                    <option value="minutes">Minutes</option>
+                                    <option value="hours">Hours</option>
+                                    <option value="days">Days</option>
+                                </select>
+                            </div>
                             <p className="text-xs text-muted-foreground">
-                                Count calendar days, including weekends. Maximum
-                                365 days.
+                                Enter a whole number. Maximum: 525,600 minutes,
+                                8,760 hours, or 365 days.
                             </p>
                             <InputError
-                                message={errors.estimated_duration_days}
+                                message={errors.estimated_duration_value}
+                            />
+                            <InputError
+                                message={errors.estimated_duration_unit}
                             />
                         </div>
                     </section>

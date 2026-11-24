@@ -27,8 +27,12 @@ use Illuminate\Support\Carbon;
 
  * @property-read string|null $estimated_duration_hours
  * @property-write string|float|int|null $estimated_duration_hours
- * @property-read int $estimated_duration_days
- * @property-write int|string $estimated_duration_days
+ * @property-read int|null $estimated_duration_days
+ * @property-write int|string|null $estimated_duration_days
+ * @property-read int|null $estimated_duration_value
+ * @property-write int|string|null $estimated_duration_value
+ * @property-read string|null $estimated_duration_unit
+ * @property-write string|null $estimated_duration_unit
  * @property-read string|null $budget
  * @property-write string|float|int|null $budget
  * @property-read string|null $budget_min
@@ -66,6 +70,8 @@ class Task extends Model
         'deliverables',
         'estimated_duration_hours',
         'estimated_duration_days',
+        'estimated_duration_value',
+        'estimated_duration_unit',
         'skill_requirements',
         'complexity',
         'budget',
@@ -89,6 +95,7 @@ class Task extends Model
             'status' => TaskStatus::class,
             'estimated_duration_hours' => 'decimal:1',
             'estimated_duration_days' => 'integer',
+            'estimated_duration_value' => 'integer',
             'budget' => 'decimal:2',
             'budget_min' => 'decimal:2',
             'budget_max' => 'decimal:2',
@@ -121,6 +128,30 @@ class Task extends Model
         }
 
         return 'Budget not provided';
+    }
+
+    public function durationLabel(): ?string
+    {
+        $value = $this->estimated_duration_value ?? $this->estimated_duration_days;
+        $unit = $this->estimated_duration_unit ?? ($this->estimated_duration_days !== null ? 'days' : null);
+
+        if ($value === null || $unit === null) {
+            if ($this->estimated_duration_hours !== null) {
+                $hours = (float) $this->estimated_duration_hours;
+
+                return rtrim(rtrim(number_format($hours, 1, '.', ''), '0'), '.').' '.($hours === 1.0 ? 'hour' : 'hours');
+            }
+
+            return null;
+        }
+
+        $label = match ($unit) {
+            'minutes' => 'minute',
+            'hours' => 'hour',
+            default => 'day',
+        };
+
+        return $value.' '.$label.($value === 1 ? '' : 's');
     }
 
     /** @return BelongsTo<User, $this> */
