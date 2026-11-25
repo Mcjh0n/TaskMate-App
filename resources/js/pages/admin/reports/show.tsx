@@ -118,15 +118,38 @@ function AdminReportShow({
     return (
         <>
             <Head title={`Review report #${report.id}`} />
-            <div className="admin-page space-y-5" data-tone="reports">
+            <div
+                className="admin-page admin-report-detail space-y-4"
+                data-tone="reports"
+            >
+                <Link href={admin.reports.index()} className="admin-back-link">
+                    ← Back to reports
+                </Link>
+                <header className="admin-page-heading flex-wrap">
+                    <div>
+                        <p className="admin-page-eyebrow">
+                            Report review · #{report.id}
+                        </p>
+                        <h1>{report.typeLabel ?? 'Report details'}</h1>
+                        <p className="admin-page-description">
+                            {report.task?.title ?? 'Related report record'}
+                        </p>
+                    </div>
+                    <span
+                        className="admin-pill"
+                        data-variant={
+                            report.status === 'open' ? 'urgent' : 'quiet'
+                        }
+                    >
+                        {report.statusLabel ?? report.status}
+                    </span>
+                </header>
                 {status && (
                     <p role="status" className="admin-notice">
                         {status}
                     </p>
                 )}
-                <p className="admin-notice">
-                    {notice}
-                </p>
+                <p className="admin-notice">{notice}</p>
                 <ReportDetails report={report} />
                 {report.escalatedAt && (
                     <p className="rounded border p-3 text-sm">

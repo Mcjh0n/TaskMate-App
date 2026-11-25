@@ -94,7 +94,7 @@ function DecisionForm({
     return (
         <Form
             {...admin.tasks.decision.form(taskId)}
-            className="space-y-2 rounded-lg border p-4"
+            className={`admin-decision-card admin-decision-card--${decision} space-y-2 rounded-lg border p-4`}
         >
             {({ errors, processing }) => (
                 <>
@@ -116,7 +116,17 @@ function DecisionForm({
                             <InputError message={errors.note} />
                         </>
                     )}
-                    <Button type="submit" disabled={processing}>
+                    {decision === 'approve' && (
+                        <p className="admin-decision-caption">
+                            Approve this task so it can appear in the student
+                            listings.
+                        </p>
+                    )}
+                    <Button
+                        type="submit"
+                        disabled={processing}
+                        className="admin-decision-button"
+                    >
                         {label}
                     </Button>
                 </>
@@ -138,7 +148,10 @@ export default function AdminTaskReview({
     return (
         <>
             <Head title={`Review: ${task.title}`} />
-            <div className="admin-page space-y-5" data-tone="tasks">
+            <div
+                className="admin-page admin-task-detail space-y-4"
+                data-tone="tasks"
+            >
                 {status && (
                     <div
                         role="status"
@@ -155,9 +168,7 @@ export default function AdminTaskReview({
                         >
                             Back to task queue
                         </Link>
-                        <h1>
-                            {task.title}
-                        </h1>
+                        <h1>{task.title}</h1>
                         <p className="admin-page-description">
                             Submitted{' '}
                             {task.submittedAt
@@ -175,7 +186,7 @@ export default function AdminTaskReview({
                     Every submitted task is reviewed by an administrator before
                     it can be approved.
                 </p>
-                <section className="grid gap-4 lg:grid-cols-3">
+                <section className="grid min-w-0 gap-4 lg:grid-cols-3">
                     <div className="admin-detail-card space-y-4 lg:col-span-2">
                         <h2 className="text-lg font-semibold">Task details</h2>
                         <p>

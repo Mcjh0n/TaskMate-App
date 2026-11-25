@@ -74,53 +74,49 @@ export default function AdminUsersIndex({
                     countLabel="accounts"
                 />
 
-                <form
-                    onSubmit={applyFilters}
-                    className="admin-filter-panel"
-                >
+                <form onSubmit={applyFilters} className="admin-filter-panel">
                     <p className="admin-filter-heading">Find an account</p>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_1fr_1fr_auto]">
-                    <input
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search by name"
-                        aria-label="Search by name"
-                    />
-                    <select
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                        value={userType}
-                        onChange={(event) => setUserType(event.target.value)}
-                        aria-label="Filter by account type"
-                    >
-                        <option value="">All account types</option>
-                        {userTypes.map((type) => (
-                            <option key={type.value} value={type.value}>
-                                {type.label}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                        value={verificationStatus}
-                        onChange={(event) =>
-                            setVerificationStatus(event.target.value)
-                        }
-                        aria-label="Filter by verification status"
-                    >
-                        <option value="">All statuses</option>
-                        {verificationStatuses.map((status) => (
-                            <option key={status.value} value={status.value}>
-                                {status.label}
-                            </option>
-                        ))}
-                    </select>
-                    <button
-                        className="admin-filter-submit"
-                        type="submit"
-                    >
-                        Apply filters
-                    </button>
+                        <input
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            placeholder="Search by name"
+                            aria-label="Search by name"
+                        />
+                        <select
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                            value={userType}
+                            onChange={(event) =>
+                                setUserType(event.target.value)
+                            }
+                            aria-label="Filter by account type"
+                        >
+                            <option value="">All account types</option>
+                            {userTypes.map((type) => (
+                                <option key={type.value} value={type.value}>
+                                    {type.label}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                            value={verificationStatus}
+                            onChange={(event) =>
+                                setVerificationStatus(event.target.value)
+                            }
+                            aria-label="Filter by verification status"
+                        >
+                            <option value="">All statuses</option>
+                            {verificationStatuses.map((status) => (
+                                <option key={status.value} value={status.value}>
+                                    {status.label}
+                                </option>
+                            ))}
+                        </select>
+                        <button className="admin-filter-submit" type="submit">
+                            Apply filters
+                        </button>
                     </div>
                 </form>
 
@@ -163,7 +159,10 @@ export default function AdminUsersIndex({
                                                     }
                                                 />
                                             </td>
-                                            <td data-label="Registered" className="whitespace-nowrap">
+                                            <td
+                                                data-label="Registered"
+                                                className="whitespace-nowrap"
+                                            >
                                                 {user.registeredAt ?? '—'}
                                             </td>
                                         </tr>
@@ -185,8 +184,14 @@ export default function AdminUsersIndex({
                                         key={`${link.label}-${index}`}
                                         href={link.url ?? '#'}
                                         aria-disabled={!link.url}
-                                        aria-current={link.active ? 'page' : undefined}
-                                        className={link.url ? '' : 'pointer-events-none opacity-50'}
+                                        aria-current={
+                                            link.active ? 'page' : undefined
+                                        }
+                                        className={
+                                            link.url
+                                                ? ''
+                                                : 'pointer-events-none opacity-50'
+                                        }
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
                                         }}

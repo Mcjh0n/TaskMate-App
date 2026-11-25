@@ -1,4 +1,4 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
 import InputError from '@/components/input-error';
 import { VerificationStatusBadge } from '@/components/verification-status-badge';
@@ -73,11 +73,17 @@ function DecisionForm({
     return (
         <Form
             {...admin.users.verification.form(userId)}
-            className="space-y-2 rounded-lg border p-4"
+            className={`admin-decision-card admin-decision-card--${decision} space-y-2 rounded-lg border p-4`}
         >
             {({ processing, errors }) => (
                 <>
                     <input type="hidden" name="decision" value={decision} />
+                    {!needsNote && (
+                        <p className="admin-decision-caption">
+                            Confirm this account&apos;s submitted details and
+                            enable verified account features.
+                        </p>
+                    )}
                     {needsNote && (
                         <>
                             <label
@@ -98,7 +104,7 @@ function DecisionForm({
                     )}
                     <button
                         disabled={processing}
-                        className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+                        className="admin-decision-button disabled:cursor-not-allowed disabled:opacity-50"
                         type="submit"
                     >
                         {label}
@@ -127,16 +133,36 @@ export default function AdminUserShow({
     return (
         <>
             <Head title={`Review ${user.name}`} />
-            <div className="admin-page space-y-6" data-tone="users">
+            <div
+                className="admin-page admin-user-detail space-y-4"
+                data-tone="users"
+            >
+                <Link href={admin.users.index()} className="admin-back-link">
+                    ← Back to users
+                </Link>
                 <div className="admin-page-heading flex-wrap">
-                    <div>
-                        <p className="admin-page-eyebrow">Account review</p>
-                        <h1>
-                            {user.name}
-                        </h1>
-                        <p className="admin-page-description break-all">
-                            {user.email}
-                        </p>
+                    <div className="admin-account-identity">
+                        <div
+                            className="admin-account-avatar"
+                            aria-hidden="true"
+                        >
+                            {user.name.trim().charAt(0).toUpperCase() || 'U'}
+                        </div>
+                        <div className="min-w-0">
+                            <p className="admin-page-eyebrow">Account review</p>
+                            <h1>{user.name}</h1>
+                            <p className="admin-page-description break-all">
+                                {user.email}
+                            </p>
+                            <div className="admin-account-meta">
+                                <span className="admin-pill">
+                                    {user.userTypeLabel}
+                                </span>
+                                {user.registeredAt && (
+                                    <span>Joined {user.registeredAt}</span>
+                                )}
+                            </div>
+                        </div>
                     </div>
                     <VerificationStatusBadge status={user.verificationStatus} />
                 </div>
@@ -147,9 +173,9 @@ export default function AdminUserShow({
                     the safety of a task.
                 </div>
 
-                <section className="admin-detail-card space-y-4">
+                <section className="admin-detail-card admin-user-section space-y-3">
                     <h2 className="text-lg font-semibold">Submitted details</h2>
-                    <dl className="grid gap-4 sm:grid-cols-2">
+                    <dl className="admin-detail-grid">
                         <Detail
                             label="Account type"
                             value={user.userTypeLabel}
@@ -184,12 +210,11 @@ export default function AdminUserShow({
                             />
                         )}
                         {user.userType === 'organization' && (
-                            <div className="sm:col-span-2">
-                                <Detail
-                                    label="Organization description"
-                                    value={user.supportingInfo}
-                                />
-                            </div>
+                            <Detail
+                                label="Organization description"
+                                value={user.supportingInfo}
+                                wide
+                            />
                         )}
                         <Detail label="Registered" value={user.registeredAt} />
                         <Detail
@@ -200,12 +225,11 @@ export default function AdminUserShow({
                                     : null
                             }
                         />
-                        <div className="sm:col-span-2">
-                            <Detail
-                                label="Current verification note"
-                                value={user.verificationNote}
-                            />
-                        </div>
+                        <Detail
+                            label="Current verification note"
+                            value={user.verificationNote}
+                            wide
+                        />
                     </dl>
                 </section>
 
@@ -214,11 +238,11 @@ export default function AdminUserShow({
                         You cannot change your own account verification.
                     </p>
                 ) : (
-                    <section className="admin-detail-card space-y-4">
+                    <section className="admin-detail-card admin-user-section space-y-3">
                         <h2 className="text-lg font-semibold">
                             Review decision
                         </h2>
-                        <div className="grid gap-3 md:grid-cols-3">
+                        <div className="admin-decision-grid">
                             <DecisionForm
                                 userId={user.id}
                                 decision="verified"
@@ -240,7 +264,7 @@ export default function AdminUserShow({
                     </section>
                 )}
 
-                <section className="admin-detail-card space-y-3">
+                <section className="admin-detail-card admin-user-section space-y-2">
                     <h2 className="text-lg font-semibold">Account history</h2>
                     {history.length ? (
                         history.map((item) => (
@@ -272,7 +296,7 @@ export default function AdminUserShow({
                         </p>
                     )}
                 </section>
-                <section className="admin-detail-card space-y-4">
+                <section className="admin-detail-card admin-user-section space-y-3">
                     <h2 className="text-lg font-semibold">
                         Ratings received and given
                     </h2>
@@ -336,7 +360,7 @@ export default function AdminUserShow({
                         </div>
                     ))}
                 </section>
-                <section className="admin-detail-card space-y-3">
+                <section className="admin-detail-card admin-user-section space-y-2">
                     <h2 className="text-lg font-semibold">
                         Sanctions and platform actions
                     </h2>
@@ -344,68 +368,90 @@ export default function AdminUserShow({
                         <Form
                             action={`/admin/users/${user.id}/sanctions`}
                             method="post"
-                            className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2"
+                            className="admin-sanction-form"
                         >
                             {({ processing }) => (
                                 <>
-                                    <select
-                                        name="action"
-                                        className="h-10 rounded border bg-background px-3"
-                                    >
-                                        <option value="warning">
-                                            Issue warning
-                                        </option>
-                                        <option value="require_verification">
-                                            Require additional verification
-                                        </option>
-                                        <option value="suspend">
-                                            Suspend user
-                                        </option>
-                                        <option value="ban">Ban user</option>
-                                        <option value="remove_post">
-                                            Remove post
-                                        </option>
-                                    </select>
-                                    <select
-                                        name="task_id"
-                                        className="h-10 rounded border bg-background px-3"
-                                    >
-                                        <option value="">
-                                            Choose a post to remove
-                                        </option>
-                                        {postedTasks.map((task) => (
-                                            <option
-                                                key={task.id}
-                                                value={task.id}
-                                            >
-                                                {task.title} · {task.status}
+                                    <p className="admin-sanction-help">
+                                        Choose an action, provide the reason the
+                                        user will see, and add an internal note
+                                        for administrators.
+                                    </p>
+                                    <label className="grid gap-1 text-sm font-medium">
+                                        Platform action
+                                        <select
+                                            name="action"
+                                            className="admin-sanction-control"
+                                        >
+                                            <option value="warning">
+                                                Issue warning
                                             </option>
-                                        ))}
-                                    </select>
-                                    <input
-                                        name="ends_at"
-                                        type="datetime-local"
-                                        className="h-10 rounded border bg-background px-3"
-                                    />
-                                    <textarea
-                                        name="reason"
-                                        required
-                                        minLength={5}
-                                        maxLength={2000}
-                                        placeholder="Reason shown to the user"
-                                        className="min-h-20 rounded border bg-background p-3"
-                                    />
-                                    <textarea
-                                        name="internal_note"
-                                        required
-                                        minLength={3}
-                                        maxLength={3000}
-                                        placeholder="Internal admin note"
-                                        className="min-h-20 rounded border bg-background p-3"
-                                    />
+                                            <option value="require_verification">
+                                                Require additional verification
+                                            </option>
+                                            <option value="suspend">
+                                                Suspend user
+                                            </option>
+                                            <option value="ban">
+                                                Ban user
+                                            </option>
+                                            <option value="remove_post">
+                                                Remove post
+                                            </option>
+                                        </select>
+                                    </label>
+                                    <label className="grid gap-1 text-sm font-medium">
+                                        Post to remove (if applicable)
+                                        <select
+                                            name="task_id"
+                                            className="admin-sanction-control"
+                                        >
+                                            <option value="">
+                                                Choose a post to remove
+                                            </option>
+                                            {postedTasks.map((task) => (
+                                                <option
+                                                    key={task.id}
+                                                    value={task.id}
+                                                >
+                                                    {task.title} · {task.status}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </label>
+                                    <label className="grid gap-1 text-sm font-medium">
+                                        Suspension end date (if applicable)
+                                        <input
+                                            name="ends_at"
+                                            type="datetime-local"
+                                            className="admin-sanction-control"
+                                        />
+                                    </label>
+                                    <label className="grid gap-1 text-sm font-medium">
+                                        Reason shown to the user
+                                        <textarea
+                                            name="reason"
+                                            required
+                                            minLength={5}
+                                            maxLength={2000}
+                                            placeholder="Explain the reason for this action."
+                                            className="admin-sanction-textarea"
+                                        />
+                                    </label>
+                                    <label className="grid gap-1 text-sm font-medium">
+                                        Internal admin note
+                                        <textarea
+                                            name="internal_note"
+                                            required
+                                            minLength={3}
+                                            maxLength={3000}
+                                            placeholder="Add context for the admin record."
+                                            className="admin-sanction-textarea"
+                                        />
+                                    </label>
                                     <button
                                         disabled={processing}
-                                        className="rounded bg-primary px-4 py-2 text-primary-foreground"
+                                        className="admin-sanction-submit"
                                     >
                                         Record action
                                     </button>
@@ -470,11 +516,19 @@ export default function AdminUserShow({
     );
 }
 
-function Detail({ label, value }: { label: string; value: string | null }) {
+function Detail({
+    label,
+    value,
+    wide = false,
+}: {
+    label: string;
+    value: string | null;
+    wide?: boolean;
+}) {
     return (
-        <div>
-            <dt className="text-sm text-muted-foreground">{label}</dt>
-            <dd className="mt-1 text-sm break-words whitespace-pre-wrap">
+        <div className={wide ? 'admin-detail-wide' : 'admin-detail-item'}>
+            <dt>{label}</dt>
+            <dd className="break-words whitespace-pre-wrap">
                 {value || 'Not provided'}
             </dd>
         </div>

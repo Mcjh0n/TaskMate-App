@@ -75,98 +75,97 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                     This review is a platform record, not a legal ruling.
                     TaskMate cannot recover or guarantee payment.
                 </p>
-                <form
-                    onSubmit={filter}
-                    className="admin-filter-panel"
-                >
+                <form onSubmit={filter} className="admin-filter-panel">
                     <p className="admin-filter-heading">Find a report</p>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <input
-                        aria-label="Search parties"
-                        placeholder="Search reporter or reported person"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                    />
-                    <select
-                        aria-label="Filter type"
-                        value={type}
-                        onChange={(event) => setType(event.target.value)}
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                    >
-                        <option value="">All types</option>
-                        {types.map((item) => (
-                            <option key={item.value} value={item.value}>
-                                {item.label}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        aria-label="Filter status"
-                        value={status}
-                        onChange={(event) => setStatus(event.target.value)}
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                    >
-                        <option value="">All statuses</option>
-                        {statuses.map((item) => (
-                            <option key={item.value} value={item.value}>
-                                {item.label}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        aria-label="Filter priority"
-                        value={priority}
-                        onChange={(event) => setPriority(event.target.value)}
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                    >
-                        <option value="">All priorities</option>
-                        <option value="high">High</option>
-                        <option value="normal">Normal</option>
-                    </select>
-                    <details
-                        open={moreFiltersOpen}
-                        onToggle={(event) =>
-                            setMoreFiltersOpen(event.currentTarget.open)
-                        }
-                        className="rounded-md border p-3 sm:col-span-2 lg:col-span-4"
-                    >
-                        <summary className="cursor-pointer text-sm font-medium">
-                            More filters
-                        </summary>
-                        <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                            <select
-                                aria-label="Filter escalation"
-                                value={escalated}
-                                onChange={(event) =>
-                                    setEscalated(event.target.value)
-                                }
-                                className="h-10 rounded-md border bg-background px-3 text-sm"
-                            >
-                                <option value="">Any escalation</option>
-                                <option value="1">Escalated</option>
-                                <option value="0">Not escalated</option>
-                            </select>
-                            <select
-                                aria-label="Filter evidence"
-                                value={hasEvidence}
-                                onChange={(event) =>
-                                    setHasEvidence(event.target.value)
-                                }
-                                className="h-10 rounded-md border bg-background px-3 text-sm"
-                            >
-                                <option value="">Any evidence</option>
-                                <option value="1">Has evidence</option>
-                                <option value="0">No evidence</option>
-                            </select>
-                        </div>
-                    </details>
-                    <button
-                        className="admin-filter-submit sm:col-span-2 lg:col-span-4"
-                        type="submit"
-                    >
-                        Apply filters
-                    </button>
+                        <input
+                            aria-label="Search parties"
+                            placeholder="Search reporter or reported person"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                        />
+                        <select
+                            aria-label="Filter type"
+                            value={type}
+                            onChange={(event) => setType(event.target.value)}
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                        >
+                            <option value="">All types</option>
+                            {types.map((item) => (
+                                <option key={item.value} value={item.value}>
+                                    {item.label}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            aria-label="Filter status"
+                            value={status}
+                            onChange={(event) => setStatus(event.target.value)}
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                        >
+                            <option value="">All statuses</option>
+                            {statuses.map((item) => (
+                                <option key={item.value} value={item.value}>
+                                    {item.label}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            aria-label="Filter priority"
+                            value={priority}
+                            onChange={(event) =>
+                                setPriority(event.target.value)
+                            }
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                        >
+                            <option value="">All priorities</option>
+                            <option value="high">High</option>
+                            <option value="normal">Normal</option>
+                        </select>
+                        <details
+                            open={moreFiltersOpen}
+                            onToggle={(event) =>
+                                setMoreFiltersOpen(event.currentTarget.open)
+                            }
+                            className="rounded-md border p-3 sm:col-span-2 lg:col-span-4"
+                        >
+                            <summary className="cursor-pointer text-sm font-medium">
+                                More filters
+                            </summary>
+                            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                                <select
+                                    aria-label="Filter escalation"
+                                    value={escalated}
+                                    onChange={(event) =>
+                                        setEscalated(event.target.value)
+                                    }
+                                    className="h-10 rounded-md border bg-background px-3 text-sm"
+                                >
+                                    <option value="">Any escalation</option>
+                                    <option value="1">Escalated</option>
+                                    <option value="0">Not escalated</option>
+                                </select>
+                                <select
+                                    aria-label="Filter evidence"
+                                    value={hasEvidence}
+                                    onChange={(event) =>
+                                        setHasEvidence(event.target.value)
+                                    }
+                                    className="h-10 rounded-md border bg-background px-3 text-sm"
+                                >
+                                    <option value="">Any evidence</option>
+                                    <option value="1">Has evidence</option>
+                                    <option value="0">No evidence</option>
+                                </select>
+                            </div>
+                        </details>
+                        <button
+                            className="admin-filter-submit sm:col-span-2 lg:col-span-4"
+                            type="submit"
+                        >
+                            Apply filters
+                        </button>
                     </div>
                 </form>
                 {reports.data.length ? (
@@ -205,7 +204,18 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                                                 </span>
                                             )}
                                         </td>
-                                        <td data-label="Priority"><span className="admin-pill">{item.priority}</span></td>
+                                        <td data-label="Priority">
+                                            <span
+                                                className="admin-pill"
+                                                data-variant={
+                                                    item.priority === 'high'
+                                                        ? 'urgent'
+                                                        : 'quiet'
+                                                }
+                                            >
+                                                {item.priority}
+                                            </span>
+                                        </td>
                                         <td data-label="Reporter">
                                             {item.reporterName}
                                         </td>
@@ -240,7 +250,9 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                                 <Link
                                     key={index}
                                     href={link.url}
-                                    aria-current={link.active ? 'page' : undefined}
+                                    aria-current={
+                                        link.active ? 'page' : undefined
+                                    }
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}

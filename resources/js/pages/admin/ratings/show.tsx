@@ -24,7 +24,10 @@ function Page({ rating, notice }: { rating: Rating; notice: string }) {
     return (
         <>
             <Head title="Review rating" />
-            <div className="admin-page max-w-4xl space-y-5" data-tone="ratings">
+            <div
+                className="admin-page admin-rating-detail max-w-4xl space-y-4"
+                data-tone="ratings"
+            >
                 <Link className="admin-back-link" href="/admin/ratings">
                     ← Back to ratings
                 </Link>
@@ -32,34 +35,52 @@ function Page({ rating, notice }: { rating: Rating; notice: string }) {
                     <div>
                         <p className="admin-page-eyebrow">Feedback review</p>
                         <h1>Rating for {rating.taskTitle}</h1>
-                        <p className="admin-page-description">{rating.rater} rated {rating.ratee}</p>
+                        <p className="admin-page-description">
+                            {rating.rater} rated {rating.ratee}
+                        </p>
                     </div>
-                    <span className="admin-pill">{rating.hidden ? 'Hidden' : 'Visible'}</span>
+                    <span
+                        className="admin-pill"
+                        data-variant={rating.hidden ? 'quiet' : undefined}
+                    >
+                        {rating.hidden ? 'Hidden' : 'Visible'}
+                    </span>
                 </header>
                 <p className="admin-notice">{ratingNotice}</p>
-                <p className="admin-notice">
-                    {notice}
-                </p>
-                <section className="admin-detail-card space-y-4">
+                <p className="admin-notice">{notice}</p>
+                <section className="admin-detail-card space-y-3">
                     <h2 className="text-lg font-semibold">Rating details</h2>
                     <div className="grid gap-3 sm:grid-cols-2">
                         <p className="rounded-lg bg-muted/40 p-3 text-sm">
-                            <span className="block text-muted-foreground">Direction</span>
-                            <strong className="capitalize">{rating.direction.replaceAll('_', ' ')}</strong>
+                            <span className="block text-muted-foreground">
+                                Direction
+                            </span>
+                            <strong className="capitalize">
+                                {rating.direction.replaceAll('_', ' ')}
+                            </strong>
                         </p>
                         <p className="rounded-lg bg-muted/40 p-3 text-sm">
-                            <span className="block text-muted-foreground">Overall experience</span>
+                            <span className="block text-muted-foreground">
+                                Overall experience
+                            </span>
                             <strong>{rating.overall}/5</strong>
                         </p>
                         {rating.scores.map((score) => (
-                            <p key={score.dimension} className="rounded-lg bg-muted/40 p-3 text-sm">
-                                <span className="block text-muted-foreground">{score.label}</span>
+                            <p
+                                key={score.dimension}
+                                className="rounded-lg bg-muted/40 p-3 text-sm"
+                            >
+                                <span className="block text-muted-foreground">
+                                    {score.label}
+                                </span>
                                 <strong>{score.score}/5</strong>
                             </p>
                         ))}
                     </div>
                     {rating.comment && (
-                        <p className="rounded-lg border p-3 whitespace-pre-wrap">{rating.comment}</p>
+                        <p className="rounded-lg border p-3 whitespace-pre-wrap">
+                            {rating.comment}
+                        </p>
                     )}
                     <p>
                         Status:{' '}
@@ -107,7 +128,7 @@ function Page({ rating, notice }: { rating: Rating; notice: string }) {
                     <Form
                         action={`/admin/ratings/${rating.id}/moderate`}
                         method="post"
-                        className="admin-detail-card space-y-3"
+                        className="admin-detail-card admin-rating-action space-y-2"
                     >
                         <input type="hidden" name="action" value="hide" />
                         <label

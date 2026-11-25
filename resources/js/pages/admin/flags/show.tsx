@@ -17,16 +17,25 @@ export default function ShowFlag({ flag }: { flag: any }) {
                             {flag.author.name} · {flag.field} · {flag.createdAt}
                         </p>
                     </div>
-                    <span className="admin-pill">{flag.status}</span>
+                    <span
+                        className="admin-pill"
+                        data-variant={
+                            flag.status === 'open' ? 'urgent' : 'quiet'
+                        }
+                    >
+                        {flag.status}
+                    </span>
                 </header>
                 {flag.task && (
-                    <p className="admin-notice">
-                        Task: {flag.task.title}
-                    </p>
+                    <p className="admin-notice">Task: {flag.task.title}</p>
                 )}
                 <section className="admin-detail-card">
-                    <h2 className="mb-3 text-lg font-semibold">Flagged content</h2>
-                    <p className="break-words whitespace-pre-wrap">{flag.content}</p>
+                    <h2 className="mb-3 text-lg font-semibold">
+                        Flagged content
+                    </h2>
+                    <p className="break-words whitespace-pre-wrap">
+                        {flag.content}
+                    </p>
                 </section>
                 {flag.relatedReportUrl && (
                     <Link
@@ -40,7 +49,9 @@ export default function ShowFlag({ flag }: { flag: any }) {
                     Matched labels: {(flag.matched ?? []).join(', ')}
                 </p>
                 <section className="admin-detail-card">
-                    <h2 className="text-lg font-semibold">Author account actions</h2>
+                    <h2 className="text-lg font-semibold">
+                        Author account actions
+                    </h2>
                     {flag.sanctions.map((item: any, i: number) => (
                         <p key={i} className="mt-2 text-sm">
                             {item.type}: {item.reason}
@@ -55,52 +66,52 @@ export default function ShowFlag({ flag }: { flag: any }) {
                         {({ processing }) => (
                             <>
                                 <label className="grid gap-1 text-sm font-medium">
-                                Platform action
-                                <select
-                                    name="action"
-                                    className="h-10 rounded border bg-background px-3"
-                                >
-                                    <option value="warning">
-                                        Issue warning
-                                    </option>
-                                    <option value="require_verification">
-                                        Require additional verification
-                                    </option>
-                                    <option value="suspend">
-                                        Suspend user
-                                    </option>
-                                    <option value="ban">Ban user</option>
-                                </select>
+                                    Platform action
+                                    <select
+                                        name="action"
+                                        className="h-10 rounded border bg-background px-3"
+                                    >
+                                        <option value="warning">
+                                            Issue warning
+                                        </option>
+                                        <option value="require_verification">
+                                            Require additional verification
+                                        </option>
+                                        <option value="suspend">
+                                            Suspend user
+                                        </option>
+                                        <option value="ban">Ban user</option>
+                                    </select>
                                 </label>
                                 <label className="grid gap-1 text-sm font-medium">
-                                Suspension ends (if suspending)
-                                <input
-                                    name="ends_at"
-                                    type="datetime-local"
-                                    className="h-10 rounded border bg-background px-3"
-                                />
+                                    Suspension ends (if suspending)
+                                    <input
+                                        name="ends_at"
+                                        type="datetime-local"
+                                        className="h-10 rounded border bg-background px-3"
+                                    />
                                 </label>
                                 <label className="grid gap-1 text-sm font-medium sm:col-span-2">
-                                Reason shown to the user
-                                <textarea
-                                    name="reason"
-                                    required
-                                    minLength={5}
-                                    maxLength={2000}
-                                    className="min-h-20 rounded border bg-background p-3"
-                                    placeholder="Reason shown to the user"
-                                />
+                                    Reason shown to the user
+                                    <textarea
+                                        name="reason"
+                                        required
+                                        minLength={5}
+                                        maxLength={2000}
+                                        className="min-h-20 rounded border bg-background p-3"
+                                        placeholder="Reason shown to the user"
+                                    />
                                 </label>
                                 <label className="grid gap-1 text-sm font-medium sm:col-span-2">
-                                Internal admin note
-                                <textarea
-                                    name="internal_note"
-                                    required
-                                    minLength={3}
-                                    maxLength={3000}
-                                    className="min-h-20 rounded border bg-background p-3"
-                                    placeholder="Internal admin note"
-                                />
+                                    Internal admin note
+                                    <textarea
+                                        name="internal_note"
+                                        required
+                                        minLength={3}
+                                        maxLength={3000}
+                                        className="min-h-20 rounded border bg-background p-3"
+                                        placeholder="Internal admin note"
+                                    />
                                 </label>
                                 <button
                                     disabled={processing}
@@ -135,15 +146,15 @@ export default function ShowFlag({ flag }: { flag: any }) {
                                     </select>
                                 </label>
                                 <label className="grid gap-1 text-sm font-medium">
-                                Review note
-                                <textarea
-                                    name="note"
-                                    required
-                                    minLength={3}
-                                    maxLength={2000}
-                                    className="min-h-24 w-full rounded border bg-background p-3"
-                                    placeholder="Required review note"
-                                />
+                                    Review note
+                                    <textarea
+                                        name="note"
+                                        required
+                                        minLength={3}
+                                        maxLength={2000}
+                                        className="min-h-24 w-full rounded border bg-background p-3"
+                                        placeholder="Required review note"
+                                    />
                                 </label>
                                 <button
                                     disabled={processing}

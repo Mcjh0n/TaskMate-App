@@ -91,7 +91,7 @@ export function ReportDetails({
     statementMaxLength?: number;
 }) {
     return (
-        <div className="report-details space-y-5">
+        <div className="report-details admin-report-sections space-y-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <p className="text-sm text-muted-foreground">

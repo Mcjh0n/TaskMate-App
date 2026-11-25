@@ -56,51 +56,47 @@ export default function AdminTaskQueue({
                     count={tasks.data.length}
                     countLabel="on this page"
                 />
-                <form
-                    onSubmit={filter}
-                    className="admin-filter-panel"
-                >
+                <form onSubmit={filter} className="admin-filter-panel">
                     <p className="admin-filter-heading">Find a task</p>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_1fr_1fr_auto]">
-                    <input
-                        aria-label="Search title or poster"
-                        placeholder="Search title or poster"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                    />
-                    <select
-                        aria-label="Filter status"
-                        value={status}
-                        onChange={(event) => setStatus(event.target.value)}
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                    >
-                        <option value="">All statuses</option>
-                        {statuses.map((item) => (
-                            <option key={item.value} value={item.value}>
-                                {item.label}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        aria-label="Filter work mode"
-                        value={workMode}
-                        onChange={(event) => setWorkMode(event.target.value)}
-                        className="h-10 rounded-md border bg-background px-3 text-sm"
-                    >
-                        <option value="">All work modes</option>
-                        {workModes.map((item) => (
-                            <option key={item.value} value={item.value}>
-                                {item.label}
-                            </option>
-                        ))}
-                    </select>
-                    <button
-                        className="admin-filter-submit"
-                        type="submit"
-                    >
-                        Apply filters
-                    </button>
+                        <input
+                            aria-label="Search title or poster"
+                            placeholder="Search title or poster"
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                        />
+                        <select
+                            aria-label="Filter status"
+                            value={status}
+                            onChange={(event) => setStatus(event.target.value)}
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                        >
+                            <option value="">All statuses</option>
+                            {statuses.map((item) => (
+                                <option key={item.value} value={item.value}>
+                                    {item.label}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            aria-label="Filter work mode"
+                            value={workMode}
+                            onChange={(event) =>
+                                setWorkMode(event.target.value)
+                            }
+                            className="h-10 rounded-md border bg-background px-3 text-sm"
+                        >
+                            <option value="">All work modes</option>
+                            {workModes.map((item) => (
+                                <option key={item.value} value={item.value}>
+                                    {item.label}
+                                </option>
+                            ))}
+                        </select>
+                        <button className="admin-filter-submit" type="submit">
+                            Apply filters
+                        </button>
                     </div>
                 </form>
                 {tasks.data.length ? (
@@ -142,8 +138,13 @@ export default function AdminTaskQueue({
                                                 label={task.statusLabel}
                                             />
                                         </td>
-                                        <td data-label="Work mode">{task.workMode}</td>
-                                        <td data-label="Submitted" className="whitespace-nowrap">
+                                        <td data-label="Work mode">
+                                            {task.workMode}
+                                        </td>
+                                        <td
+                                            data-label="Submitted"
+                                            className="whitespace-nowrap"
+                                        >
                                             {task.submittedAt
                                                 ? formatDate(task.submittedAt)
                                                 : '—'}
@@ -159,16 +160,15 @@ export default function AdminTaskQueue({
                     </div>
                 )}
                 {tasks.links.length > 3 && (
-                    <nav
-                        className="admin-pagination"
-                        aria-label="Pagination"
-                    >
+                    <nav className="admin-pagination" aria-label="Pagination">
                         {tasks.links.map((link, index) =>
                             link.url ? (
                                 <Link
                                     key={index}
                                     href={link.url}
-                                    aria-current={link.active ? 'page' : undefined}
+                                    aria-current={
+                                        link.active ? 'page' : undefined
+                                    }
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}

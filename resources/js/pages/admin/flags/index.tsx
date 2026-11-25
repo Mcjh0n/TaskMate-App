@@ -38,7 +38,10 @@ export default function FlagQueue({
                     <p className="admin-notice">
                         Automatic flagging is paused. Review past flags here and
                         open{' '}
-                        <Link href="/admin/reports" className="font-semibold underline underline-offset-2">
+                        <Link
+                            href="/admin/reports"
+                            className="font-semibold underline underline-offset-2"
+                        >
                             Reports
                         </Link>{' '}
                         for concerns submitted by users.
@@ -47,29 +50,31 @@ export default function FlagQueue({
                 <form className="admin-filter-panel">
                     <p className="admin-filter-heading">Filter flags</p>
                     <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-                    <select
-                        name="category"
-                        defaultValue={filters.category ?? ''}
-                        aria-label="Filter category"
-                    >
-                        <option value="">All categories</option>
-                        {categories.map(({ value, label }) => (
-                            <option key={value} value={value}>
-                                {label}
-                            </option>
-                        ))}
-                    </select>
-                    <select
-                        name="status"
-                        defaultValue={filters.status ?? ''}
-                        aria-label="Filter status"
-                    >
-                        <option value="">All statuses</option>
-                        <option value="open">Open</option>
-                        <option value="reviewed">Reviewed</option>
-                        <option value="dismissed">Dismissed</option>
-                    </select>
-                    <button className="admin-filter-submit">Apply filters</button>
+                        <select
+                            name="category"
+                            defaultValue={filters.category ?? ''}
+                            aria-label="Filter category"
+                        >
+                            <option value="">All categories</option>
+                            {categories.map(({ value, label }) => (
+                                <option key={value} value={value}>
+                                    {label}
+                                </option>
+                            ))}
+                        </select>
+                        <select
+                            name="status"
+                            defaultValue={filters.status ?? ''}
+                            aria-label="Filter status"
+                        >
+                            <option value="">All statuses</option>
+                            <option value="open">Open</option>
+                            <option value="reviewed">Reviewed</option>
+                            <option value="dismissed">Dismissed</option>
+                        </select>
+                        <button className="admin-filter-submit">
+                            Apply filters
+                        </button>
                     </div>
                 </form>
                 {flags.data.length ? (
@@ -94,11 +99,24 @@ export default function FlagQueue({
                                         <td data-label="Category">
                                             {flag.categoryLabel}
                                         </td>
-                                        <td data-label="Author">{flag.author}</td>
+                                        <td data-label="Author">
+                                            {flag.author}
+                                        </td>
                                         <td data-label="Content">
                                             {flag.context} · {flag.field}
                                         </td>
-                                        <td data-label="Status"><span className="admin-pill">{flag.status}</span></td>
+                                        <td data-label="Status">
+                                            <span
+                                                className="admin-pill"
+                                                data-variant={
+                                                    flag.status === 'open'
+                                                        ? 'urgent'
+                                                        : 'quiet'
+                                                }
+                                            >
+                                                {flag.status}
+                                            </span>
+                                        </td>
                                         <td data-label="Action">
                                             <Link
                                                 className="font-medium"
@@ -124,14 +142,20 @@ export default function FlagQueue({
                                 <Link
                                     key={index}
                                     href={link.url}
-                                    aria-current={link.active ? 'page' : undefined}
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    aria-current={
+                                        link.active ? 'page' : undefined
+                                    }
+                                    dangerouslySetInnerHTML={{
+                                        __html: link.label,
+                                    }}
                                 />
                             ) : (
                                 <span
                                     key={index}
                                     className="text-muted-foreground"
-                                    dangerouslySetInnerHTML={{ __html: link.label }}
+                                    dangerouslySetInnerHTML={{
+                                        __html: link.label,
+                                    }}
                                 />
                             ),
                         )}
