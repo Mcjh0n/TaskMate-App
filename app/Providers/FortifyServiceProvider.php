@@ -2,47 +2,44 @@
 
 namespace App\Providers;
 
-/* @chisel-registration */
 use App\Actions\Fortify\CreateNewUser;
-/* @end-chisel-registration */
+/* @chisel-registration */
 use App\Actions\Fortify\ResetUserPassword;
+/* @end-chisel-registration */
 use App\Http\Responses\LoginResponse;
-/* @chisel-passkeys */
 use App\Http\Responses\PasskeyLoginResponse;
+/* @chisel-passkeys */
+use App\Http\Responses\RegisterResponse;
 /* @end-chisel-passkeys */
 /* @chisel-registration */
-use App\Http\Responses\RegisterResponse;
+use App\Http\Responses\TwoFactorLoginResponse;
 /* @end-chisel-registration */
 /* @chisel-2fa */
-use App\Http\Responses\TwoFactorLoginResponse;
+use App\Http\Responses\VerifyEmailResponse;
 /* @end-chisel-2fa */
 /* @chisel-email-verification */
-use App\Http\Responses\VerifyEmailResponse;
-/* @end-chisel-email-verification */
 use App\Models\TeamInvitation;
+/* @end-chisel-email-verification */
 use App\Models\User;
 use App\Services\SanctionService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
-/* @chisel-registration */
 use Illuminate\Support\ServiceProvider;
-/* @end-chisel-registration */
-/* @chisel-2fa */
 use Illuminate\Support\Str;
-/* @end-chisel-2fa */
 /* @chisel-email-verification */
-use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rules\Password;
 /* @end-chisel-email-verification */
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Laravel\Fortify\Contracts\LoginResponse as LoginResponseContract;
 use Laravel\Fortify\Contracts\RegisterResponse as RegisterResponseContract;
 use Laravel\Fortify\Contracts\TwoFactorLoginResponse as TwoFactorLoginResponseContract;
 use Laravel\Fortify\Contracts\VerifyEmailResponse as VerifyEmailResponseContract;
 use Laravel\Fortify\Features;
-use Laravel\Fortify\Fortify;
 /* @chisel-passkeys */
+use Laravel\Fortify\Fortify;
 use Laravel\Passkeys\Contracts\PasskeyLoginResponse as PasskeyLoginResponseContract;
 
 /* @end-chisel-passkeys */
@@ -115,6 +112,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::resetPasswordView(fn (Request $request) => Inertia::render('auth/reset-password', [
             'email' => $request->email,
             'token' => $request->route('token'),
+            'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]));
 
         Fortify::requestPasswordResetLinkView(fn (Request $request) => Inertia::render('auth/forgot-password', [
@@ -131,6 +129,7 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::registerView(fn (Request $request) => Inertia::render('auth/register', [
             'teamInvitation' => $this->teamInvitation($request),
             'institutionalEmailDomains' => config('taskmate.institutional_email_domains', []),
+            'passwordRules' => Password::defaults()->toPasswordRulesString(),
         ]));
         /* @end-chisel-registration */
 

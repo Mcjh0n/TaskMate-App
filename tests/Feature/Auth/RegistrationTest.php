@@ -22,7 +22,21 @@ class RegistrationTest extends TestCase
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('auth/register')
-                ->where('institutionalEmailDomains.0', 'cmu.edu.ph'));
+                ->where('institutionalEmailDomains.0', 'cmu.edu.ph')
+                ->where('passwordRules', 'minlength: 8;'));
+    }
+
+    public function test_password_must_be_at_least_eight_characters(): void
+    {
+        $this->from(route('register'))->post(route('register.store'), [
+            ...$this->validStudent(),
+            'password' => 'short7',
+            'password_confirmation' => 'short7',
+        ])->assertSessionHasErrors('password');
+
+        $this->post(route('register.store'), $this->validStudent())
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
     }
 
     public function test_registration_screen_includes_team_invitation_context(): void

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
@@ -49,7 +50,9 @@ class PasswordResetTest extends TestCase
         Notification::assertSentTo($user, ResetPassword::class, function ($notification) {
             $response = $this->get(route('password.reset', $notification->token));
 
-            $response->assertOk();
+            $response->assertOk()->assertInertia(fn (Assert $page) => $page
+                ->component('auth/reset-password')
+                ->where('passwordRules', 'minlength: 8;'));
 
             return true;
         });
