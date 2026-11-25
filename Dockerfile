@@ -18,7 +18,8 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/entrypoint.sh /usr/local/bin/taskmate-entrypoint
-RUN chmod +x /usr/local/bin/taskmate-entrypoint
+COPY docker/start-nginx.sh /usr/local/bin/taskmate-nginx
+RUN chmod +x /usr/local/bin/taskmate-entrypoint /usr/local/bin/taskmate-nginx
 
 EXPOSE 10000
 
