@@ -1,5 +1,5 @@
-import { PAYMENT_BOUNDARY_NOTICE, SAFETY_NOTICE } from '@/constants/notices';
 import { Link } from '@inertiajs/react';
+import { PAYMENT_BOUNDARY_NOTICE, SAFETY_NOTICE } from '@/constants/notices';
 
 const links = [
     ['/how-it-works', 'How TaskMate works'],
@@ -10,24 +10,26 @@ const links = [
 
 export default function SiteFooter() {
     return (
-        <footer className="border-t bg-card px-5 py-8 text-sm sm:px-8">
-            <nav
-                aria-label="Information"
-                className="mx-auto flex max-w-6xl flex-wrap gap-x-6 gap-y-3 font-semibold text-primary"
-            >
-                {links.map(([href, label]) => (
-                    <Link
-                        key={href}
-                        href={href}
-                        className="underline underline-offset-4"
-                    >
-                        {label}
-                    </Link>
-                ))}
-            </nav>
-            <div className="mx-auto mt-5 max-w-6xl space-y-1 border-t pt-4 text-xs leading-relaxed text-muted-foreground">
-                <p>{PAYMENT_BOUNDARY_NOTICE}</p>
-                <p>{SAFETY_NOTICE}</p>
+        <footer className="taskmate-footer">
+            <div className="taskmate-footer-inner">
+                <nav aria-label="Information" className="taskmate-footer-links">
+                    {links.map(([href, label]) => (
+                        <Link key={href} href={href}>
+                            {label}
+                        </Link>
+                    ))}
+                </nav>
+
+                <div className="taskmate-footer-notices">
+                    <div className="taskmate-footer-notice taskmate-footer-notice--payment">
+                        <strong>Payment</strong>
+                        <p>{PAYMENT_BOUNDARY_NOTICE}</p>
+                    </div>
+                    <div className="taskmate-footer-notice taskmate-footer-notice--safety">
+                        <strong>Safety</strong>
+                        <p>{SAFETY_NOTICE}</p>
+                    </div>
+                </div>
             </div>
         </footer>
     );

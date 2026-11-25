@@ -36,7 +36,9 @@ export default function Login({ status, canResetPassword }: Props) {
             )}
 
             {/* @chisel-passkeys */}
-            <PasskeyVerify />
+            <div className="mb-5 flex flex-col gap-5 empty:hidden [&_button]:h-11 [&_button]:border-primary/40 [&_button]:bg-secondary/40 [&_button]:font-semibold [&_button]:text-foreground [&_button:hover]:bg-secondary">
+                <PasskeyVerify />
+            </div>
             {/* @end-chisel-passkeys */}
 
             <Form
@@ -90,7 +92,7 @@ export default function Login({ status, canResetPassword }: Props) {
 
                             <Button
                                 type="submit"
-                                className="w-full"
+                                className="h-11 w-full font-semibold"
                                 disabled={processing}
                                 data-test="login-button"
                             >

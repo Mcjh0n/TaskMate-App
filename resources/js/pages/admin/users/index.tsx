@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeading } from '@/components/admin-page-heading';
 import { VerificationStatusBadge } from '@/components/verification-status-badge';
 import admin from '@/routes/admin';
 
@@ -64,19 +65,21 @@ export default function AdminUsersIndex({
     return (
         <>
             <Head title="Users" />
-            <div className="space-y-6">
-                <div>
-                    <h1 className="text-2xl font-semibold">Users</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Search accounts and filter by account type or
-                        verification status.
-                    </p>
-                </div>
+            <div className="admin-page space-y-5" data-tone="users">
+                <AdminPageHeading
+                    eyebrow="Account verification"
+                    title="Users"
+                    description="Review submitted accounts and follow up on verification."
+                    count={users.total}
+                    countLabel="accounts"
+                />
 
                 <form
                     onSubmit={applyFilters}
-                    className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
+                    className="admin-filter-panel"
                 >
+                    <p className="admin-filter-heading">Find an account</p>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_1fr_1fr_auto]">
                     <input
                         className="h-10 rounded-md border bg-background px-3 text-sm"
                         value={search}
@@ -113,18 +116,23 @@ export default function AdminUsersIndex({
                         ))}
                     </select>
                     <button
-                        className="h-10 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+                        className="admin-filter-submit"
                         type="submit"
                     >
                         Apply filters
                     </button>
+                    </div>
                 </form>
 
                 {users.data.length ? (
                     <div className="space-y-4">
-                        <div className="overflow-x-auto rounded-lg border bg-card">
-                            <table className="w-full text-left text-sm">
-                                <thead className="bg-muted/50 text-muted-foreground">
+                        <div className="admin-list-panel">
+                            <div className="admin-list-heading">
+                                <h2>Account results</h2>
+                                <p>Open a name to review details</p>
+                            </div>
+                            <table className="admin-table">
+                                <thead>
                                     <tr>
                                         <th className="p-3">Name</th>
                                         <th className="p-3">Type</th>
@@ -134,28 +142,28 @@ export default function AdminUsersIndex({
                                 </thead>
                                 <tbody>
                                     {users.data.map((user) => (
-                                        <tr key={user.id} className="border-t">
-                                            <td className="p-3">
+                                        <tr key={user.id}>
+                                            <td data-label="Name">
                                                 <Link
                                                     href={admin.users.show(
                                                         user.id,
                                                     )}
-                                                    className="font-medium underline underline-offset-4"
+                                                    className="font-medium"
                                                 >
                                                     {user.name}
                                                 </Link>
                                             </td>
-                                            <td className="p-3">
+                                            <td data-label="Type">
                                                 {user.userTypeLabel}
                                             </td>
-                                            <td className="p-3">
+                                            <td data-label="Status">
                                                 <VerificationStatusBadge
                                                     status={
                                                         user.verificationStatus
                                                     }
                                                 />
                                             </td>
-                                            <td className="p-3 whitespace-nowrap">
+                                            <td data-label="Registered" className="whitespace-nowrap">
                                                 {user.registeredAt ?? '—'}
                                             </td>
                                         </tr>
@@ -170,14 +178,15 @@ export default function AdminUsersIndex({
                             </p>
                             <nav
                                 aria-label="Users pages"
-                                className="flex flex-wrap gap-1"
+                                className="admin-pagination"
                             >
                                 {users.links.map((link, index) => (
                                     <Link
                                         key={`${link.label}-${index}`}
                                         href={link.url ?? '#'}
                                         aria-disabled={!link.url}
-                                        className={`rounded border px-3 py-2 text-sm ${link.active ? 'bg-muted font-medium' : ''} ${link.url ? '' : 'pointer-events-none opacity-50'}`}
+                                        aria-current={link.active ? 'page' : undefined}
+                                        className={link.url ? '' : 'pointer-events-none opacity-50'}
                                         dangerouslySetInnerHTML={{
                                             __html: link.label,
                                         }}
@@ -187,9 +196,9 @@ export default function AdminUsersIndex({
                         </div>
                     </div>
                 ) : (
-                    <p className="rounded-lg border bg-card p-6 text-sm text-muted-foreground">
+                    <div className="admin-list-panel admin-empty">
                         No accounts match these filters.
-                    </p>
+                    </div>
                 )}
             </div>
         </>

@@ -137,18 +137,51 @@ const AdminLayout = loadComponent(
                 element('div', { 'data-part': 'shell', children }),
         },
         '@/components/app-sidebar-header': {
-            AppSidebarHeader: ({ showMessages }) =>
+            AppSidebarHeader: ({ showMessages, showBack, showAppearance }) =>
                 element('header', {
-                    children: showMessages
-                        ? 'Header with messages'
-                        : 'Admin alerts only',
+                    children: `${showMessages ? 'Header with messages' : 'Admin alerts only'} ${showBack ? 'Back' : ''} ${showAppearance ? 'Appearance' : ''}`,
                 }),
         },
         '@/components/prototype-banner': () => null,
-        '@/components/site-footer': () =>
-            element('footer', { children: 'Footer' }),
     },
     'admin layout',
+);
+
+const AppSidebarHeader = loadComponent(
+    'resources/js/components/app-sidebar-header.tsx',
+    {
+        '@/components/breadcrumbs': {
+            Breadcrumbs: () => element('span', { children: 'Administration' }),
+        },
+        '@/components/notification-bell': {
+            NotificationBell: () =>
+                element('span', { children: 'Notifications' }),
+        },
+        '@/components/ui/button': {
+            Button: ({ children, ...props }) =>
+                element('button', { ...props, children }),
+        },
+        '@/components/ui/sidebar': {
+            SidebarTrigger: () => element('button', { children: 'Menu' }),
+        },
+        '@/hooks/use-appearance': {
+            useAppearance: () => ({
+                resolvedAppearance: 'light',
+                updateAppearance: () => {},
+            }),
+        },
+        '@inertiajs/react': {
+            router: { visit: () => {} },
+            usePage: () => ({ url: '/admin/tasks', props: {} }),
+        },
+        'lucide-react': {
+            ArrowLeft: () => null,
+            Moon: () => null,
+            Sun: () => null,
+        },
+    },
+    'admin header',
+    'AppSidebarHeader',
 );
 
 const AdminDashboard = loadComponent(
@@ -196,8 +229,25 @@ void test('admin pages use the sidebar shell and show admin alerts in the header
     assert.match(markup, /data-part="shell"/);
     assert.match(markup, /Admin sidebar/);
     assert.match(markup, /Admin alerts only/);
+    assert.match(markup, /Back Appearance/);
     assert.match(markup, /Admin page/);
-    assert.match(markup, /Footer/);
+    assert.doesNotMatch(markup, /<footer|Footer/);
+});
+
+void test('admin header includes back navigation and an appearance control beside alerts', () => {
+    const markup = renderToStaticMarkup(
+        React.createElement(AppSidebarHeader, {
+            showBack: true,
+            showAppearance: true,
+            showMessages: false,
+        }),
+    );
+
+    assert.match(markup, /aria-label="Go back"/);
+    assert.match(markup, /aria-label="Switch to dark mode"/);
+    assert.ok(
+        markup.indexOf('Switch to dark mode') < markup.indexOf('Notifications'),
+    );
 });
 
 void test('admin dashboard highlights the latest pending task and links to the review queue', () => {

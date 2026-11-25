@@ -125,11 +125,28 @@ export default function Information({
                             These guidelines are provisional and must be
                             reviewed by the team and university.
                         </p>
-                        <ul className="mt-6 list-disc space-y-3 pl-6">
-                            {guidelines.map((rule) => (
-                                <li key={rule}>{rule}</li>
+                        <p className="mt-5 max-w-3xl text-muted-foreground">
+                            Use these guidelines to describe tasks clearly and
+                            help people decide whether the work suits them.
+                        </p>
+                        <ol className="mt-6 space-y-3">
+                            {guidelines.map((rule, index) => (
+                                <li
+                                    key={rule}
+                                    className="flex gap-4 rounded-xl border bg-card p-4"
+                                >
+                                    <span
+                                        aria-hidden="true"
+                                        className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground"
+                                    >
+                                        {index + 1}
+                                    </span>
+                                    <p className="pt-1 text-sm leading-relaxed">
+                                        {rule}
+                                    </p>
+                                </li>
                             ))}
-                        </ul>
+                        </ol>
                     </>
                 )}
                 {page === 'safety-and-limits' && (

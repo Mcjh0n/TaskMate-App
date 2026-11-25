@@ -2,6 +2,7 @@ import { formatDate } from '@/lib/format';
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeading } from '@/components/admin-page-heading';
 import { TaskStatusBadge } from '@/components/task-status-badge';
 import admin from '@/routes/admin';
 
@@ -47,20 +48,20 @@ export default function AdminTaskQueue({
     return (
         <>
             <Head title="Task review queue" />
-            <div className="space-y-5">
-                <div>
-                    <h1 className="text-2xl font-semibold">
-                        Task review queue
-                    </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Pending tasks appear first, with the newest submissions
-                        at the top.
-                    </p>
-                </div>
+            <div className="admin-page space-y-5" data-tone="tasks">
+                <AdminPageHeading
+                    eyebrow="Task moderation"
+                    title="Task review queue"
+                    description="Pending tasks appear first, newest submissions at the top."
+                    count={tasks.data.length}
+                    countLabel="on this page"
+                />
                 <form
                     onSubmit={filter}
-                    className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
+                    className="admin-filter-panel"
                 >
+                    <p className="admin-filter-heading">Find a task</p>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.5fr)_1fr_1fr_auto]">
                     <input
                         aria-label="Search title or poster"
                         placeholder="Search title or poster"
@@ -95,16 +96,21 @@ export default function AdminTaskQueue({
                         ))}
                     </select>
                     <button
-                        className="h-10 rounded-md border px-4 text-sm font-medium hover:bg-muted"
+                        className="admin-filter-submit"
                         type="submit"
                     >
                         Apply filters
                     </button>
+                    </div>
                 </form>
                 {tasks.data.length ? (
-                    <div className="overflow-x-auto rounded-lg border bg-card">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-muted/50 text-muted-foreground">
+                    <div className="admin-list-panel">
+                        <div className="admin-list-heading">
+                            <h2>Submitted tasks</h2>
+                            <p>Open a task to review it</p>
+                        </div>
+                        <table className="admin-table">
+                            <thead>
                                 <tr>
                                     <th className="p-3">Title</th>
                                     <th className="p-3">Poster</th>
@@ -115,29 +121,29 @@ export default function AdminTaskQueue({
                             </thead>
                             <tbody>
                                 {tasks.data.map((task) => (
-                                    <tr key={task.id} className="border-t">
-                                        <td className="p-3">
+                                    <tr key={task.id}>
+                                        <td data-label="Title">
                                             <Link
-                                                className="font-medium underline underline-offset-4"
+                                                className="font-medium"
                                                 href={admin.tasks.show(task.id)}
                                             >
                                                 {task.title}
                                             </Link>
                                         </td>
-                                        <td className="p-3">
+                                        <td data-label="Poster">
                                             {task.posterName}
                                             <div className="text-xs text-muted-foreground">
                                                 {task.posterType}
                                             </div>
                                         </td>
-                                        <td className="p-3">
+                                        <td data-label="Status">
                                             <TaskStatusBadge
                                                 status={task.status}
                                                 label={task.statusLabel}
                                             />
                                         </td>
-                                        <td className="p-3">{task.workMode}</td>
-                                        <td className="p-3 whitespace-nowrap">
+                                        <td data-label="Work mode">{task.workMode}</td>
+                                        <td data-label="Submitted" className="whitespace-nowrap">
                                             {task.submittedAt
                                                 ? formatDate(task.submittedAt)
                                                 : '—'}
@@ -148,13 +154,13 @@ export default function AdminTaskQueue({
                         </table>
                     </div>
                 ) : (
-                    <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
+                    <div className="admin-list-panel admin-empty">
                         No tasks match these filters.
                     </div>
                 )}
                 {tasks.links.length > 3 && (
                     <nav
-                        className="flex flex-wrap gap-2"
+                        className="admin-pagination"
                         aria-label="Pagination"
                     >
                         {tasks.links.map((link, index) =>
@@ -162,7 +168,7 @@ export default function AdminTaskQueue({
                                 <Link
                                     key={index}
                                     href={link.url}
-                                    className={`rounded border px-3 py-1 text-sm ${link.active ? 'bg-muted font-medium' : ''}`}
+                                    aria-current={link.active ? 'page' : undefined}
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}
@@ -170,7 +176,7 @@ export default function AdminTaskQueue({
                             ) : (
                                 <span
                                     key={index}
-                                    className="rounded border px-3 py-1 text-sm text-muted-foreground"
+                                    className="text-muted-foreground"
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}

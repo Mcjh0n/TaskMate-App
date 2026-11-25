@@ -127,16 +127,14 @@ export default function AdminUserShow({
     return (
         <>
             <Head title={`Review ${user.name}`} />
-            <div className="space-y-8">
-                <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="admin-page space-y-6" data-tone="users">
+                <div className="admin-page-heading flex-wrap">
                     <div>
-                        <p className="text-sm text-muted-foreground">
-                            Account review
-                        </p>
-                        <h1 className="mt-1 text-2xl font-semibold">
+                        <p className="admin-page-eyebrow">Account review</p>
+                        <h1>
                             {user.name}
                         </h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="admin-page-description break-all">
                             {user.email}
                         </p>
                     </div>
@@ -149,9 +147,9 @@ export default function AdminUserShow({
                     the safety of a task.
                 </div>
 
-                <section className="space-y-4">
+                <section className="admin-detail-card space-y-4">
                     <h2 className="text-lg font-semibold">Submitted details</h2>
-                    <dl className="grid gap-4 rounded-lg border p-4 sm:grid-cols-2">
+                    <dl className="grid gap-4 sm:grid-cols-2">
                         <Detail
                             label="Account type"
                             value={user.userTypeLabel}
@@ -216,7 +214,7 @@ export default function AdminUserShow({
                         You cannot change your own account verification.
                     </p>
                 ) : (
-                    <section className="space-y-4">
+                    <section className="admin-detail-card space-y-4">
                         <h2 className="text-lg font-semibold">
                             Review decision
                         </h2>
@@ -242,7 +240,7 @@ export default function AdminUserShow({
                     </section>
                 )}
 
-                <section className="space-y-3">
+                <section className="admin-detail-card space-y-3">
                     <h2 className="text-lg font-semibold">Account history</h2>
                     {history.length ? (
                         history.map((item) => (
@@ -274,7 +272,7 @@ export default function AdminUserShow({
                         </p>
                     )}
                 </section>
-                <section className="space-y-4">
+                <section className="admin-detail-card space-y-4">
                     <h2 className="text-lg font-semibold">
                         Ratings received and given
                     </h2>
@@ -338,7 +336,7 @@ export default function AdminUserShow({
                         </div>
                     ))}
                 </section>
-                <section className="space-y-3">
+                <section className="admin-detail-card space-y-3">
                     <h2 className="text-lg font-semibold">
                         Sanctions and platform actions
                     </h2>

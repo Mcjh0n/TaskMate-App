@@ -92,11 +92,13 @@ return [
 
     // PROVISIONAL: the Job and Task Guidelines must be finalized by the team and university.
     'task_guidelines' => [
-        'PROVISIONAL: Tasks must be lawful and appropriate for a campus setting.',
-        'PROVISIONAL: Do not request academic dishonesty, such as doing another person’s graded work.',
-        'PROVISIONAL: Do not require a private meeting in an unsafe or isolated place.',
-        'PROVISIONAL: The budget should be a fair estimate for the described work.',
-        'PROVISIONAL: Payment is arranged directly between the poster and the student.',
+        'Post a defined task with a clear result. Describe the work honestly, including what needs to be done, the expected result, estimated duration, and budget or budget range.',
+        'Choose the correct work mode. For on-campus or off-campus work, give the actual work location and explain any travel, physical effort, equipment, or hazards in the task description.',
+        'Do not post unlawful, exploitative, or unsafe work. Do not require a private meeting in an isolated place.',
+        'Do not ask someone to take an exam, complete another person’s graded work, provide answer keys, or impersonate someone.',
+        'Keep the agreement and any changes to the work or amount in TaskMate. Do not ask anyone to start before both people confirm the agreement or to bypass administrator review.',
+        'Agree on how and when payment will be made before work begins. Payment is made directly between users; TaskMate does not hold, process, or guarantee it.',
+        'Do not ask for passwords, identity documents, or personal details that are not needed for the task. Report misleading or unsafe requests.',
     ],
 
     'browse' => [

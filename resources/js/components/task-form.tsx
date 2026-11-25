@@ -437,12 +437,14 @@ export default function TaskForm({
                             Platform rules
                         </h2>
                         <div className="rounded-lg border bg-muted/40 p-4">
-                            <h3 className="font-medium">Task guidelines</h3>
-                            <ul className="mt-2 list-disc space-y-1 pl-5 text-sm">
+                            <h3 className="font-medium">
+                                Task guidelines (provisional)
+                            </h3>
+                            <ol className="mt-2 list-decimal space-y-2 pl-5 text-sm leading-relaxed">
                                 {options.guidelines.map((guideline) => (
                                     <li key={guideline}>{guideline}</li>
                                 ))}
-                            </ul>
+                            </ol>
                         </div>
                         <div className="flex items-start gap-2">
                             <input

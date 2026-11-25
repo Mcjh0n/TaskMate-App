@@ -4,7 +4,6 @@ import { AdminSidebar } from '@/components/admin-sidebar';
 import { AppShell } from '@/components/app-shell';
 import { AppSidebarHeader } from '@/components/app-sidebar-header';
 import PrototypeBanner from '@/components/prototype-banner';
-import SiteFooter from '@/components/site-footer';
 
 export default function AdminLayout({ children }: PropsWithChildren) {
     return (
@@ -18,6 +17,8 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                 >
                     <AppSidebarHeader
                         showMessages={false}
+                        showBack
+                        showAppearance
                         breadcrumbs={[
                             { title: 'Administration', href: '/admin' },
                         ]}
@@ -25,7 +26,6 @@ export default function AdminLayout({ children }: PropsWithChildren) {
                     <div className="mx-auto w-full max-w-6xl px-4 py-6">
                         {children}
                     </div>
-                    <SiteFooter />
                 </AppContent>
             </AppShell>
         </>

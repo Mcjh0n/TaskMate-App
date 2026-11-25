@@ -2,6 +2,7 @@ import { formatDate } from '@/lib/format';
 import { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeading } from '@/components/admin-page-heading';
 import { ReportStatusBadge } from '@/components/report-status-badge';
 import admin from '@/routes/admin';
 
@@ -62,23 +63,24 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
     return (
         <>
             <Head title="Report review queue" />
-            <div className="space-y-5">
-                <div>
-                    <h1 className="text-2xl font-semibold">
-                        Report review queue
-                    </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Review reports and related TaskMate records.
-                    </p>
-                </div>
-                <p className="rounded-lg border bg-card p-4 text-sm">
+            <div className="admin-page space-y-5" data-tone="reports">
+                <AdminPageHeading
+                    eyebrow="Community concerns"
+                    title="Report review queue"
+                    description="Review reports and the related TaskMate records."
+                    count={reports.data.length}
+                    countLabel="on this page"
+                />
+                <p className="admin-notice">
                     This review is a platform record, not a legal ruling.
                     TaskMate cannot recover or guarantee payment.
                 </p>
                 <form
                     onSubmit={filter}
-                    className="grid gap-3 rounded-lg border bg-card p-4 sm:grid-cols-2 lg:grid-cols-3"
+                    className="admin-filter-panel"
                 >
+                    <p className="admin-filter-heading">Find a report</p>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <input
                         aria-label="Search parties"
                         placeholder="Search reporter or reported person"
@@ -127,7 +129,7 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                         onToggle={(event) =>
                             setMoreFiltersOpen(event.currentTarget.open)
                         }
-                        className="rounded-md border p-3 sm:col-span-2 lg:col-span-3"
+                        className="rounded-md border p-3 sm:col-span-2 lg:col-span-4"
                     >
                         <summary className="cursor-pointer text-sm font-medium">
                             More filters
@@ -160,16 +162,21 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                         </div>
                     </details>
                     <button
-                        className="h-10 rounded-md border px-4 text-sm font-medium"
+                        className="admin-filter-submit sm:col-span-2 lg:col-span-4"
                         type="submit"
                     >
                         Apply filters
                     </button>
+                    </div>
                 </form>
                 {reports.data.length ? (
-                    <div className="overflow-x-auto rounded-lg border bg-card">
-                        <table className="w-full text-left text-sm">
-                            <thead className="bg-muted/50">
+                    <div className="admin-list-panel">
+                        <div className="admin-list-heading">
+                            <h2>Reported concerns</h2>
+                            <p>Open a report to review its record</p>
+                        </div>
+                        <table className="admin-table">
+                            <thead>
                                 <tr>
                                     <th className="p-3">Type / Task</th>
                                     <th className="p-3">Priority</th>
@@ -181,10 +188,10 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                             </thead>
                             <tbody>
                                 {reports.data.map((item) => (
-                                    <tr key={item.id} className="border-t">
-                                        <td className="p-3">
+                                    <tr key={item.id}>
+                                        <td data-label="Report">
                                             <Link
-                                                className="underline"
+                                                className="font-medium"
                                                 href={admin.reports.show(
                                                     item.id,
                                                 )}
@@ -193,25 +200,25 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                                                 {item.taskTitle}
                                             </Link>
                                             {item.escalated && (
-                                                <span className="ml-2 text-xs">
+                                                <span className="admin-pill ml-2">
                                                     Escalated
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="p-3">{item.priority}</td>
-                                        <td className="p-3">
+                                        <td data-label="Priority"><span className="admin-pill">{item.priority}</span></td>
+                                        <td data-label="Reporter">
                                             {item.reporterName}
                                         </td>
-                                        <td className="p-3">
+                                        <td data-label="Reported person">
                                             {item.reportedUserName}
                                         </td>
-                                        <td className="p-3">
+                                        <td data-label="Status">
                                             <ReportStatusBadge
                                                 status={item.status}
                                                 label={item.statusLabel}
                                             />
                                         </td>
-                                        <td className="p-3">
+                                        <td data-label="Filed">
                                             {item.createdAt
                                                 ? formatDate(item.createdAt)
                                                 : '—'}
@@ -222,18 +229,18 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                         </table>
                     </div>
                 ) : (
-                    <p className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
+                    <p className="admin-list-panel admin-empty">
                         No reports match these filters.
                     </p>
                 )}
                 {reports.links.length > 3 && (
-                    <nav className="flex flex-wrap gap-2">
+                    <nav className="admin-pagination" aria-label="Report pages">
                         {reports.links.map((link, index) =>
                             link.url ? (
                                 <Link
                                     key={index}
                                     href={link.url}
-                                    className="rounded border px-3 py-1 text-sm"
+                                    aria-current={link.active ? 'page' : undefined}
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}
@@ -241,7 +248,7 @@ function AdminReportsQueue({ reports, filters, types, statuses }: Props) {
                             ) : (
                                 <span
                                     key={index}
-                                    className="rounded border px-3 py-1 text-sm"
+                                    className="text-muted-foreground"
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}

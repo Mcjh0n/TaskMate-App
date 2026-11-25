@@ -5,36 +5,42 @@ export default function ShowFlag({ flag }: { flag: any }) {
     return (
         <>
             <Head title="Review content flag" />
-            <main className="max-w-3xl space-y-5">
-                <Link href="/admin/flags" className="text-sm underline">
-                    Back to flags
+            <main className="admin-page max-w-4xl space-y-5" data-tone="flags">
+                <Link href="/admin/flags" className="admin-back-link">
+                    ← Back to flags
                 </Link>
-                <h1 className="text-2xl font-semibold">{flag.categoryLabel}</h1>
-                <p className="rounded border p-4 text-sm">
-                    <strong>{flag.author.name}</strong> · {flag.field} ·{' '}
-                    {flag.createdAt}
-                </p>
+                <header className="admin-page-heading flex-wrap">
+                    <div>
+                        <p className="admin-page-eyebrow">Flag review</p>
+                        <h1>{flag.categoryLabel}</h1>
+                        <p className="admin-page-description">
+                            {flag.author.name} · {flag.field} · {flag.createdAt}
+                        </p>
+                    </div>
+                    <span className="admin-pill">{flag.status}</span>
+                </header>
                 {flag.task && (
-                    <p className="rounded border p-4 text-sm">
+                    <p className="admin-notice">
                         Task: {flag.task.title}
                     </p>
                 )}
-                <section className="rounded border p-4 break-words whitespace-pre-wrap">
-                    {flag.content}
+                <section className="admin-detail-card">
+                    <h2 className="mb-3 text-lg font-semibold">Flagged content</h2>
+                    <p className="break-words whitespace-pre-wrap">{flag.content}</p>
                 </section>
                 {flag.relatedReportUrl && (
                     <Link
-                        className="text-sm underline"
+                        className="admin-back-link"
                         href={flag.relatedReportUrl}
                     >
                         Open related report
                     </Link>
                 )}
-                <p className="text-sm">
+                <p className="admin-notice">
                     Matched labels: {(flag.matched ?? []).join(', ')}
                 </p>
-                <section className="rounded border p-4">
-                    <h2 className="font-semibold">Author account actions</h2>
+                <section className="admin-detail-card">
+                    <h2 className="text-lg font-semibold">Author account actions</h2>
                     {flag.sanctions.map((item: any, i: number) => (
                         <p key={i} className="mt-2 text-sm">
                             {item.type}: {item.reason}
@@ -44,10 +50,12 @@ export default function ShowFlag({ flag }: { flag: any }) {
                     <Form
                         action={`/admin/users/${flag.author.id}/sanctions`}
                         method="post"
-                        className="mt-4 grid gap-3"
+                        className="mt-4 grid gap-3 rounded-lg border p-4 sm:grid-cols-2"
                     >
                         {({ processing }) => (
                             <>
+                                <label className="grid gap-1 text-sm font-medium">
+                                Platform action
                                 <select
                                     name="action"
                                     className="h-10 rounded border bg-background px-3"
@@ -63,11 +71,17 @@ export default function ShowFlag({ flag }: { flag: any }) {
                                     </option>
                                     <option value="ban">Ban user</option>
                                 </select>
+                                </label>
+                                <label className="grid gap-1 text-sm font-medium">
+                                Suspension ends (if suspending)
                                 <input
                                     name="ends_at"
                                     type="datetime-local"
                                     className="h-10 rounded border bg-background px-3"
                                 />
+                                </label>
+                                <label className="grid gap-1 text-sm font-medium sm:col-span-2">
+                                Reason shown to the user
                                 <textarea
                                     name="reason"
                                     required
@@ -76,6 +90,9 @@ export default function ShowFlag({ flag }: { flag: any }) {
                                     className="min-h-20 rounded border bg-background p-3"
                                     placeholder="Reason shown to the user"
                                 />
+                                </label>
+                                <label className="grid gap-1 text-sm font-medium sm:col-span-2">
+                                Internal admin note
                                 <textarea
                                     name="internal_note"
                                     required
@@ -84,9 +101,10 @@ export default function ShowFlag({ flag }: { flag: any }) {
                                     className="min-h-20 rounded border bg-background p-3"
                                     placeholder="Internal admin note"
                                 />
+                                </label>
                                 <button
                                     disabled={processing}
-                                    className="rounded border px-4 py-2"
+                                    className="admin-filter-submit sm:col-span-2"
                                 >
                                     Record platform action
                                 </button>
@@ -98,7 +116,7 @@ export default function ShowFlag({ flag }: { flag: any }) {
                     <Form
                         action={`/admin/flags/${flag.id}/decision`}
                         method="post"
-                        className="space-y-3 rounded border p-4"
+                        className="admin-detail-card space-y-3"
                     >
                         {({ processing }) => (
                             <>
@@ -116,6 +134,8 @@ export default function ShowFlag({ flag }: { flag: any }) {
                                         </option>
                                     </select>
                                 </label>
+                                <label className="grid gap-1 text-sm font-medium">
+                                Review note
                                 <textarea
                                     name="note"
                                     required
@@ -124,9 +144,10 @@ export default function ShowFlag({ flag }: { flag: any }) {
                                     className="min-h-24 w-full rounded border bg-background p-3"
                                     placeholder="Required review note"
                                 />
+                                </label>
                                 <button
                                     disabled={processing}
-                                    className="rounded border px-4 py-2"
+                                    className="admin-filter-submit"
                                 >
                                     Save review
                                 </button>

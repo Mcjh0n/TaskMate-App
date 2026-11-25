@@ -41,33 +41,72 @@ export default function Register({ passwordRules }: Props) {
             >
                 {({ processing, errors }) => (
                     <>
-                        <div className="grid gap-x-4 gap-y-4 sm:grid-cols-2">
-                            <div className="grid content-start gap-1.5 sm:col-span-2">
-                                <Label htmlFor="user_type">
-                                    Choose your account type
-                                </Label>
-                                <select
-                                    id="user_type"
-                                    name="user_type"
-                                    value={userType}
-                                    onChange={(event) => {
-                                        setUserType(
-                                            event.target.value as UserType,
-                                        );
-                                        setIdNumber('');
-                                    }}
-                                    required
-                                    className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
-                                >
-                                    <option value="student">CMU Student</option>
-                                    <option value="faculty_staff">
-                                        CMU Faculty / Staff
-                                    </option>
-                                    <option value="organization">
-                                        Office or Organization Representative
-                                    </option>
-                                </select>
+                        <div className="grid gap-x-3 gap-y-3 sm:grid-cols-2">
+                            <fieldset className="grid gap-1.5 sm:col-span-2">
+                                <legend className="mb-1 text-sm font-medium">
+                                    Account type
+                                </legend>
+                                <div className="grid grid-cols-3 gap-1.5">
+                                    {(
+                                        [
+                                            ['student', 'CMU Student'],
+                                            [
+                                                'faculty_staff',
+                                                'CMU Faculty / Staff',
+                                            ],
+                                            [
+                                                'organization',
+                                                'Office or Organization',
+                                            ],
+                                        ] as const
+                                    ).map(([value, label]) => (
+                                        <label
+                                            key={value}
+                                            className="cursor-pointer"
+                                        >
+                                            <input
+                                                className="peer sr-only"
+                                                type="radio"
+                                                name="user_type"
+                                                value={value}
+                                                checked={userType === value}
+                                                onChange={() => {
+                                                    setUserType(value);
+                                                    setIdNumber('');
+                                                }}
+                                                required
+                                            />
+                                            <span className="flex min-h-11 items-center justify-center rounded-lg border border-input px-1.5 py-1 text-center text-xs leading-tight font-semibold transition-colors peer-checked:border-primary peer-checked:bg-accent peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 hover:border-primary">
+                                                {label}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
                                 <InputError message={errors.user_type} />
+                            </fieldset>
+
+                            <div className="grid content-start gap-1.5">
+                                <Label htmlFor="name">Full name</Label>
+                                <Input
+                                    id="name"
+                                    name="name"
+                                    required
+                                    autoFocus
+                                    autoComplete="name"
+                                />
+                                <InputError message={errors.name} />
+                            </div>
+
+                            <div className="grid content-start gap-1.5">
+                                <Label htmlFor="email">Email address</Label>
+                                <Input
+                                    id="email"
+                                    type="email"
+                                    required
+                                    autoComplete="email"
+                                    name="email"
+                                />
+                                <InputError message={errors.email} />
                             </div>
 
                             {userType === 'organization' ? (
@@ -178,30 +217,6 @@ export default function Register({ passwordRules }: Props) {
                                 </>
                             )}
 
-                            <div className="grid content-start gap-1.5 sm:col-span-2">
-                                <Label htmlFor="name">Full name</Label>
-                                <Input
-                                    id="name"
-                                    name="name"
-                                    required
-                                    autoFocus
-                                    autoComplete="name"
-                                />
-                                <InputError message={errors.name} />
-                            </div>
-
-                            <div className="grid content-start gap-1.5 sm:col-span-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    required
-                                    autoComplete="email"
-                                    name="email"
-                                />
-                                <InputError message={errors.email} />
-                            </div>
-
                             <div className="grid content-start gap-1.5">
                                 <Label htmlFor="password">Password</Label>
                                 <PasswordInput
@@ -231,11 +246,11 @@ export default function Register({ passwordRules }: Props) {
                             </div>
 
                             <div className="sm:col-span-2">
-                                <SafetyNotice />
+                                <SafetyNotice compact />
                             </div>
                             <Button
                                 type="submit"
-                                className="w-full sm:col-span-2"
+                                className="h-11 w-full bg-brand-gold font-semibold text-[#173323] hover:bg-[#e9bd32] sm:col-span-2"
                                 disabled={processing}
                                 data-test="register-user-button"
                             >

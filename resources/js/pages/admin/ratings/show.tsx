@@ -24,32 +24,42 @@ function Page({ rating, notice }: { rating: Rating; notice: string }) {
     return (
         <>
             <Head title="Review rating" />
-            <div className="space-y-5">
-                <Link className="text-sm underline" href="/admin/ratings">
-                    Back to ratings
+            <div className="admin-page max-w-4xl space-y-5" data-tone="ratings">
+                <Link className="admin-back-link" href="/admin/ratings">
+                    ← Back to ratings
                 </Link>
-                <h1 className="text-2xl font-semibold">
-                    Rating for {rating.taskTitle}
-                </h1>
-                <p className="rounded-lg border p-4 text-sm">{ratingNotice}</p>
-                <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                <header className="admin-page-heading flex-wrap">
+                    <div>
+                        <p className="admin-page-eyebrow">Feedback review</p>
+                        <h1>Rating for {rating.taskTitle}</h1>
+                        <p className="admin-page-description">{rating.rater} rated {rating.ratee}</p>
+                    </div>
+                    <span className="admin-pill">{rating.hidden ? 'Hidden' : 'Visible'}</span>
+                </header>
+                <p className="admin-notice">{ratingNotice}</p>
+                <p className="admin-notice">
                     {notice}
                 </p>
-                <section className="space-y-2 rounded-xl border bg-card p-5">
-                    <p>
-                        {rating.rater} rated {rating.ratee}
-                    </p>
-                    <p>
-                        Direction: {rating.direction.replaceAll('_', ' ')} ·
-                        Overall: {rating.overall}/5
-                    </p>
-                    {rating.scores.map((score) => (
-                        <p key={score.dimension}>
-                            {score.label}: {score.score}/5
+                <section className="admin-detail-card space-y-4">
+                    <h2 className="text-lg font-semibold">Rating details</h2>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                        <p className="rounded-lg bg-muted/40 p-3 text-sm">
+                            <span className="block text-muted-foreground">Direction</span>
+                            <strong className="capitalize">{rating.direction.replaceAll('_', ' ')}</strong>
                         </p>
-                    ))}
+                        <p className="rounded-lg bg-muted/40 p-3 text-sm">
+                            <span className="block text-muted-foreground">Overall experience</span>
+                            <strong>{rating.overall}/5</strong>
+                        </p>
+                        {rating.scores.map((score) => (
+                            <p key={score.dimension} className="rounded-lg bg-muted/40 p-3 text-sm">
+                                <span className="block text-muted-foreground">{score.label}</span>
+                                <strong>{score.score}/5</strong>
+                            </p>
+                        ))}
+                    </div>
                     {rating.comment && (
-                        <p className="whitespace-pre-wrap">{rating.comment}</p>
+                        <p className="rounded-lg border p-3 whitespace-pre-wrap">{rating.comment}</p>
                     )}
                     <p>
                         Status:{' '}
@@ -89,7 +99,7 @@ function Page({ rating, notice }: { rating: Rating; notice: string }) {
                         method="post"
                     >
                         <input type="hidden" name="action" value="restore" />
-                        <button className="rounded border px-4 py-2">
+                        <button className="admin-filter-submit">
                             Restore rating
                         </button>
                     </Form>
@@ -97,7 +107,7 @@ function Page({ rating, notice }: { rating: Rating; notice: string }) {
                     <Form
                         action={`/admin/ratings/${rating.id}/moderate`}
                         method="post"
-                        className="space-y-3 rounded-xl border bg-card p-5"
+                        className="admin-detail-card space-y-3"
                     >
                         <input type="hidden" name="action" value="hide" />
                         <label

@@ -118,13 +118,13 @@ function AdminReportShow({
     return (
         <>
             <Head title={`Review report #${report.id}`} />
-            <div className="space-y-5">
+            <div className="admin-page space-y-5" data-tone="reports">
                 {status && (
-                    <p role="status" className="rounded-lg border p-3 text-sm">
+                    <p role="status" className="admin-notice">
                         {status}
                     </p>
                 )}
-                <p className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
+                <p className="admin-notice">
                     {notice}
                 </p>
                 <ReportDetails report={report} />
@@ -137,7 +137,7 @@ function AdminReportShow({
                     </p>
                 )}
                 {canReview && (
-                    <section className="space-y-3 rounded-xl border bg-card p-5">
+                    <section className="admin-detail-card space-y-3">
                         <h2 className="text-lg font-semibold">
                             Review decision
                         </h2>

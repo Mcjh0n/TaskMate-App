@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AdminLayout from '@/layouts/admin-layout';
+import { AdminPageHeading } from '@/components/admin-page-heading';
 import { ratingNotice } from '@/components/rating-summary';
 
 type Item = {
@@ -31,16 +32,24 @@ function Page({ ratings, filters }: Props) {
     return (
         <>
             <Head title="Ratings" />
-            <div className="space-y-5">
-                <h1 className="text-2xl font-semibold">Ratings</h1>
-                <p className="rounded-lg border p-4 text-sm">{ratingNotice}</p>
+            <div className="admin-page space-y-5" data-tone="ratings">
+                <AdminPageHeading
+                    eyebrow="Feedback moderation"
+                    title="Ratings"
+                    description="Review task feedback and manage visibility when needed."
+                    count={ratings.data.length}
+                    countLabel="on this page"
+                />
+                <p className="admin-notice">{ratingNotice}</p>
                 <form
-                    className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5"
+                    className="admin-filter-panel"
                     onSubmit={(e) => {
                         e.preventDefault();
                         router.get('/admin/ratings', values);
                     }}
                 >
+                    <p className="admin-filter-heading">Find feedback</p>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                     <input
                         aria-label="Search user"
                         placeholder="Search user name"
@@ -102,12 +111,17 @@ function Page({ ratings, filters }: Props) {
                         }
                         className="rounded border px-3"
                     />
-                    <button className="rounded bg-primary px-3 py-2 text-primary-foreground sm:col-span-2 lg:col-span-5">
+                    <button className="admin-filter-submit sm:col-span-2 lg:col-span-5">
                         Apply filters
                     </button>
+                    </div>
                 </form>
-                <div className="overflow-x-auto rounded-xl border bg-card">
-                    <table className="w-full text-left text-sm">
+                <div className="admin-list-panel">
+                    <div className="admin-list-heading">
+                        <h2>Submitted ratings</h2>
+                        <p>Open a task to review feedback</p>
+                    </div>
+                    {ratings.data.length > 0 && <table className="admin-table">
                         <thead>
                             <tr className="border-b">
                                 <th className="p-3">Task</th>
@@ -121,44 +135,44 @@ function Page({ ratings, filters }: Props) {
                         </thead>
                         <tbody>
                             {ratings.data.map((rating) => (
-                                <tr key={rating.id} className="border-b">
-                                    <td className="p-3">
+                                <tr key={rating.id}>
+                                    <td data-label="Task">
                                         <Link
-                                            className="underline"
+                                            className="font-medium"
                                             href={`/admin/ratings/${rating.id}`}
                                         >
                                             {rating.taskTitle}
                                         </Link>
                                     </td>
-                                    <td className="p-3">{rating.raterName}</td>
-                                    <td className="p-3">{rating.rateeName}</td>
-                                    <td className="p-3">
+                                    <td data-label="Rater">{rating.raterName}</td>
+                                    <td data-label="Ratee">{rating.rateeName}</td>
+                                    <td data-label="Direction">
                                         {rating.direction.replaceAll('_', ' ')}
                                     </td>
-                                    <td className="p-3">{rating.overall}/5</td>
-                                    <td className="p-3">
-                                        {rating.hidden ? 'Hidden' : 'Visible'}
+                                    <td data-label="Score"><strong>{rating.overall}/5</strong></td>
+                                    <td data-label="Status">
+                                        <span className="admin-pill">{rating.hidden ? 'Hidden' : 'Visible'}</span>
                                     </td>
-                                    <td className="p-3">
+                                    <td data-label="Date">
                                         {rating.date ?? '—'}
                                     </td>
                                 </tr>
                             ))}
                         </tbody>
-                    </table>
+                    </table>}
                     {ratings.data.length === 0 && (
-                        <p className="p-6 text-sm text-muted-foreground">
+                        <p className="admin-empty">
                             No ratings match these filters.
                         </p>
                     )}
                 </div>
-                <nav className="flex gap-2">
+                <nav className="admin-pagination" aria-label="Rating pages">
                     {ratings.links.map((link, i) =>
                         link.url ? (
                             <Link
                                 key={i}
                                 href={link.url}
-                                className="rounded border px-3 py-1"
+                                aria-current={link.active ? 'page' : undefined}
                                 dangerouslySetInnerHTML={{ __html: link.label }}
                             />
                         ) : null,

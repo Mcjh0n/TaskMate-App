@@ -138,7 +138,7 @@ export default function AdminTaskReview({
     return (
         <>
             <Head title={`Review: ${task.title}`} />
-            <div className="space-y-6">
+            <div className="admin-page space-y-5" data-tone="tasks">
                 {status && (
                     <div
                         role="status"
@@ -147,18 +147,18 @@ export default function AdminTaskReview({
                         {status}
                     </div>
                 )}
-                <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="admin-page-heading flex-wrap">
                     <div>
                         <Link
                             href={admin.tasks.index()}
-                            className="text-sm underline underline-offset-4"
+                            className="admin-back-link -ml-2"
                         >
                             Back to task queue
                         </Link>
-                        <h1 className="mt-2 text-2xl font-semibold">
+                        <h1>
                             {task.title}
                         </h1>
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="admin-page-description">
                             Submitted{' '}
                             {task.submittedAt
                                 ? formatDateTime(task.submittedAt)
@@ -171,12 +171,12 @@ export default function AdminTaskReview({
                     />
                 </div>
                 <SafetyNotice />
-                <p className="rounded-lg border p-4 text-sm">
+                <p className="admin-notice">
                     Every submitted task is reviewed by an administrator before
                     it can be approved.
                 </p>
                 <section className="grid gap-4 lg:grid-cols-3">
-                    <div className="space-y-4 rounded-xl border bg-card p-5 lg:col-span-2">
+                    <div className="admin-detail-card space-y-4 lg:col-span-2">
                         <h2 className="text-lg font-semibold">Task details</h2>
                         <p>
                             <strong>Category:</strong> {task.category}
@@ -199,7 +199,7 @@ export default function AdminTaskReview({
                             </p>
                         )}
                     </div>
-                    <aside className="space-y-3 rounded-xl border bg-card p-5">
+                    <aside className="admin-detail-card space-y-3">
                         <h2 className="text-lg font-semibold">Poster</h2>
                         <p>{task.poster.name}</p>
                         <p>{task.poster.type}</p>
@@ -211,7 +211,7 @@ export default function AdminTaskReview({
                         </p>
                     </aside>
                 </section>
-                <section className="space-y-3 rounded-xl border bg-card p-5">
+                <section className="admin-detail-card space-y-3">
                     <h2 className="text-lg font-semibold">Work details</h2>
                     <p>
                         <strong>Work mode:</strong> {task.workMode}
@@ -236,7 +236,7 @@ export default function AdminTaskReview({
                         locations or collect coordinates.
                     </p>
                 </section>
-                <section className="space-y-3 rounded-xl border bg-card p-5">
+                <section className="admin-detail-card space-y-3">
                     <h2 className="text-lg font-semibold">
                         Off-platform content flags
                     </h2>
@@ -271,7 +271,7 @@ export default function AdminTaskReview({
                     )}
                 </section>
                 {agreement && (
-                    <section className="space-y-2 rounded-xl border bg-card p-5">
+                    <section className="admin-detail-card space-y-2">
                         <h2 className="text-lg font-semibold">Agreement</h2>
                         <p>Status: {agreement.status.replaceAll('_', ' ')}</p>
                         {agreement.locked_at && (
@@ -323,7 +323,7 @@ export default function AdminTaskReview({
                         readOnly
                     />
                 )}
-                <section className="space-y-3 rounded-xl border bg-card p-5">
+                <section className="admin-detail-card space-y-3">
                     <h2 className="text-lg font-semibold">Applications</h2>
                     {applications.length ? (
                         applications.map((application) => (
@@ -351,7 +351,7 @@ export default function AdminTaskReview({
                         </p>
                     )}
                 </section>
-                <section className="space-y-3 rounded-xl border bg-card p-5">
+                <section className="admin-detail-card space-y-3">
                     <h2 className="text-lg font-semibold">
                         Admin action history
                     </h2>
@@ -382,7 +382,7 @@ export default function AdminTaskReview({
                     )}
                 </section>
                 {canReview ? (
-                    <section className="space-y-4 rounded-xl border bg-card p-5">
+                    <section className="admin-detail-card space-y-4">
                         <h2 className="text-lg font-semibold">
                             Review decision
                         </h2>
