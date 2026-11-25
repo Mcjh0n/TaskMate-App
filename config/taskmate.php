@@ -24,6 +24,8 @@ return [
 
     'students_can_post' => true,
     'require_verification' => true,
+    // Temporarily disabled until a verified transactional email sender is configured.
+    'email_verification_enabled' => env('TASKMATE_EMAIL_VERIFICATION', env('APP_ENV') === 'testing'),
 
     // PROVISIONAL: in-app alerts are not yet part of a finalized notification-retention policy.
     'notifications' => [

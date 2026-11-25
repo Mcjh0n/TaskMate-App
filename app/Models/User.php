@@ -56,6 +56,12 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
+    public function hasVerifiedEmail(): bool
+    {
+        return ! config('taskmate.email_verification_enabled', true)
+            || $this->email_verified_at !== null;
+    }
+
     public function isAdmin(): bool
     {
         return $this->is_admin;

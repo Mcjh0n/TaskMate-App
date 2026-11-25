@@ -2,6 +2,11 @@
 
 use Laravel\Fortify\Features;
 
+$emailVerificationEnabled = filter_var(
+    env('TASKMATE_EMAIL_VERIFICATION', env('APP_ENV') === 'testing'),
+    FILTER_VALIDATE_BOOL,
+);
+
 return [
 
     /*
@@ -172,7 +177,7 @@ return [
         /* @end-chisel-registration */
         Features::resetPasswords(),
         /* @chisel-email-verification */
-        Features::emailVerification(),
+        ...($emailVerificationEnabled ? [Features::emailVerification()] : []),
         /* @end-chisel-email-verification */
         /* @chisel-2fa */
         Features::twoFactorAuthentication([
