@@ -1,8 +1,9 @@
-import { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
-import { ApplicationStatusBadge } from '@/components/application-status-badge';
-import { VerificationStatusBadge } from '@/components/verification-status-badge';
-import browse from '@/routes/browse';
+import { useState } from "react";
+import { Head, Link, router } from "@inertiajs/react";
+import { ArrowUpRight, BriefcaseBusiness, Clock3, MapPin, Search } from "lucide-react";
+import { ApplicationStatusBadge } from "@/components/application-status-badge";
+import { VerificationStatusBadge } from "@/components/verification-status-badge";
+import browse from "@/routes/browse";
 
 type Option = { value: string; label: string };
 type Listing = {
@@ -19,11 +20,7 @@ type Listing = {
     workplaceAddress: string | null;
     posterName: string;
     posterType: string;
-    posterVerificationStatus:
-        | 'pending'
-        | 'verified'
-        | 'rejected'
-        | 'more_info_requested';
+    posterVerificationStatus: "pending" | "verified" | "rejected" | "more_info_requested";
     hasApplied: boolean;
     canApply: boolean;
 };
@@ -44,19 +41,16 @@ type Props = {
 };
 
 export default function BrowseTasks({ tasks, filters, options }: Props) {
-    const budgetFiltersActive = Boolean(
-        filters.min_budget || filters.max_budget,
-    );
+    const budgetFiltersActive = Boolean(filters.min_budget || filters.max_budget);
     const [values, setValues] = useState({
-        search: filters.search ?? '',
-        category: filters.category ?? '',
-        work_mode: filters.work_mode ?? '',
-        min_budget: filters.min_budget ?? '',
-        max_budget: filters.max_budget ?? '',
-        sort: filters.sort ?? 'newest',
+        search: filters.search ?? "",
+        category: filters.category ?? "",
+        work_mode: filters.work_mode ?? "",
+        min_budget: filters.min_budget ?? "",
+        max_budget: filters.max_budget ?? "",
+        sort: filters.sort ?? "newest",
     });
-    const [budgetFiltersOpen, setBudgetFiltersOpen] =
-        useState(budgetFiltersActive);
+    const [budgetFiltersOpen, setBudgetFiltersOpen] = useState(budgetFiltersActive);
     const submit = (event: React.FormEvent) => {
         event.preventDefault();
         router.get(browse.index().url, values, {
@@ -68,33 +62,32 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
     return (
         <>
             <Head title="Browse tasks" />
-            <div className="mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                    <div>
-                        <p className="text-sm font-medium text-primary">
-                            Find work that fits your schedule
-                        </p>
-                        <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-                            Browse tasks
-                        </h1>
-                        <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-                            Review the work, location, duration, and budget
-                            before you decide to apply.
-                        </p>
+            <main className="browse-page">
+                <header className="browse-hero">
+                    <div className="browse-hero-copy">
+                        <span className="browse-hero-icon">
+                            <BriefcaseBusiness aria-hidden="true" />
+                        </span>
+                        <div>
+                            <p className="browse-eyebrow">Find your next opportunity</p>
+                            <h1>Browse tasks</h1>
+                            <p className="browse-hero-description">
+                                Explore campus work with clear details about the task, location,
+                                duration, and budget.
+                            </p>
+                        </div>
                     </div>
-                    <p className="rounded-full border bg-card px-3 py-1.5 text-sm text-muted-foreground">
-                        {tasks.data.length} task
-                        {tasks.data.length === 1 ? '' : 's'} on this page
+                    <p className="browse-count">
+                        <strong>{tasks.data.length}</strong>
+                        task
+                        {tasks.data.length === 1 ? "" : "s"} on this page
                     </p>
-                </div>
+                </header>
 
-                <form
-                    onSubmit={submit}
-                    className="space-y-4 rounded-2xl border bg-card p-4 shadow-sm sm:p-5"
-                >
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <form onSubmit={submit} className="browse-filters">
+                    <div className="browse-filter-grid">
                         <label
-                            className="grid gap-1.5 text-sm font-medium lg:col-span-2"
+                            className="browse-filter-field browse-filter-field--search"
                             htmlFor="search-tasks"
                         >
                             Search tasks
@@ -109,13 +102,10 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                         search: event.target.value,
                                     })
                                 }
-                                className="h-10 rounded-md border bg-background px-3 font-normal"
+                                className="browse-filter-control"
                             />
                         </label>
-                        <label
-                            className="grid gap-1.5 text-sm font-medium"
-                            htmlFor="filter-category"
-                        >
+                        <label className="browse-filter-field" htmlFor="filter-category">
                             Category
                             <select
                                 id="filter-category"
@@ -127,23 +117,17 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                         category: event.target.value,
                                     })
                                 }
-                                className="h-10 rounded-md border bg-background px-3 font-normal"
+                                className="browse-filter-control"
                             >
                                 <option value="">All categories</option>
                                 {options.categories.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
+                                    <option key={option.value} value={option.value}>
                                         {option.label}
                                     </option>
                                 ))}
                             </select>
                         </label>
-                        <label
-                            className="grid gap-1.5 text-sm font-medium"
-                            htmlFor="filter-work-mode"
-                        >
+                        <label className="browse-filter-field" htmlFor="filter-work-mode">
                             Work mode
                             <select
                                 id="filter-work-mode"
@@ -155,14 +139,11 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                         work_mode: event.target.value,
                                     })
                                 }
-                                className="h-10 rounded-md border bg-background px-3 font-normal"
+                                className="browse-filter-control"
                             >
                                 <option value="">All work modes</option>
                                 {options.workModes.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
+                                    <option key={option.value} value={option.value}>
                                         {option.label}
                                     </option>
                                 ))}
@@ -172,20 +153,15 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
 
                     <details
                         open={budgetFiltersOpen}
-                        onToggle={(event) =>
-                            setBudgetFiltersOpen(event.currentTarget.open)
-                        }
-                        className="rounded-lg border px-4 py-3"
+                        onToggle={(event) => setBudgetFiltersOpen(event.currentTarget.open)}
+                        className="browse-budget-filters"
                     >
-                        <summary className="cursor-pointer text-sm font-medium">
+                        <summary>
                             Budget filters
-                            {budgetFiltersActive ? ' · active' : ''}
+                            {budgetFiltersActive ? " · active" : ""}
                         </summary>
-                        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                            <label
-                                className="grid gap-1.5 text-sm font-medium"
-                                htmlFor="min-budget"
-                            >
+                        <div className="browse-budget-fields">
+                            <label className="browse-filter-field" htmlFor="min-budget">
                                 Minimum budget (PHP)
                                 <input
                                     id="min-budget"
@@ -201,13 +177,10 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                             min_budget: event.target.value,
                                         })
                                     }
-                                    className="h-10 rounded-md border bg-background px-3 font-normal"
+                                    className="browse-filter-control"
                                 />
                             </label>
-                            <label
-                                className="grid gap-1.5 text-sm font-medium"
-                                htmlFor="max-budget"
-                            >
+                            <label className="browse-filter-field" htmlFor="max-budget">
                                 Maximum budget (PHP)
                                 <input
                                     id="max-budget"
@@ -223,29 +196,21 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                             max_budget: event.target.value,
                                         })
                                     }
-                                    className="h-10 rounded-md border bg-background px-3 font-normal"
+                                    className="browse-filter-control"
                                 />
                             </label>
                         </div>
                     </details>
 
-                    <div className="flex flex-wrap items-end gap-3 border-t pt-4">
-                        <button
-                            type="submit"
-                            className="min-h-10 rounded-md bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
+                    <div className="browse-filter-actions">
+                        <button type="submit" className="browse-submit">
+                            <Search aria-hidden="true" />
                             Find tasks
                         </button>
-                        <Link
-                            href={browse.index().url}
-                            className="text-sm underline underline-offset-4"
-                        >
+                        <Link href={browse.index().url} className="browse-clear">
                             Clear filters
                         </Link>
-                        <label
-                            className="grid min-w-40 gap-1.5 text-sm font-medium sm:ml-auto"
-                            htmlFor="sort-tasks"
-                        >
+                        <label className="browse-sort-field" htmlFor="sort-tasks">
                             Sort by
                             <select
                                 id="sort-tasks"
@@ -257,13 +222,10 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                         sort: event.target.value,
                                     })
                                 }
-                                className="h-10 rounded-md border bg-background px-3 font-normal"
+                                className="browse-filter-control"
                             >
                                 {options.sorts.map((option) => (
-                                    <option
-                                        key={option.value}
-                                        value={option.value}
-                                    >
+                                    <option key={option.value} value={option.value}>
                                         {option.label}
                                     </option>
                                 ))}
@@ -273,25 +235,16 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                 </form>
 
                 {tasks.data.length ? (
-                    <div className="mx-auto grid w-full max-w-5xl gap-4">
+                    <section className="browse-results" aria-label="Available tasks">
                         {tasks.data.map((task) => (
-                            <article
-                                key={task.id}
-                                className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-sm transition hover:border-primary/40 hover:shadow-md sm:p-6"
-                            >
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0">
-                                        <p className="text-xs font-semibold tracking-wide text-primary uppercase">
-                                            {task.category}
-                                        </p>
-                                        <h2 className="mt-1 text-xl font-semibold tracking-tight">
-                                            {task.title}
-                                        </h2>
+                            <article key={task.id} className="browse-task-card">
+                                <div className="browse-task-card-top">
+                                    <div className="browse-task-heading">
+                                        <p className="browse-task-category">{task.category}</p>
+                                        <h2>{task.title}</h2>
                                     </div>
-                                    <div className="flex shrink-0 flex-col items-end gap-2">
-                                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                                            {task.workMode}
-                                        </span>
+                                    <div className="browse-task-badges">
+                                        <span className="browse-mode-badge">{task.workMode}</span>
                                         {task.hasApplied && (
                                             <ApplicationStatusBadge
                                                 status="pending"
@@ -300,105 +253,87 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                         )}
                                     </div>
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2 text-sm">
-                                    <span className="font-medium">
-                                        {task.posterName}
+                                <div className="browse-poster-row">
+                                    <span className="browse-poster-avatar" aria-hidden="true">
+                                        {task.posterName.slice(0, 1).toUpperCase()}
                                     </span>
-                                    <span className="text-muted-foreground">
-                                        · {task.posterType}
-                                    </span>
+                                    <span className="browse-poster-name">{task.posterName}</span>
+                                    <span className="browse-poster-type">{task.posterType}</span>
                                     <VerificationStatusBadge
                                         status={task.posterVerificationStatus}
                                     />
                                 </div>
-                                <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-                                    {task.descriptionPreview}
-                                </p>
-                                <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+                                <p className="browse-task-description">{task.descriptionPreview}</p>
+                                <div className="browse-task-facts">
                                     {task.estimatedDurationLabel && (
-                                        <span>
-                                            <span className="font-medium text-foreground">
-                                                Duration:
-                                            </span>{' '}
-                                            {task.estimatedDurationLabel}
+                                        <span className="browse-task-fact">
+                                            <Clock3 aria-hidden="true" />
+                                            <span>
+                                                <strong>Duration:</strong>{" "}
+                                                {task.estimatedDurationLabel}
+                                            </span>
                                         </span>
                                     )}
-                                    {(task.workplaceName ||
-                                        task.workplaceAddress) && (
-                                        <span>
-                                            <span className="font-medium text-foreground">
-                                                {task.workMode === 'On-campus'
-                                                    ? 'On-campus:'
-                                                    : 'Off-campus:'}
-                                            </span>{' '}
-                                            {[
-                                                task.workplaceName,
-                                                task.workplaceAddress,
-                                            ]
-                                                .filter(Boolean)
-                                                .join(' · ')}
+                                    {(task.workplaceName || task.workplaceAddress) && (
+                                        <span className="browse-task-fact">
+                                            <MapPin aria-hidden="true" />
+                                            <span>
+                                                <strong>
+                                                    {task.workMode === "On-campus"
+                                                        ? "On-campus:"
+                                                        : "Off-campus:"}
+                                                </strong>{" "}
+                                                {[task.workplaceName, task.workplaceAddress]
+                                                    .filter(Boolean)
+                                                    .join(" · ")}
+                                            </span>
                                         </span>
                                     )}
                                 </div>
                                 {task.deliverablesPreview && (
-                                    <p className="border-l-2 border-brand-gold pl-3 text-sm">
-                                        <span className="font-medium">
-                                            Expected result:
-                                        </span>{' '}
-                                        {task.deliverablesPreview}
+                                    <p className="browse-deliverable">
+                                        <strong>Expected result:</strong> {task.deliverablesPreview}
                                     </p>
                                 )}
-                                <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-                                    <div className="flex flex-wrap items-center justify-between gap-3">
-                                        <p className="text-xl font-bold tracking-tight">
-                                            {task.budgetDisplay}
-                                        </p>
+                                <div className="browse-task-card-footer">
+                                    <div className="browse-task-budget">
+                                        <span>Budget</span>
+                                        <strong>{task.budgetDisplay}</strong>
                                     </div>
-                                    <Link
-                                        href={browse.show(task.id)}
-                                        className="inline-flex min-h-10 items-center justify-center rounded-md border border-primary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary hover:text-primary-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                    >
+                                    <Link href={browse.show(task.id)} className="browse-task-cta">
                                         {task.hasApplied
-                                            ? 'View application'
+                                            ? "View application"
                                             : task.canApply
-                                              ? 'View details and apply'
-                                              : 'View task details'}
+                                              ? "View details and apply"
+                                              : "View task details"}
+                                        <ArrowUpRight aria-hidden="true" />
                                     </Link>
                                 </div>
                             </article>
                         ))}
-                    </div>
+                    </section>
                 ) : (
-                    <div className="mx-auto w-full max-w-5xl rounded-2xl border bg-card p-10 text-center shadow-sm">
-                        <h2 className="font-semibold">
-                            No tasks match your search
-                        </h2>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Try changing or clearing your filters.
-                        </p>
-                        <Link
-                            href={browse.index().url}
-                            className="mt-4 inline-block text-sm underline underline-offset-4"
-                        >
+                    <div className="browse-empty-state">
+                        <span>
+                            <Search aria-hidden="true" />
+                        </span>
+                        <h2>No tasks match your search</h2>
+                        <p>Try changing or clearing your filters.</p>
+                        <Link href={browse.index().url} className="browse-clear browse-empty-clear">
                             Clear filters
                         </Link>
                     </div>
                 )}
 
                 {tasks.links.length > 3 && (
-                    <nav
-                        className="flex flex-wrap gap-2"
-                        aria-label="Task pages"
-                    >
+                    <nav className="browse-pagination" aria-label="Task pages">
                         {tasks.links.map((link, index) =>
                             link.url ? (
                                 <Link
                                     key={index}
                                     href={link.url}
-                                    aria-current={
-                                        link.active ? 'page' : undefined
-                                    }
-                                    className={`rounded border px-3 py-1 text-sm ${link.active ? 'bg-muted font-medium' : ''}`}
+                                    aria-current={link.active ? "page" : undefined}
+                                    className={`browse-page-link ${link.active ? "is-active" : ""}`}
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}
@@ -407,7 +342,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                                 <span
                                     key={index}
                                     aria-disabled="true"
-                                    className="rounded border px-3 py-1 text-sm text-muted-foreground"
+                                    className="browse-page-link is-disabled"
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}
@@ -416,7 +351,7 @@ export default function BrowseTasks({ tasks, filters, options }: Props) {
                         )}
                     </nav>
                 )}
-            </div>
+            </main>
         </>
     );
 }

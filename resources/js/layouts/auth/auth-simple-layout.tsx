@@ -1,18 +1,14 @@
-import { Link } from '@inertiajs/react';
-import AppLogoIcon from '@/components/app-logo-icon';
-import PrototypeBanner from '@/components/prototype-banner';
-import SiteFooter from '@/components/site-footer';
-import { home } from '@/routes';
-import type { AuthLayoutProps } from '@/types';
+import { Link } from "@inertiajs/react";
+import AppLogoIcon from "@/components/app-logo-icon";
+import PrototypeBanner from "@/components/prototype-banner";
+import { home } from "@/routes";
+import type { AuthLayoutProps } from "@/types";
 
 function BrandIntro() {
     return (
         <aside className="order-2 mx-auto w-full max-w-lg px-3 py-8 sm:px-6 lg:order-1 lg:self-center lg:px-0">
             <p className="flex items-center gap-3 text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">
-                <span
-                    className="h-1 w-8 rounded-full bg-brand-gold"
-                    aria-hidden="true"
-                />
+                <span className="h-1 w-8 rounded-full bg-brand-gold" aria-hidden="true" />
                 Central Mindanao University
             </p>
             <h2 className="mt-7 text-[clamp(2.9rem,5vw,4.5rem)] leading-[1.05] font-semibold tracking-[-0.06em]">
@@ -29,12 +25,8 @@ function BrandIntro() {
     );
 }
 
-export default function AuthSimpleLayout({
-    children,
-    title,
-    description,
-}: AuthLayoutProps) {
-    const isEntryPage = title === 'Log in' || title === 'Create an account';
+export default function AuthSimpleLayout({ children, title, description }: AuthLayoutProps) {
+    const isEntryPage = title === "Log in" || title === "Create an account";
 
     if (isEntryPage) {
         return (
@@ -44,7 +36,7 @@ export default function AuthSimpleLayout({
                     <BrandIntro />
                     <section className="order-1 flex items-start justify-center lg:order-2 lg:items-center">
                         <div
-                            className={`w-full max-w-[34rem] rounded-2xl border bg-card p-5 shadow-sm sm:p-7 ${title === 'Log in' ? 'border-t-4 border-t-brand-gold lg:p-8' : ''}`}
+                            className={`w-full max-w-[34rem] rounded-2xl border bg-card p-5 shadow-sm sm:p-7 ${title === "Log in" ? "border-t-4 border-t-brand-gold lg:p-8" : ""}`}
                         >
                             <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-5">
                                 <Link
@@ -62,30 +54,21 @@ export default function AuthSimpleLayout({
                                     Back to home
                                 </Link>
                             </div>
-                            <div
-                                className={
-                                    title === 'Log in'
-                                        ? 'mt-6 mb-6'
-                                        : 'mt-5 mb-4'
-                                }
-                            >
+                            <div className={title === "Log in" ? "mt-6 mb-6" : "mt-5 mb-4"}>
                                 <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-                                    {title === 'Log in'
-                                        ? 'Welcome back'
-                                        : 'Create your account'}
+                                    {title === "Log in" ? "Welcome back" : "Create your account"}
                                 </h1>
                                 <p className="mt-1 text-sm text-muted-foreground">
                                     {description ||
-                                        (title === 'Log in'
-                                            ? 'Log in to continue.'
-                                            : 'Join the CMU task community.')}
+                                        (title === "Log in"
+                                            ? "Log in to continue."
+                                            : "Join the CMU task community.")}
                                 </p>
                             </div>
                             {children}
                         </div>
                     </section>
                 </main>
-                <SiteFooter />
             </>
         );
     }
@@ -105,9 +88,7 @@ export default function AuthSimpleLayout({
                                 TaskMate
                             </Link>
                             <div className="space-y-0.5 text-center">
-                                <h1 className="text-base leading-tight font-semibold">
-                                    {title}
-                                </h1>
+                                <h1 className="text-base leading-tight font-semibold">{title}</h1>
                                 {description && (
                                     <p className="text-center text-sm text-muted-foreground">
                                         {description}
@@ -126,7 +107,6 @@ export default function AuthSimpleLayout({
                     </div>
                 </div>
             </main>
-            <SiteFooter />
         </>
     );
 }

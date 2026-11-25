@@ -1,15 +1,15 @@
-import { Breadcrumbs } from '@/components/breadcrumbs';
-import { Button } from '@/components/ui/button';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { useAppearance } from '@/hooks/use-appearance';
-import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
-import { NotificationBell } from '@/components/notification-bell';
-import { router, usePage } from '@inertiajs/react';
-import { ArrowLeft, Moon, Sun } from 'lucide-react';
+import { Breadcrumbs } from "@/components/breadcrumbs";
+import { Button } from "@/components/ui/button";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { useAppearance } from "@/hooks/use-appearance";
+import type { BreadcrumbItem as BreadcrumbItemType } from "@/types";
+import { NotificationBell } from "@/components/notification-bell";
+import { router, usePage } from "@inertiajs/react";
+import { ArrowLeft, Moon, Sun } from "lucide-react";
 
 function AppearanceIconButton() {
     const { resolvedAppearance, updateAppearance } = useAppearance();
-    const nextAppearance = resolvedAppearance === 'dark' ? 'light' : 'dark';
+    const nextAppearance = resolvedAppearance === "dark" ? "light" : "dark";
 
     return (
         <Button
@@ -21,7 +21,7 @@ function AppearanceIconButton() {
             title={`Switch to ${nextAppearance} mode`}
             onClick={() => updateAppearance(nextAppearance)}
         >
-            {resolvedAppearance === 'dark' ? (
+            {resolvedAppearance === "dark" ? (
                 <Sun className="size-5" aria-hidden="true" />
             ) : (
                 <Moon className="size-5" aria-hidden="true" />
@@ -43,15 +43,14 @@ export function AppSidebarHeader({
 }) {
     const page = usePage();
     const pollSeconds =
-        (page.props as { notificationPollSeconds?: number })
-            .notificationPollSeconds ?? 10;
+        (page.props as { notificationPollSeconds?: number }).notificationPollSeconds ?? 10;
     const goBack = () => {
-        if (page.url === '/admin') {
-            router.visit('/dashboard');
+        if (page.url === "/admin") {
+            router.visit("/dashboard");
         } else if (window.history.length > 1) {
             window.history.back();
         } else {
-            router.visit('/admin');
+            router.visit("/admin");
         }
     };
 
@@ -74,11 +73,8 @@ export function AppSidebarHeader({
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
             <div className="ml-auto flex items-center gap-1">
+                <NotificationBell pollSeconds={pollSeconds} showMessages={showMessages} />
                 {showAppearance && <AppearanceIconButton />}
-                <NotificationBell
-                    pollSeconds={pollSeconds}
-                    showMessages={showMessages}
-                />
             </div>
         </header>
     );

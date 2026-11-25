@@ -1,11 +1,20 @@
-import { formatDate } from '@/lib/format';
-import { Form, Head, Link } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { ApplicationStatusBadge } from '@/components/application-status-badge';
-import applicationsRoutes from '@/routes/applications';
-import browseRoutes from '@/routes/browse';
-import agreementsRoutes from '@/routes/agreements';
-import { PaymentStatusBadge } from '@/components/payment-status-badge';
+import { formatDate } from "@/lib/format";
+import { Form, Head, Link } from "@inertiajs/react";
+import { Button } from "@/components/ui/button";
+import { ApplicationStatusBadge } from "@/components/application-status-badge";
+import applicationsRoutes from "@/routes/applications";
+import browseRoutes from "@/routes/browse";
+import agreementsRoutes from "@/routes/agreements";
+import { PaymentStatusBadge } from "@/components/payment-status-badge";
+import {
+    ArrowUpRight,
+    BriefcaseBusiness,
+    CalendarDays,
+    CircleDollarSign,
+    FileText,
+    MessageCircle,
+    Star,
+} from "lucide-react";
 
 type Item = {
     id: number;
@@ -41,156 +50,162 @@ export default function MyApplications({ applications, status }: Props) {
     return (
         <>
             <Head title="My applications" />
-            <div className="mx-auto max-w-5xl space-y-5 p-4 sm:p-6">
-                <div>
-                    <h1 className="text-2xl font-semibold">My applications</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        See each response and the next step for your task
-                        applications.
-                    </p>
-                </div>
+            <main className="my-applications-page">
+                <header className="my-applications-hero">
+                    <span className="my-applications-hero-icon">
+                        <BriefcaseBusiness aria-hidden="true" />
+                    </span>
+                    <div>
+                        <p className="my-applications-eyebrow">Your activity</p>
+                        <h1>My applications</h1>
+                        <p className="my-applications-description">
+                            See each response and the next step for your task applications.
+                        </p>
+                    </div>
+                    <div className="my-applications-count">
+                        <strong>{applications.data.length}</strong>
+                        <span>on this page</span>
+                    </div>
+                </header>
                 {status && (
-                    <div
-                        role="status"
-                        className="rounded-lg border px-4 py-3 text-sm"
-                    >
+                    <div role="status" className="my-applications-status">
                         {status}
                     </div>
                 )}
                 {applications.data.length ? (
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <section className="my-applications-list" aria-label="Your applications">
                         {applications.data.map((application) => {
                             const nextStep =
-                                application.status === 'pending'
+                                application.status === "pending"
                                     ? application.otherApplicantAccepted
-                                        ? 'The poster is working out an agreement with another applicant. Your application stays active until an agreement is confirmed.'
-                                        : 'Waiting for the poster to respond. You can withdraw while your application is pending.'
-                                    : application.status === 'accepted'
-                                      ? application.agreementStatus === 'agreed'
-                                          ? 'Both parties confirmed the agreement. Work may begin under the locked terms.'
-                                          : application.agreementStatus ===
-                                              'negotiating'
-                                            ? 'Review the agreement and confirm the same version before work begins. You can ask the poster to change it.'
-                                            : application.agreementStatus ===
-                                                'draft'
-                                              ? 'The poster is reviewing the prepared agreement. You will be able to review it after they send it.'
-                                              : 'You were accepted. The poster will propose an agreement before work begins.'
-                                      : application.status === 'declined'
-                                        ? 'The poster declined this application.'
-                                        : application.status === 'withdrawn'
-                                          ? 'You withdrew this application.'
-                                          : application.status ===
-                                                  'cancelled' &&
-                                              application.agreementStatus ===
-                                                  'cancelled'
-                                            ? 'The agreement was cancelled and your application is closed. The task is open again for other applicants.'
+                                        ? "The poster is working out an agreement with another applicant. Your application stays active until an agreement is confirmed."
+                                        : "Waiting for the poster to respond. You can withdraw while your application is pending."
+                                    : application.status === "accepted"
+                                      ? application.agreementStatus === "agreed"
+                                          ? "Both parties confirmed the agreement. Work may begin under the locked terms."
+                                          : application.agreementStatus === "negotiating"
+                                            ? "Review the agreement and confirm the same version before work begins. You can ask the poster to change it."
+                                            : application.agreementStatus === "draft"
+                                              ? "The poster is reviewing the prepared agreement. You will be able to review it after they send it."
+                                              : "You were accepted. The poster will propose an agreement before work begins."
+                                      : application.status === "declined"
+                                        ? "The poster declined this application."
+                                        : application.status === "withdrawn"
+                                          ? "You withdrew this application."
+                                          : application.status === "cancelled" &&
+                                              application.agreementStatus === "cancelled"
+                                            ? "The agreement was cancelled and your application is closed. The task is open again for other applicants."
                                             : null;
 
                             return (
-                                <article
-                                    key={application.id}
-                                    className="space-y-3 rounded-xl border bg-card p-5"
-                                >
-                                    <div className="flex flex-wrap items-start justify-between gap-2">
-                                        <h2 className="font-semibold">
-                                            {application.taskTitle}
-                                        </h2>
+                                <article key={application.id} className="my-application-card">
+                                    <div className="my-application-card-header">
+                                        <div className="my-application-title-group">
+                                            <p>Task application</p>
+                                            <h2>{application.taskTitle}</h2>
+                                        </div>
                                         <ApplicationStatusBadge
                                             status={application.status}
                                             label={application.statusLabel}
                                         />
                                     </div>
-                                    <p className="text-sm">
-                                        Poster: {application.posterName}
-                                    </p>
-                                    <p>Budget: {application.budgetDisplay}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Applied{' '}
-                                        {application.appliedAt
-                                            ? formatDate(application.appliedAt)
-                                            : '—'}
-                                    </p>
+                                    <div className="my-application-summary">
+                                        <div>
+                                            <span>
+                                                <BriefcaseBusiness aria-hidden="true" /> Poster
+                                            </span>
+                                            <strong>{application.posterName}</strong>
+                                        </div>
+                                        <div>
+                                            <span>
+                                                <CircleDollarSign aria-hidden="true" /> Task budget
+                                            </span>
+                                            <strong>{application.budgetDisplay}</strong>
+                                        </div>
+                                        <div>
+                                            <span>
+                                                <CalendarDays aria-hidden="true" /> Applied
+                                            </span>
+                                            <strong>
+                                                {application.appliedAt
+                                                    ? formatDate(application.appliedAt)
+                                                    : "—"}
+                                            </strong>
+                                        </div>
+                                    </div>
                                     {nextStep && (
-                                        <p className="rounded-md border bg-muted/40 p-3 text-sm">
-                                            {nextStep}
-                                        </p>
+                                        <div className="my-application-next-step">
+                                            <span>
+                                                <FileText aria-hidden="true" />
+                                            </span>
+                                            <p>{nextStep}</p>
+                                        </div>
                                     )}
                                     {application.paymentStatus &&
                                         application.paymentStatusLabel && (
-                                            <PaymentStatusBadge
-                                                status={
-                                                    application.paymentStatus
-                                                }
-                                                label={
-                                                    application.paymentStatusLabel
-                                                }
-                                            />
+                                            <div className="my-application-payment">
+                                                <span>Payment status</span>
+                                                <PaymentStatusBadge
+                                                    status={application.paymentStatus}
+                                                    label={application.paymentStatusLabel}
+                                                />
+                                            </div>
                                         )}
-                                    {application.needsRating &&
-                                        application.agreementId && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                asChild
-                                            >
-                                                <Link
-                                                    href={agreementsRoutes.rate(
-                                                        application.agreementId,
-                                                    )}
-                                                >
-                                                    Rate your experience
-                                                </Link>
-                                            </Button>
-                                        )}
-                                    {!application.taskApproved && (
-                                        <p className="text-sm text-muted-foreground">
-                                            Task status:{' '}
-                                            {application.taskStatus}
-                                        </p>
-                                    )}
-                                    <div className="flex flex-wrap gap-2">
+                                    {application.needsRating && application.agreementId && (
                                         <Button
-                                            variant="outline"
                                             size="sm"
+                                            variant="outline"
                                             asChild
+                                            className="my-application-rate"
                                         >
                                             <Link
-                                                href={applicationsRoutes.task(
-                                                    application.id,
+                                                href={agreementsRoutes.rate(
+                                                    application.agreementId,
                                                 )}
                                             >
+                                                <Star aria-hidden="true" />
+                                                Rate your experience
+                                            </Link>
+                                        </Button>
+                                    )}
+                                    {!application.taskApproved && (
+                                        <p className="my-application-task-status">
+                                            Task status: {application.taskStatus}
+                                        </p>
+                                    )}
+                                    <div className="my-application-actions">
+                                        <Button variant="outline" size="sm" asChild>
+                                            <Link href={applicationsRoutes.task(application.id)}>
+                                                <FileText aria-hidden="true" />
                                                 View task details
                                             </Link>
                                         </Button>
                                         {application.conversationId && (
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                asChild
-                                            >
+                                            <Button size="sm" variant="outline" asChild>
                                                 <Link
                                                     href={`/messages/${application.conversationId}`}
                                                 >
+                                                    <MessageCircle aria-hidden="true" />
                                                     {application.messageBlockedReason
-                                                        ? 'View conversation'
-                                                        : 'Message poster'}
+                                                        ? "View conversation"
+                                                        : "Message poster"}
                                                 </Link>
                                             </Button>
                                         )}
                                         {application.agreementId &&
-                                            application.agreementStatus !==
-                                                'draft' && (
+                                            application.agreementStatus !== "draft" && (
                                                 <Button size="sm" asChild>
                                                     <Link
                                                         href={agreementsRoutes.show(
                                                             application.agreementId,
                                                         )}
                                                     >
+                                                        <FileText aria-hidden="true" />
                                                         View agreement
                                                     </Link>
                                                 </Button>
                                             )}
-                                        {application.status === 'pending' && (
+                                        {application.status === "pending" && (
                                             <Form
                                                 {...applicationsRoutes.withdraw.form(
                                                     application.id,
@@ -198,57 +213,50 @@ export default function MyApplications({ applications, status }: Props) {
                                                 onSubmit={(event) => {
                                                     if (
                                                         !window.confirm(
-                                                            'Withdraw this application?',
+                                                            "Withdraw this application?",
                                                         )
                                                     )
                                                         event.preventDefault();
                                                 }}
                                             >
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    type="submit"
-                                                >
+                                                <Button size="sm" variant="outline" type="submit">
                                                     Withdraw
                                                 </Button>
                                             </Form>
                                         )}
                                     </div>
                                     {application.messageBlockedReason && (
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="my-application-message-note">
                                             {application.messageBlockedReason}
                                         </p>
                                     )}
                                 </article>
                             );
                         })}
-                    </div>
+                    </section>
                 ) : (
-                    <div className="rounded-xl border bg-card p-8 text-center">
-                        <h2 className="font-semibold">
-                            You have not applied to any tasks
-                        </h2>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            Browse approved tasks to find work that suits you.
-                        </p>
-                        <Button className="mt-4" asChild>
+                    <div className="my-applications-empty">
+                        <span>
+                            <BriefcaseBusiness aria-hidden="true" />
+                        </span>
+                        <h2>You have not applied to any tasks</h2>
+                        <p>Browse approved tasks to find work that suits you.</p>
+                        <Button className="my-applications-empty-action" asChild>
                             <Link href={browseRoutes.index()}>
                                 Browse tasks
+                                <ArrowUpRight aria-hidden="true" />
                             </Link>
                         </Button>
                     </div>
                 )}
                 {applications.links.length > 3 && (
-                    <nav
-                        className="flex flex-wrap gap-2"
-                        aria-label="Pagination"
-                    >
+                    <nav className="my-applications-pagination" aria-label="Pagination">
                         {applications.links.map((link, index) =>
                             link.url ? (
                                 <Link
                                     key={index}
                                     href={link.url}
-                                    className={`rounded border px-3 py-1 text-sm ${link.active ? 'bg-muted font-medium' : ''}`}
+                                    className={`my-applications-page-link ${link.active ? "is-active" : ""}`}
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}
@@ -256,7 +264,7 @@ export default function MyApplications({ applications, status }: Props) {
                             ) : (
                                 <span
                                     key={index}
-                                    className="rounded border px-3 py-1 text-sm text-muted-foreground"
+                                    className="my-applications-page-link is-disabled"
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}
@@ -265,7 +273,7 @@ export default function MyApplications({ applications, status }: Props) {
                         )}
                     </nav>
                 )}
-            </div>
+            </main>
         </>
     );
 }

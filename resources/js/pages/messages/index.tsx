@@ -1,7 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { formatDateTime } from '@/lib/format';
-import { VerificationStatusBadge } from '@/components/verification-status-badge';
+import { Head, Link } from "@inertiajs/react";
+import { ArrowRight, CheckCheck, MessageCircle, MessagesSquare } from "lucide-react";
+import AppLayout from "@/layouts/app-layout";
+import { formatDateTime } from "@/lib/format";
+import { VerificationStatusBadge } from "@/components/verification-status-badge";
 
 type Item = {
     id: number;
@@ -9,17 +10,23 @@ type Item = {
     otherPerson: {
         name: string;
         type: string;
-        verificationStatus:
-            | 'pending'
-            | 'verified'
-            | 'rejected'
-            | 'more_info_requested';
+        verificationStatus: "pending" | "verified" | "rejected" | "more_info_requested";
     };
     preview: string | null;
     latestAt: string | null;
     hasUnreadMessages: boolean;
-    status: 'open' | 'closed' | 'read_only';
+    status: "open" | "closed" | "read_only";
 };
+
+function initials(name: string) {
+    return name
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .map((part) => part.charAt(0))
+        .join("")
+        .toUpperCase();
+}
 
 export default function MessagesIndex({
     conversations,
@@ -29,92 +36,130 @@ export default function MessagesIndex({
         links: { url: string | null; label: string; active: boolean }[];
     };
 }) {
+    const unread = conversations.data.filter((item) => item.hasUnreadMessages).length;
+
     return (
         <>
             <Head title="Messages" />
-            <main className="mx-auto max-w-5xl space-y-5 p-4 sm:p-6">
-                <div>
-                    <h1 className="text-2xl font-semibold">Messages</h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Private conversations are available to the task poster
-                        and applicant.
-                    </p>
-                </div>
-                {conversations.data.length ? (
-                    <div className="grid gap-3">
-                        {conversations.data.map((item) => (
-                            <Link
-                                key={item.id}
-                                href={`/messages/${item.id}`}
-                                className="block rounded-xl border bg-card p-4 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                            >
-                                <div className="flex flex-wrap items-start justify-between gap-3">
-                                    <div>
-                                        <p className="text-xs text-muted-foreground">
-                                            {item.taskTitle}
-                                        </p>
-                                        <h2 className="mt-1 font-semibold">
-                                            {item.otherPerson.name}
-                                        </h2>
-                                        <p className="text-xs text-muted-foreground">
-                                            {item.otherPerson.type}
-                                        </p>
-                                    </div>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <VerificationStatusBadge
-                                            status={
-                                                item.otherPerson
-                                                    .verificationStatus
-                                            }
-                                        />
-                                        {item.status !== 'open' && (
-                                            <span className="rounded border px-2 py-1 text-xs">
-                                                {item.status === 'closed'
-                                                    ? 'Closed'
-                                                    : 'Read-only'}
-                                            </span>
-                                        )}
-                                        {item.hasUnreadMessages && (
-                                            <span className="rounded-full bg-primary px-2 py-1 text-xs text-primary-foreground">
-                                                Unread
-                                            </span>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="mt-3 flex justify-between gap-3 text-sm">
-                                    <p className="line-clamp-2 whitespace-pre-wrap text-muted-foreground">
-                                        {item.preview ??
-                                            'No messages yet. Start the conversation.'}
-                                    </p>
-                                    <span className="shrink-0 text-xs text-muted-foreground">
-                                        {item.latestAt
-                                            ? formatDateTime(item.latestAt)
-                                            : '—'}
-                                    </span>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                ) : (
-                    <section className="rounded-xl border bg-card p-8 text-center">
-                        <h2 className="font-semibold">No conversations yet</h2>
-                        <p className="mt-2 text-sm text-muted-foreground">
-                            A private conversation opens when someone applies to
-                            a task.
+            <main className="messages-page messages-inbox mx-auto w-full max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
+                <header className="messages-page-header">
+                    <span className="messages-heading-icon">
+                        <MessagesSquare aria-hidden="true" />
+                    </span>
+                    <div className="messages-heading-copy">
+                        <p className="messages-eyebrow">Your private conversations</p>
+                        <h1>Messages</h1>
+                        <p>
+                            Keep task details and questions in one place with the people involved.
                         </p>
-                    </section>
-                )}
+                    </div>
+                    <div className="messages-inbox-counts" aria-label="Conversation summary">
+                        <div>
+                            <strong>{conversations.data.length}</strong>
+                            <span>shown here</span>
+                        </div>
+                        <div className="messages-unread-count">
+                            <strong>{unread}</strong>
+                            <span>unread here</span>
+                        </div>
+                    </div>
+                </header>
+
+                <section className="messages-list-panel" aria-label="Your conversations">
+                    <div className="messages-list-heading">
+                        <div>
+                            <h2>Recent conversations</h2>
+                            <p>Private to you and the other task participant.</p>
+                        </div>
+                        <span className="messages-secure-label">
+                            <span aria-hidden="true">●</span> Private
+                        </span>
+                    </div>
+                    {conversations.data.length ? (
+                        <div className="messages-conversation-list">
+                            {conversations.data.map((item) => (
+                                <Link
+                                    key={item.id}
+                                    href={`/messages/${item.id}`}
+                                    className={`messages-conversation ${item.hasUnreadMessages ? "is-unread" : ""}`}
+                                >
+                                    <span className="messages-person-avatar" aria-hidden="true">
+                                        {initials(item.otherPerson.name) || "?"}
+                                    </span>
+                                    <span className="messages-conversation-main">
+                                        <span className="messages-person-line">
+                                            <strong>{item.otherPerson.name}</strong>
+                                            <span className="messages-person-meta">
+                                                {item.otherPerson.type}
+                                            </span>
+                                            <VerificationStatusBadge
+                                                status={item.otherPerson.verificationStatus}
+                                            />
+                                        </span>
+                                        <span className="messages-task-line">
+                                            <MessageCircle aria-hidden="true" />
+                                            {item.taskTitle}
+                                        </span>
+                                        <span className="messages-preview">
+                                            {item.preview ??
+                                                "No messages yet. Start the conversation."}
+                                        </span>
+                                    </span>
+                                    <span className="messages-conversation-side">
+                                        <time>
+                                            {item.latestAt
+                                                ? formatDateTime(item.latestAt)
+                                                : "New conversation"}
+                                        </time>
+                                        {item.status !== "open" && (
+                                            <span
+                                                className={`messages-state-pill ${item.status === "closed" ? "is-closed" : "is-readonly"}`}
+                                            >
+                                                {item.status === "closed" ? "Closed" : "Read-only"}
+                                            </span>
+                                        )}
+                                        {item.hasUnreadMessages ? (
+                                            <span className="messages-unread-pill">
+                                                <span className="sr-only">Unread messages</span>
+                                                <span aria-hidden="true" />
+                                            </span>
+                                        ) : (
+                                            <CheckCheck
+                                                aria-label="All caught up"
+                                                className="messages-read-icon"
+                                            />
+                                        )}
+                                        <ArrowRight
+                                            aria-hidden="true"
+                                            className="messages-open-arrow"
+                                        />
+                                    </span>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="messages-empty">
+                            <span>
+                                <MessageCircle aria-hidden="true" />
+                            </span>
+                            <h2>No conversations yet</h2>
+                            <p>
+                                A private conversation opens when someone applies to a task. You can
+                                use it to discuss the work before confirming an agreement.
+                            </p>
+                        </div>
+                    )}
+                </section>
+
                 {conversations.links.length > 3 && (
-                    <nav
-                        className="flex flex-wrap gap-2"
-                        aria-label="Conversation pages"
-                    >
+                    <nav className="messages-pagination" aria-label="Conversation pages">
                         {conversations.links.map((link, index) =>
                             link.url ? (
                                 <Link
                                     key={index}
                                     href={link.url}
-                                    className={`rounded border px-3 py-1 text-sm ${link.active ? 'bg-muted font-medium' : ''}`}
+                                    aria-current={link.active ? "page" : undefined}
+                                    className={link.active ? "is-active" : ""}
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}
@@ -122,7 +167,7 @@ export default function MessagesIndex({
                             ) : (
                                 <span
                                     key={index}
-                                    className="rounded border px-3 py-1 text-sm text-muted-foreground"
+                                    className="is-disabled"
                                     dangerouslySetInnerHTML={{
                                         __html: link.label,
                                     }}
@@ -135,4 +180,5 @@ export default function MessagesIndex({
         </>
     );
 }
+
 MessagesIndex.layout = (page: React.ReactNode) => <AppLayout>{page}</AppLayout>;

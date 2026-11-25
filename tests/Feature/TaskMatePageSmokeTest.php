@@ -146,6 +146,7 @@ class TaskMatePageSmokeTest extends TestCase
             'agreements.create' => route('agreements.create', $task),
             'users.show' => route('users.show', $poster),
             'appearance.edit' => route('appearance.edit'),
+            'settings.about' => route('settings.about'),
             'profile.edit' => route('profile.edit'),
             'security.edit' => route('security.edit'),
         ];

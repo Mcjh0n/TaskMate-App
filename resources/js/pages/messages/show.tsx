@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Form, Head, Link } from '@inertiajs/react';
-import AppLayout from '@/layouts/app-layout';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import InputError from '@/components/input-error';
-import { VerificationStatusBadge } from '@/components/verification-status-badge';
-import { ProblemReportForm } from '@/components/problem-report-form';
-import { formatDateTime } from '@/lib/format';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Form, Head, Link } from "@inertiajs/react";
+import { ArrowLeft, LockKeyhole, Send, ShieldCheck } from "lucide-react";
+import AppLayout from "@/layouts/app-layout";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import InputError from "@/components/input-error";
+import { VerificationStatusBadge } from "@/components/verification-status-badge";
+import { ProblemReportForm } from "@/components/problem-report-form";
+import { formatDateTime } from "@/lib/format";
 
 type Message = {
     id: number;
@@ -20,7 +21,7 @@ type Message = {
 };
 type EventItem = {
     id: number;
-    event: 'closed' | 'reopened';
+    event: "closed" | "reopened";
     actor: string;
     createdAt: string | null;
 };
@@ -32,11 +33,7 @@ type Props = {
         otherPerson: {
             name: string;
             type: string;
-            verificationStatus:
-                | 'pending'
-                | 'verified'
-                | 'rejected'
-                | 'more_info_requested';
+            verificationStatus: "pending" | "verified" | "rejected" | "more_info_requested";
         };
         status: string;
         closedBy: string | null;
@@ -57,9 +54,21 @@ type Props = {
 };
 
 const PRIVATE_NOTICE =
-    'Use this private conversation to discuss the task. Confirm the terms on the agreement page before starting work. Administrators can see flagged messages or limited context from a report. Keep passwords and identity documents private.';
+    "This conversation is private between you and {person}. Only the two of you can read it unless you report a message or the system flags it. Keep task terms on the agreement page. Never share passwords or identity documents.";
 const FLAG_NOTICE =
-    'This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.';
+    "This message contains a request to move outside TaskMate or skip its steps. Be careful, keep agreements and communications on record, and report anything that makes you uncomfortable.";
+
+function getMessageInitials(name: string) {
+    return (
+        name
+            .trim()
+            .split(/\s+/)
+            .slice(0, 2)
+            .map((part) => part.charAt(0))
+            .join("")
+            .toUpperCase() || "?"
+    );
+}
 
 export default function ConversationShow(props: Props) {
     return <ConversationThread key={props.conversation.id} {...props} />;
@@ -68,7 +77,10 @@ export default function ConversationShow(props: Props) {
 function ConversationThread(props: Props) {
     const { conversation } = props;
     const [polledMessages, setPolledMessages] = useState<Message[]>([]);
+    const [activeReportMessageId, setActiveReportMessageId] = useState<number | null>(null);
+    const [timestampMessageId, setTimestampMessageId] = useState<number | null>(null);
     const listRef = useRef<HTMLDivElement>(null);
+    const reportPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const cursor = useRef(conversation.lastMessageId);
     const backoff = useRef(0);
     const lastSavedMessage = props.messages.at(-1);
@@ -77,31 +89,31 @@ function ConversationThread(props: Props) {
             [
                 ...[
                     ...props.messages,
-                    ...polledMessages.filter(
-                        (message) => message.id > conversation.lastMessageId,
-                    ),
+                    ...polledMessages.filter((message) => message.id > conversation.lastMessageId),
                 ].map((message) => ({
-                    kind: 'message' as const,
+                    kind: "message" as const,
                     at: message.createdAt,
                     id: message.id,
                     message,
                 })),
                 ...props.events.map((event) => ({
-                    kind: 'event' as const,
+                    kind: "event" as const,
                     at: event.createdAt,
                     id: event.id,
                     event,
                 })),
-            ].sort(
-                (a, b) => (a.at ?? '').localeCompare(b.at ?? '') || a.id - b.id,
-            ),
-        [
-            props.messages,
-            polledMessages,
-            conversation.lastMessageId,
-            props.events,
-        ],
+            ].sort((a, b) => (a.at ?? "").localeCompare(b.at ?? "") || a.id - b.id),
+        [props.messages, polledMessages, conversation.lastMessageId, props.events],
     );
+
+    const clearReportPressTimer = () => {
+        if (reportPressTimer.current) {
+            clearTimeout(reportPressTimer.current);
+            reportPressTimer.current = null;
+        }
+    };
+
+    useEffect(() => clearReportPressTimer, []);
 
     useEffect(() => {
         listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
@@ -119,20 +131,19 @@ function ConversationThread(props: Props) {
         let stopped = false;
         let request: AbortController | undefined;
         const schedule = (delay: number) => {
-            if (!stopped && document.visibilityState === 'visible')
-                timer = setTimeout(poll, delay);
+            if (!stopped && document.visibilityState === "visible") timer = setTimeout(poll, delay);
         };
         const poll = async () => {
-            if (stopped || document.visibilityState !== 'visible') return;
+            if (stopped || document.visibilityState !== "visible") return;
             request = new AbortController();
             try {
                 const response = await fetch(
                     `/messages/${conversation.id}/updates?after_id=${cursor.current}`,
                     {
-                        credentials: 'same-origin',
+                        credentials: "same-origin",
                         headers: {
-                            Accept: 'application/json',
-                            'X-Requested-With': 'XMLHttpRequest',
+                            Accept: "application/json",
+                            "X-Requested-With": "XMLHttpRequest",
                         },
                         signal: request.signal,
                     },
@@ -141,10 +152,7 @@ function ConversationThread(props: Props) {
                     stopped = true;
                     return;
                 }
-                if (!response.ok)
-                    throw new Error(
-                        `Message refresh failed (${response.status}).`,
-                    );
+                if (!response.ok) throw new Error(`Message refresh failed (${response.status}).`);
                 const data = (await response.json()) as { messages: Message[] };
                 if (data.messages.length) {
                     const shouldStick =
@@ -160,41 +168,29 @@ function ConversationThread(props: Props) {
                     setPolledMessages((current) => [
                         ...current,
                         ...data.messages.filter(
-                            (message) =>
-                                !current.some(
-                                    (existing) => existing.id === message.id,
-                                ),
+                            (message) => !current.some((existing) => existing.id === message.id),
                         ),
                     ]);
                     if (shouldStick)
                         requestAnimationFrame(() =>
                             listRef.current?.scrollTo({
                                 top: listRef.current.scrollHeight,
-                                behavior: 'smooth',
+                                behavior: "smooth",
                             }),
                         );
                 }
                 backoff.current = 0;
                 schedule(Math.max(1, props.pollSeconds) * 1000);
             } catch (error) {
-                if (
-                    error instanceof DOMException &&
-                    error.name === 'AbortError'
-                )
-                    return;
+                if (error instanceof DOMException && error.name === "AbortError") return;
                 backoff.current = Math.min(backoff.current + 1, 6);
                 schedule(
-                    Math.min(
-                        Math.max(1, props.pollSeconds) *
-                            1000 *
-                            2 ** backoff.current,
-                        300_000,
-                    ),
+                    Math.min(Math.max(1, props.pollSeconds) * 1000 * 2 ** backoff.current, 300_000),
                 );
             }
         };
         const onVisibility = () => {
-            if (document.visibilityState === 'visible') {
+            if (document.visibilityState === "visible") {
                 if (timer) clearTimeout(timer);
                 void poll();
             } else {
@@ -202,204 +198,330 @@ function ConversationThread(props: Props) {
                 request?.abort();
             }
         };
-        document.addEventListener('visibilitychange', onVisibility);
-        if (document.visibilityState === 'visible') void poll();
+        document.addEventListener("visibilitychange", onVisibility);
+        if (document.visibilityState === "visible") void poll();
         return () => {
             stopped = true;
             if (timer) clearTimeout(timer);
             request?.abort();
-            document.removeEventListener('visibilitychange', onVisibility);
+            document.removeEventListener("visibilitychange", onVisibility);
         };
     }, [conversation.id, props.pollSeconds]);
 
     return (
         <>
             <Head title={`Messages · ${conversation.taskTitle}`} />
-            <main className="mx-auto max-w-4xl space-y-4 p-4 sm:p-6">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                        <Link href="/messages" className="text-sm underline">
-                            Back to messages
+            <main className="messages-page messages-thread-page mx-auto w-full max-w-7xl p-3 sm:p-5 lg:p-8">
+                <div className="messages-thread-shell">
+                    <header className="messages-thread-header">
+                        <Link
+                            href="/messages"
+                            className="messages-back-link"
+                            aria-label="Back to messages"
+                        >
+                            <ArrowLeft aria-hidden="true" />
+                            <span>Messages</span>
                         </Link>
-                        <h1 className="mt-2 text-2xl font-semibold">
-                            {conversation.otherPerson.name}
-                        </h1>
-                        <p className="text-sm text-muted-foreground">
-                            {conversation.otherPerson.type} · Task:{' '}
-                            {conversation.taskTitle}
-                        </p>
-                    </div>
-                    <VerificationStatusBadge
-                        status={conversation.otherPerson.verificationStatus}
-                    />
-                </div>
-                {props.status && (
-                    <div
-                        role="status"
-                        className="rounded-lg border px-4 py-3 text-sm"
-                    >
-                        {props.status}
-                    </div>
-                )}
-                <p className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-950">
-                    {PRIVATE_NOTICE}
-                </p>
-                {conversation.sendBlockedReason && (
-                    <p
-                        role="status"
-                        className="rounded-lg border bg-muted p-3 text-sm"
-                    >
-                        {conversation.sendBlockedReason}
-                    </p>
-                )}
-                <div
-                    ref={listRef}
-                    aria-label="Conversation messages"
-                    className="max-h-[60vh] min-h-56 space-y-4 overflow-y-auto rounded-xl border bg-card p-4"
-                >
-                    {timeline.length ? (
-                        timeline.map((item) =>
-                            item.kind === 'event' ? (
-                                <p
-                                    key={`event-${item.id}`}
-                                    className="text-center text-xs text-muted-foreground"
-                                >
-                                    {item.event.event === 'closed'
-                                        ? `${item.event.actor} closed this conversation`
-                                        : `${item.event.actor} reopened this conversation`}{' '}
-                                    ·{' '}
-                                    {item.event.createdAt
-                                        ? formatDateTime(item.event.createdAt)
-                                        : '—'}
+                        <div className="messages-thread-identity">
+                            <span
+                                className="messages-person-avatar messages-thread-avatar"
+                                aria-hidden="true"
+                            >
+                                {conversation.otherPerson.name
+                                    .trim()
+                                    .split(/\s+/)
+                                    .slice(0, 2)
+                                    .map((part) => part.charAt(0))
+                                    .join("")
+                                    .toUpperCase() || "?"}
+                            </span>
+                            <div className="messages-thread-person-copy">
+                                <h1>{conversation.otherPerson.name}</h1>
+                                <p>
+                                    {conversation.otherPerson.type}{" "}
+                                    <span aria-hidden="true">·</span> {conversation.taskTitle}
                                 </p>
+                            </div>
+                        </div>
+                        <div className="messages-thread-header-status">
+                            <VerificationStatusBadge
+                                status={conversation.otherPerson.verificationStatus}
+                            />
+                            {conversation.status === "open" ? (
+                                <span className="messages-state-pill is-open">Open</span>
                             ) : (
-                                <article
-                                    key={`message-${item.id}`}
-                                    className={`max-w-[90%] rounded-lg border p-3 ${item.message.isMine ? 'ml-auto bg-muted' : ''}`}
+                                <span
+                                    className={`messages-state-pill ${conversation.status === "closed" ? "is-closed" : "is-readonly"}`}
                                 >
-                                    <p className="text-xs font-medium">
-                                        {item.message.senderName} ·{' '}
-                                        {item.message.createdAt
-                                            ? formatDateTime(
-                                                  item.message.createdAt,
-                                              )
-                                            : '—'}
-                                    </p>
-                                    <p className="mt-2 text-sm break-words whitespace-pre-wrap">
-                                        {item.message.body}
-                                    </p>
-                                    {item.message.flaggedForRecipient &&
-                                        !item.message.isMine && (
-                                            <div className="mt-3 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-                                                {FLAG_NOTICE}
-                                            </div>
-                                        )}
-                                    {!item.message.isMine &&
-                                        item.message.reportUrl && (
-                                            <div className="mt-3">
-                                                <ProblemReportForm
-                                                    action={
-                                                        item.message.reportUrl
-                                                    }
-                                                    types={props.reportTypes}
-                                                    reportLabel="Report this message"
-                                                    contextMessages={
-                                                        props.reportContextMessages
-                                                    }
-                                                />
-                                            </div>
-                                        )}
-                                </article>
-                            ),
-                        )
-                    ) : (
-                        <p className="py-10 text-center text-sm text-muted-foreground">
-                            No messages yet. Send a message to start the
-                            conversation.
-                        </p>
-                    )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                    {conversation.canReopen && (
-                        <Form
-                            action={`/messages/${conversation.id}/reopen`}
-                            method="post"
+                                    {conversation.status === "closed" ? "Closed" : "Read-only"}
+                                </span>
+                            )}
+                        </div>
+                    </header>
+                    {props.status && (
+                        <div
+                            aria-live="polite"
+                            aria-atomic="true"
+                            className="messages-flash-status"
                         >
-                            <Button type="submit" variant="outline">
-                                Reopen conversation
-                            </Button>
-                        </Form>
+                            {props.status}
+                        </div>
                     )}
-                    {conversation.closedBy && (
-                        <p className="self-center text-sm text-muted-foreground">
-                            Closed by {conversation.closedBy}
-                            {conversation.closedAt
-                                ? ` on ${formatDateTime(conversation.closedAt)}`
-                                : ''}
-                            .
-                        </p>
+                    <p className="messages-private-notice">
+                        <ShieldCheck aria-hidden="true" />
+                        <span>
+                            {PRIVATE_NOTICE.replace("{person}", conversation.otherPerson.name)}{" "}
+                            Press and hold a message from them to report it.
+                        </span>
+                    </p>
+                    {conversation.sendBlockedReason && (
+                        <div
+                            aria-live="polite"
+                            aria-atomic="true"
+                            className="messages-readonly-notice"
+                        >
+                            <LockKeyhole aria-hidden="true" />
+                            {conversation.sendBlockedReason}
+                        </div>
                     )}
-                </div>
-                {conversation.canSend && (
-                    <Form
-                        action={`/messages/${conversation.id}/send`}
-                        method="post"
-                        resetOnSuccess={['body']}
-                        className="space-y-2 rounded-xl border bg-card p-4"
+                    <div
+                        ref={listRef}
+                        aria-label="Conversation messages"
+                        className="messages-thread-body"
                     >
-                        {({ errors, processing }) => (
-                            <>
-                                <label
-                                    htmlFor="body"
-                                    className="block text-sm font-medium"
-                                >
-                                    Message
-                                </label>
-                                <Textarea
-                                    id="body"
-                                    name="body"
-                                    required
-                                    readOnly={processing}
-                                    maxLength={props.messageMaxLength}
-                                    rows={3}
-                                    placeholder="Write a message about this task"
-                                />
-                                <InputError message={errors.body} />
-                                <p className="text-xs text-muted-foreground">
-                                    Links appear as plain text.
-                                </p>
-                                <Button type="submit" disabled={processing}>
-                                    {processing ? 'Sending…' : 'Send message'}
-                                </Button>
-                            </>
+                        {timeline.length ? (
+                            timeline.map((item) =>
+                                item.kind === "event" ? (
+                                    <p key={`event-${item.id}`} className="messages-system-event">
+                                        {item.event.event === "closed"
+                                            ? `${item.event.actor} closed this conversation`
+                                            : `${item.event.actor} reopened this conversation`}{" "}
+                                        ·{" "}
+                                        {item.event.createdAt
+                                            ? formatDateTime(item.event.createdAt)
+                                            : "—"}
+                                    </p>
+                                ) : (
+                                    <div
+                                        key={`message-${item.id}`}
+                                        className={`messages-message-row ${item.message.isMine ? "is-mine" : "is-theirs"}`}
+                                    >
+                                        {!item.message.isMine && (
+                                            <span
+                                                className="messages-chat-avatar"
+                                                aria-hidden="true"
+                                            >
+                                                {getMessageInitials(item.message.senderName)}
+                                            </span>
+                                        )}
+                                        <div className="messages-message-content">
+                                            <article
+                                                className={`messages-bubble ${item.message.isMine ? "is-mine" : "is-theirs"}`}
+                                            >
+                                                <p className="messages-bubble-meta">
+                                                    {item.message.senderName}
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    className="messages-bubble-text"
+                                                    aria-expanded={
+                                                        timestampMessageId === item.message.id
+                                                    }
+                                                    aria-label={
+                                                        !item.message.isMine &&
+                                                        item.message.reportUrl
+                                                            ? `Message from ${item.message.senderName}. Activate to show the time, or press and hold to report.`
+                                                            : undefined
+                                                    }
+                                                    onPointerDown={(event) => {
+                                                        if (
+                                                            !item.message.isMine &&
+                                                            item.message.reportUrl &&
+                                                            event.pointerType !== "mouse"
+                                                        ) {
+                                                            clearReportPressTimer();
+                                                            reportPressTimer.current = setTimeout(
+                                                                () => {
+                                                                    setActiveReportMessageId(
+                                                                        item.message.id,
+                                                                    );
+                                                                },
+                                                                550,
+                                                            );
+                                                        }
+                                                    }}
+                                                    onPointerUp={clearReportPressTimer}
+                                                    onPointerCancel={clearReportPressTimer}
+                                                    onPointerLeave={clearReportPressTimer}
+                                                    onContextMenu={(event) => {
+                                                        if (
+                                                            !item.message.isMine &&
+                                                            item.message.reportUrl
+                                                        ) {
+                                                            event.preventDefault();
+                                                            setActiveReportMessageId(
+                                                                item.message.id,
+                                                            );
+                                                        }
+                                                    }}
+                                                    onKeyDown={(event) => {
+                                                        if (
+                                                            (event.key === "ContextMenu" ||
+                                                                (event.shiftKey &&
+                                                                    event.key === "F10")) &&
+                                                            !item.message.isMine &&
+                                                            item.message.reportUrl
+                                                        ) {
+                                                            event.preventDefault();
+                                                            setActiveReportMessageId(
+                                                                item.message.id,
+                                                            );
+                                                        }
+                                                    }}
+                                                    onClick={() =>
+                                                        setTimestampMessageId(
+                                                            timestampMessageId === item.message.id
+                                                                ? null
+                                                                : item.message.id,
+                                                        )
+                                                    }
+                                                >
+                                                    {item.message.body}
+                                                </button>
+                                                {item.message.flaggedForRecipient &&
+                                                    !item.message.isMine && (
+                                                        <div className="messages-flag-notice">
+                                                            {FLAG_NOTICE}
+                                                        </div>
+                                                    )}
+                                                {!item.message.isMine &&
+                                                    item.message.reportUrl &&
+                                                    activeReportMessageId === item.message.id && (
+                                                        <div className="messages-report-action">
+                                                            <ProblemReportForm
+                                                                action={item.message.reportUrl}
+                                                                types={props.reportTypes}
+                                                                reportLabel="Report this message"
+                                                                contextMessages={
+                                                                    props.reportContextMessages
+                                                                }
+                                                            />
+                                                        </div>
+                                                    )}
+                                            </article>
+                                            {timestampMessageId === item.message.id &&
+                                                item.message.createdAt && (
+                                                    <time className="messages-message-time">
+                                                        {formatDateTime(item.message.createdAt)}
+                                                    </time>
+                                                )}
+                                        </div>
+                                        {item.message.isMine && (
+                                            <span
+                                                className="messages-chat-avatar is-mine"
+                                                aria-hidden="true"
+                                            >
+                                                {getMessageInitials(item.message.senderName)}
+                                            </span>
+                                        )}
+                                    </div>
+                                ),
+                            )
+                        ) : (
+                            <p className="messages-thread-empty">
+                                No messages yet. Send a message to start the conversation.
+                            </p>
                         )}
-                    </Form>
-                )}
-                {conversation.canClose && (
-                    <details className="rounded-lg border px-4 py-3 text-sm">
-                        <summary className="cursor-pointer font-medium">
-                            Conversation options
-                        </summary>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {conversation.canReopen && (
+                            <Form action={`/messages/${conversation.id}/reopen`} method="post">
+                                <Button
+                                    type="submit"
+                                    variant="outline"
+                                    className="messages-secondary-action"
+                                >
+                                    Reopen conversation
+                                </Button>
+                            </Form>
+                        )}
+                        {conversation.closedBy && (
+                            <p className="messages-closed-by">
+                                Closed by {conversation.closedBy}
+                                {conversation.closedAt
+                                    ? ` on ${formatDateTime(conversation.closedAt)}`
+                                    : ""}
+                                .
+                            </p>
+                        )}
+                    </div>
+                    {conversation.canSend && (
                         <Form
-                            action={`/messages/${conversation.id}/close`}
+                            action={`/messages/${conversation.id}/send`}
                             method="post"
-                            className="mt-3"
-                            onBefore={() =>
-                                window.confirm(
-                                    'Close this conversation for both participants?',
-                                )
-                            }
+                            resetOnSuccess={["body"]}
+                            className="messages-composer"
                         >
-                            <Button type="submit" variant="outline">
-                                Close conversation
-                            </Button>
+                            {({ errors, processing }) => (
+                                <>
+                                    <label htmlFor="body" className="messages-composer-label">
+                                        Message
+                                    </label>
+                                    <div className="messages-composer-row">
+                                        <Textarea
+                                            id="body"
+                                            name="body"
+                                            required
+                                            readOnly={processing}
+                                            maxLength={props.messageMaxLength}
+                                            rows={1}
+                                            className="messages-composer-input"
+                                            placeholder="Write a message about this task"
+                                        />
+                                        <Button
+                                            type="submit"
+                                            disabled={processing}
+                                            className="messages-send-button"
+                                        >
+                                            <Send aria-hidden="true" />
+                                            {processing ? "Sending…" : "Send"}
+                                        </Button>
+                                    </div>
+                                    <InputError message={errors.body} />
+                                    <div className="messages-composer-footer">
+                                        <p>
+                                            Private to this conversation · Links appear as plain
+                                            text.
+                                        </p>
+                                    </div>
+                                </>
+                            )}
                         </Form>
-                    </details>
-                )}
+                    )}
+                    {conversation.canClose && (
+                        <details className="messages-conversation-options">
+                            <summary>Conversation options</summary>
+                            <Form
+                                action={`/messages/${conversation.id}/close`}
+                                method="post"
+                                className="messages-close-form"
+                                onBefore={() =>
+                                    window.confirm("Close this conversation for both participants?")
+                                }
+                            >
+                                <Button
+                                    type="submit"
+                                    variant="outline"
+                                    className="messages-secondary-action"
+                                >
+                                    Close conversation
+                                </Button>
+                            </Form>
+                        </details>
+                    )}
+                </div>
             </main>
         </>
     );
 }
-ConversationShow.layout = (page: React.ReactNode) => (
-    <AppLayout>{page}</AppLayout>
-);
+ConversationShow.layout = (page: React.ReactNode) => <AppLayout>{page}</AppLayout>;

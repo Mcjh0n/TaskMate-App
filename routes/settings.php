@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth', 'account.active'])->group(function () {
     Route::redirect('settings', '/settings/profile');
 
+    Route::inertia('settings/about', 'settings/about')->name('settings.about');
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
