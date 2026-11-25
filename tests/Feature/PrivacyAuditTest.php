@@ -232,4 +232,11 @@ class PrivacyAuditTest extends TestCase
         config(['taskmate.prototype_mode' => false]);
         $this->get('/')->assertInertia(fn (Assert $page) => $page->where('prototypeMode', false));
     }
+
+    public function test_prototype_mode_is_off_by_default(): void
+    {
+        $this->assertFalse(config('taskmate.prototype_mode'));
+
+        $this->get('/')->assertInertia(fn (Assert $page) => $page->where('prototypeMode', false));
+    }
 }

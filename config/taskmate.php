@@ -4,8 +4,8 @@ $maxDurationDays = 30;
 
 return [
     'duration_limits' => ['hours' => $maxDurationDays * 24, 'days' => $maxDurationDays],
-    // Prototype features are enabled for local evaluation unless explicitly disabled.
-    'prototype_mode' => env('TASKMATE_PROTOTYPE_MODE', true),
+    // Show the prototype banner only when explicitly enabled.
+    'prototype_mode' => env('TASKMATE_PROTOTYPE_MODE', false),
     'rate_limits' => [
         'login' => ['max_attempts' => 5, 'decay_seconds' => 60],
         'register' => ['max_attempts' => 20, 'decay_seconds' => 3600],

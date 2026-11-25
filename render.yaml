@@ -10,6 +10,8 @@ services:
             value: production
           - key: APP_DEBUG
             value: 'false'
+          - key: TASKMATE_PROTOTYPE_MODE
+            value: 'false'
           - key: APP_URL
             value: https://taskmate-app-2ied.onrender.com
           - key: ASSET_URL
