@@ -8,6 +8,46 @@ type Props = {
     guidelines: string[];
     privacyDraft: string | null;
 };
+
+const taskSteps = [
+    {
+        label: 'ACCOUNT',
+        title: 'Create your account and get verified',
+        description:
+            'Submit your account details for administrator review. Students can browse approved tasks while verification is pending, but need a verified account to apply.',
+    },
+    {
+        label: 'POST A TASK',
+        title: 'Describe the work clearly',
+        description:
+            'Verified faculty and staff, approved organizations, and students when posting is enabled can provide the work details, duration, budget, and work mode. On-campus and off-campus tasks include a location. Every new or edited task goes to an administrator for review.',
+    },
+    {
+        label: 'FIND WORK',
+        title: 'Browse approved tasks and apply',
+        description:
+            'Students can browse approved tasks. Verified students can apply; faculty, staff, and organization accounts cannot apply. Students may also post when student posting is enabled.',
+    },
+    {
+        label: 'AGREE',
+        title: 'Confirm the agreement before work begins',
+        description:
+            'When a poster accepts an applicant, TaskMate prepares an agreement draft. The poster sends it, the applicant can agree or request a change, and both confirm the same version before it locks.',
+    },
+    {
+        label: 'COMPLETE AND RECORD',
+        title: 'Record completion and payment status',
+        description:
+            'The poster records when the task is complete and may record a payment. The student separately confirms whether the agreed amount was received. Payment is made directly between the two people.',
+    },
+    {
+        label: 'FEEDBACK',
+        title: 'Rate the experience or report a problem',
+        description:
+            'After completion, both people can leave feedback about that task. Use the report tools for serious concerns; ratings are not a substitute for reporting.',
+    },
+] as const;
+
 export default function Information({
     page,
     title,
@@ -36,86 +76,45 @@ export default function Information({
                 </nav>
             </header>
             <article className="mx-auto max-w-4xl px-4 pt-6 pb-16">
-                <h1 className="text-3xl font-bold">{title}</h1>
+                <h1
+                    className={
+                        page === 'how-it-works'
+                            ? 'workflow-title'
+                            : 'text-3xl font-bold'
+                    }
+                >
+                    {title}
+                </h1>
                 {page === 'how-it-works' && (
-                    <div className="mt-6 space-y-6">
-                        <p className="max-w-3xl text-muted-foreground">
-                            TaskMate's main purpose is to help CMU students find
-                            individual side jobs with clear work, budget, and
-                            workplace details.
+                    <div className="how-it-works-content mt-5">
+                        <p className="how-it-works-lead">
+                            TaskMate helps the CMU community find and post side
+                            jobs with clear work details and agreed terms. Here’s
+                            how a task moves from posting to feedback.
                         </p>
-                        <ol className="space-y-4">
-                            <li className="rounded-lg border bg-card p-4">
-                                <h2 className="font-semibold">
-                                    1. Create an account and verify it
-                                </h2>
-                                <p className="mt-1 text-sm">
-                                    An administrator reviews the information you
-                                    submit. Students and faculty/staff use CMU
-                                    institutional email addresses. Task access
-                                    begins after account approval.
-                                </p>
-                            </li>
-                            <li className="rounded-lg border bg-card p-4">
-                                <h2 className="font-semibold">
-                                    2. Post a task for review
-                                </h2>
-                                <p className="mt-1 text-sm">
-                                    Eligible verified posters describe the work,
-                                    budget, and work mode. On-campus and
-                                    off-campus tasks include the work location.
-                                    New tasks are reviewed before students can
-                                    see them.
-                                </p>
-                            </li>
-                            <li className="rounded-lg border bg-card p-4">
-                                <h2 className="font-semibold">
-                                    3. Students review and apply
-                                </h2>
-                                <p className="mt-1 text-sm">
-                                    Verified students can browse approved tasks,
-                                    check the disclosed conditions, and send one
-                                    application message. Only students can
-                                    apply.
-                                </p>
-                            </li>
-                            <li className="rounded-lg border bg-card p-4">
-                                <h2 className="font-semibold">
-                                    4. Agree before work begins
-                                </h2>
-                                <p className="mt-1 text-sm">
-                                    The poster proposes deliverables, terms,
-                                    dates, and an amount. Both people review and
-                                    confirm the same version before work begins.
-                                </p>
-                            </li>
-                            <li className="rounded-lg border bg-card p-4">
-                                <h2 className="font-semibold">
-                                    5. Record completion and payment status
-                                </h2>
-                                <p className="mt-1 text-sm">
-                                    The parties record completion and payment
-                                    status in TaskMate. Payment is made directly
-                                    between them.
-                                </p>
-                            </li>
-                            <li className="rounded-lg border bg-card p-4">
-                                <h2 className="font-semibold">
-                                    6. Share feedback or report a concern
-                                </h2>
-                                <p className="mt-1 text-sm">
-                                    After a completed task, the parties may
-                                    leave contextual ratings. Use the report
-                                    tools for serious problems; ratings are not
-                                    a substitute for reports.
-                                </p>
-                            </li>
+                        <ol className="how-it-works-steps">
+                            {taskSteps.map((step, index) => (
+                                <li key={step.title}>
+                                    <span
+                                        className="how-it-works-step-number"
+                                        aria-hidden="true"
+                                    >
+                                        {String(index + 1).padStart(2, '0')}
+                                    </span>
+                                    <div>
+                                        <p className="how-it-works-step-label">
+                                            {step.label}
+                                        </p>
+                                        <h2>{step.title}</h2>
+                                        <p className="how-it-works-step-description">
+                                            {step.description}
+                                        </p>
+                                    </div>
+                                </li>
+                            ))}
                         </ol>
-                        <p className="rounded-lg border bg-muted/30 p-4 text-sm">
-                            Students may post when student posting is enabled.
-                            Faculty/staff and approved organization
-                            representatives may post. Faculty/staff and
-                            organizations cannot apply.
+                        <p className="how-it-works-payment-note">
+                            {PAYMENT_BOUNDARY_NOTICE}
                         </p>
                     </div>
                 )}
