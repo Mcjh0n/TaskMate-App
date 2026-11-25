@@ -35,6 +35,12 @@ class EmailVerificationToggleTest extends TestCase
         $this->assertSame(VerificationStatus::Pending, $user->verification_status);
         Notification::assertNotSentTo($user, VerifyEmail::class);
 
+        $this->actingAs($user)
+            ->post(route('verification.send'))
+            ->assertRedirect();
+
+        Notification::assertNotSentTo($user, VerifyEmail::class);
+
         $this->actingAs($user)->get(route('taskmate.dashboard'))->assertOk();
     }
 }
