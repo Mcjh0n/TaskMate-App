@@ -1,5 +1,11 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+    ClipboardCheck,
+    ClipboardList,
+    Handshake,
+    UserRoundPlus,
+} from 'lucide-react';
 import { register, login } from '@/routes';
 import browse from '@/routes/browse';
 import tasks from '@/routes/tasks';
@@ -51,6 +57,12 @@ export default function Welcome() {
                 },
                 { label: 'Log in', href: login().url, primary: false },
             ];
+    const introSteps = [
+        { label: 'Post & review', Icon: ClipboardCheck },
+        { label: 'Student applies', Icon: UserRoundPlus },
+        { label: 'Agree before work', Icon: Handshake },
+        { label: 'Record outcome', Icon: ClipboardList },
+    ];
 
     useEffect(() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -329,45 +341,53 @@ export default function Welcome() {
             </div>
             {!introComplete && (
                 <p className="sr-only" role="status" aria-live="polite">
-                    TaskMate workflow: a task is posted, a student applies, both
-                    agree on the terms, and payment status is recorded.
+                    A task is posted and reviewed, a student applies, both agree
+                    on the terms, and the outcome and payment status are
+                    recorded.
                 </p>
             )}
             <div className="landing-intro-overlay" aria-hidden="true">
                 <div className="landing-intro-content">
-                    <p className="landing-intro-brand">
-                        <span aria-hidden="true">T</span> TaskMate
-                    </p>
-                    <p className="landing-intro-kicker">
-                        CAMPUS TASKS, CLEAR TERMS
-                    </p>
                     <h1 className="landing-intro-headline">
-                        <span>Campus</span>
-                        <span>tasks,</span>
-                        <span className="landing-intro-accent">clear</span>
-                        <span className="landing-intro-accent">terms.</span>
+                        <span className="landing-intro-headline-line">
+                            <span>Find</span>
+                            <span>campus</span>
+                            <span>work.</span>
+                        </span>
+                        <span className="landing-intro-headline-line landing-intro-accent">
+                            <span>Agree</span>
+                            <span>on</span>
+                            <span>clear</span>
+                            <span>terms.</span>
+                        </span>
                     </h1>
+                    <p className="landing-intro-copy">
+                        Browse approved side jobs, review the details, and agree
+                        before work begins.
+                    </p>
                     <div className="landing-intro-workflow">
                         <span className="landing-intro-travel-dot" />
                         <ol>
-                            {[
-                                'Task posted',
-                                'Student applies',
-                                'Terms agreed',
-                                'Paid',
-                            ].map((step, index) => (
+                            {introSteps.map(({ label, Icon }, index) => (
                                 <li
-                                    key={step}
+                                    key={label}
                                     style={
                                         {
                                             '--check-delay': `${850 + index * 800}ms`,
                                         } as CSSProperties
                                     }
                                 >
-                                    <span className="landing-intro-check">
-                                        ✓
+                                    <span className="landing-intro-step-icon">
+                                        <Icon
+                                            aria-hidden="true"
+                                            size={30}
+                                            strokeWidth={1.8}
+                                        />
+                                        <span className="landing-intro-check">
+                                            ✓
+                                        </span>
                                     </span>
-                                    <span>{step}</span>
+                                    <span>{label}</span>
                                 </li>
                             ))}
                         </ol>

@@ -2839,55 +2839,33 @@ details[open] > .notification-trigger {
     width: min(100%, 62rem);
 }
 
-.landing-intro-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    color: #193c2c;
-    font-size: 1.05rem;
-    font-weight: 800;
-    letter-spacing: -0.03em;
-    animation: intro-brand-enter 420ms ease-out both;
-}
-
-.landing-intro-brand > span {
-    display: grid;
-    width: 2.35rem;
-    height: 2.35rem;
-    place-items: center;
-    border-radius: 0.75rem;
-    background: #f3cc42;
-    color: #174531;
-}
-
-.landing-intro-kicker {
-    margin-top: clamp(2.5rem, 8vh, 5rem);
-    color: #617467;
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.16em;
-    animation: intro-brand-enter 420ms 120ms ease-out both;
-}
-
 .landing-intro-headline {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.08em 0.22em;
+    display: grid;
+    gap: 0.05em;
     margin-top: 0.9rem;
-    font-size: clamp(2.8rem, 8.6vw, 7rem);
+    font-size: clamp(2.5rem, 7.8vw, 5.8rem);
     font-weight: 750;
     letter-spacing: -0.075em;
     line-height: 0.98;
 }
 
-.landing-intro-headline > span {
+.landing-intro-headline-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.08em 0.22em;
+}
+
+.landing-intro-headline-line > span {
     opacity: 0;
     animation: intro-word-enter 520ms cubic-bezier(0.2, 0.75, 0.3, 1) both;
 }
 
-.landing-intro-headline > span:nth-child(2) { animation-delay: 180ms; }
-.landing-intro-headline > span:nth-child(3) { animation-delay: 360ms; }
-.landing-intro-headline > span:nth-child(4) { animation-delay: 540ms; }
+.landing-intro-headline-line:first-child > span:nth-child(2) { animation-delay: 180ms; }
+.landing-intro-headline-line:first-child > span:nth-child(3) { animation-delay: 360ms; }
+.landing-intro-headline-line:last-child > span { animation-delay: 540ms; }
+.landing-intro-headline-line:last-child > span:nth-child(2) { animation-delay: 660ms; }
+.landing-intro-headline-line:last-child > span:nth-child(3) { animation-delay: 780ms; }
+.landing-intro-headline-line:last-child > span:nth-child(4) { animation-delay: 900ms; }
 
 .landing-intro-headline .landing-intro-accent {
     color: #176144;
@@ -2896,9 +2874,18 @@ details[open] > .notification-trigger {
     font-style: italic;
 }
 
+.landing-intro-copy {
+    max-width: 40rem;
+    margin-top: 1.2rem;
+    color: #5b6f61;
+    font-size: clamp(0.95rem, 2vw, 1.12rem);
+    line-height: 1.65;
+    animation: intro-brand-enter 460ms 1s ease-out both;
+}
+
 .landing-intro-workflow {
     position: relative;
-    margin-top: clamp(3.25rem, 8vh, 5.5rem);
+    margin-top: clamp(2.5rem, 6vh, 3.75rem);
     padding: 0 0.2rem;
     animation: workflow-track-enter 480ms 260ms ease-out both;
 }
@@ -2915,7 +2902,7 @@ details[open] > .notification-trigger {
 
 .landing-intro-workflow ol::before {
     position: absolute;
-    top: 0.55rem;
+    top: 2.4rem;
     right: 8%;
     left: 8%;
     height: 2px;
@@ -2927,7 +2914,7 @@ details[open] > .notification-trigger {
 .landing-intro-travel-dot {
     position: absolute;
     z-index: 2;
-    top: 0.36rem;
+    top: 2.22rem;
     left: 8%;
     width: 0.38rem;
     height: 0.38rem;
@@ -2949,20 +2936,42 @@ details[open] > .notification-trigger {
     text-align: center;
 }
 
-.landing-intro-check {
+.landing-intro-step-icon {
+    position: relative;
     display: grid;
-    width: 1.15rem;
-    height: 1.15rem;
+    width: 4.8rem;
+    height: 4.8rem;
     place-items: center;
-    border: 2px solid #c6d2c7;
+    border: 2px solid #a6cbb0;
+    border-radius: 1.25rem;
+    background: #fffef8;
+    color: #637869;
+    opacity: 0.72;
+    animation: workflow-step-activate 320ms var(--check-delay, 850ms) ease-out both;
+}
+
+.landing-intro-check {
+    position: absolute;
+    top: -0.5rem;
+    right: -0.5rem;
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border: 3px solid #fffef8;
     border-radius: 50%;
     background: #f8f6eb;
     color: transparent;
-    font-size: 0.72rem;
+    font-size: 1rem;
     font-weight: 900;
     opacity: 0;
     animation: workflow-check-appear 300ms var(--check-delay, 850ms) ease-out both;
 }
+
+.landing-intro-workflow li:nth-child(1) .landing-intro-step-icon { animation-delay: 850ms; }
+.landing-intro-workflow li:nth-child(2) .landing-intro-step-icon { animation-delay: 1650ms; }
+.landing-intro-workflow li:nth-child(3) .landing-intro-step-icon { animation-delay: 2450ms; }
+.landing-intro-workflow li:nth-child(4) .landing-intro-step-icon { animation-delay: 3250ms; }
 
 .landing-page-content[data-intro-complete='true'] .welcome-header.reveal,
 .landing-page-content[data-intro-complete='true'] .welcome-intro.reveal,
@@ -3273,6 +3282,18 @@ details[open] > .notification-trigger {
     to { left: 91%; }
 }
 
+@keyframes workflow-step-activate {
+    0% { opacity: 0.72; transform: scale(0.92); }
+    100% {
+        border-color: #94b99d;
+        background: #e8f4e8;
+        color: #176144;
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 0.25rem rgb(27 120 80 / 10%);
+    }
+}
+
 @keyframes workflow-check-appear {
     0% { opacity: 0; transform: scale(0.55); }
     75% { opacity: 1; transform: scale(1.12); }
@@ -3283,6 +3304,44 @@ details[open] > .notification-trigger {
         opacity: 1;
         transform: scale(1);
         box-shadow: 0 0 0 0.25rem rgb(27 120 80 / 12%);
+    }
+}
+
+@media (max-width: 520px) {
+    .landing-intro-workflow ol {
+        gap: 0.15rem;
+    }
+
+    .landing-intro-workflow li {
+        gap: 0.5rem;
+        font-size: 0.66rem;
+    }
+
+    .landing-intro-step-icon {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 1rem;
+    }
+
+    .landing-intro-step-icon > svg {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    .landing-intro-check {
+        top: -0.4rem;
+        right: -0.4rem;
+        width: 1.6rem;
+        height: 1.6rem;
+        font-size: 0.82rem;
+    }
+
+    .landing-intro-workflow ol::before {
+        top: 1.75rem;
+    }
+
+    .landing-intro-travel-dot {
+        top: 1.57rem;
     }
 }
 
