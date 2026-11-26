@@ -4,17 +4,81 @@ import {
     ClipboardCheck,
     ClipboardList,
     Handshake,
+    MapPin,
     UserRoundPlus,
 } from 'lucide-react';
 import { register, login } from '@/routes';
 import browse from '@/routes/browse';
 import tasks from '@/routes/tasks';
 
+type SampleTask = {
+    title: string;
+    description: string;
+    workMode: string;
+    location?: string;
+    poster: string;
+    posterMark: string;
+    posterType: string;
+    duration: string;
+    budget: string;
+};
+
+const sampleTasks: SampleTask[] = [
+    {
+        title: 'Design a campus event poster',
+        description:
+            'Create a poster for a campus event and deliver a print-ready file.',
+        workMode: 'Online',
+        poster: 'CMU Student Affairs',
+        posterMark: 'SA',
+        posterType: 'Organization',
+        duration: '3 hours',
+        budget: '₱600',
+    },
+    {
+        title: 'Help organize a reading event',
+        description:
+            'Arrange event materials and help guests find their seats.',
+        workMode: 'On-campus',
+        location: 'CMU Main Library',
+        poster: 'CMU Library Services',
+        posterMark: 'LB',
+        posterType: 'Faculty / Staff',
+        duration: '4 hours',
+        budget: '₱450',
+    },
+    {
+        title: 'Photograph products for a catalog',
+        description:
+            'Capture clear product photos for a small shop’s online catalog.',
+        workMode: 'Off-campus',
+        location: 'Print shop, Valencia City',
+        poster: 'Valencia Print Partner',
+        posterMark: 'VP',
+        posterType: 'Organization',
+        duration: '1 day',
+        budget: '₱800',
+    },
+    {
+        title: 'Transcribe interview notes',
+        description: 'Turn recorded interviews into organized, proofread text.',
+        workMode: 'Online',
+        poster: 'Student Media Club',
+        posterMark: 'SM',
+        posterType: 'Student',
+        duration: '2 hours',
+        budget: '₱350',
+    },
+];
+
 export default function Welcome() {
     const [introComplete, setIntroComplete] = useState(false);
-    const [animationRun, setAnimationRun] = useState(0);
+    const [introRun, setIntroRun] = useState(0);
+    const [activeSampleIndex, setActiveSampleIndex] = useState(0);
     const [workflowVisible, setWorkflowVisible] = useState(false);
     const workflowSectionRef = useRef<HTMLElement | null>(null);
+    const activeSampleIndexRef = useRef(0);
+    const sampleChangesRef = useRef(0);
     const { auth } = usePage().props;
     const user = auth?.user;
     const actions = user?.is_admin
@@ -63,9 +127,14 @@ export default function Welcome() {
         { label: 'Agree before work', Icon: Handshake },
         { label: 'Record outcome', Icon: ClipboardList },
     ];
+    const activeSample = sampleTasks[activeSampleIndex];
 
     useEffect(() => {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const reducedMotion = window.matchMedia(
+            '(prefers-reduced-motion: reduce)',
+        ).matches;
+
+        if (reducedMotion) {
             setIntroComplete(true);
 
             return;
@@ -76,7 +145,49 @@ export default function Welcome() {
         }, 5600);
 
         return () => window.clearTimeout(timeout);
-    }, []);
+    }, [introRun]);
+
+    useEffect(() => {
+        if (!introComplete) {
+            return;
+        }
+
+        let restartIntroTimeout: number | undefined;
+        const rotationInterval = window.setInterval(() => {
+            const nextIndex =
+                (activeSampleIndexRef.current + 1) % sampleTasks.length;
+
+            activeSampleIndexRef.current = nextIndex;
+            setActiveSampleIndex(nextIndex);
+            sampleChangesRef.current += 1;
+
+            if (sampleChangesRef.current < 10) {
+                return;
+            }
+
+            sampleChangesRef.current = 0;
+
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                return;
+            }
+
+            window.clearInterval(rotationInterval);
+            restartIntroTimeout = window.setTimeout(() => {
+                activeSampleIndexRef.current = 0;
+                setActiveSampleIndex(0);
+                setIntroRun((run) => run + 1);
+                setIntroComplete(false);
+            }, 5000);
+        }, 5000);
+
+        return () => {
+            window.clearInterval(rotationInterval);
+
+            if (restartIntroTimeout !== undefined) {
+                window.clearTimeout(restartIntroTimeout);
+            }
+        };
+    }, [introComplete]);
 
     useEffect(() => {
         if (!introComplete) {
@@ -226,7 +337,7 @@ export default function Welcome() {
                             aria-label="Animated example TaskMate task"
                         >
                             <div
-                                key={animationRun}
+                                key={activeSampleIndex}
                                 className="task-paper task-paper-animated"
                                 aria-hidden="true"
                             >
@@ -235,59 +346,58 @@ export default function Welcome() {
                                         <span /> Sample task
                                     </p>
                                     <span className="task-paper-mode">
-                                        Online
+                                        {activeSample.workMode}
                                     </span>
                                 </div>
                                 <h2
                                     className="task-paper-title"
                                     id="sample-task-title"
                                 >
-                                    Design a campus event poster
+                                    {activeSample.title}
                                 </h2>
                                 <p className="task-paper-summary">
-                                    Create a poster for a campus event and
-                                    deliver a print-ready file.
+                                    {activeSample.description}
                                 </p>
                                 <div className="task-paper-poster">
                                     <span className="task-paper-avatar">
-                                        SA
+                                        {activeSample.posterMark}
                                     </span>
                                     <span>
                                         <span className="task-paper-poster-label">
                                             Posted by
                                         </span>
-                                        CMU Student Affairs
+                                        {activeSample.poster}
                                     </span>
                                     <span className="task-paper-poster-type">
-                                        Organization
+                                        {activeSample.posterType}
                                     </span>
                                 </div>
+                                {activeSample.location && (
+                                    <p className="task-paper-location">
+                                        <MapPin aria-hidden="true" size={15} />
+                                        {activeSample.location}
+                                    </p>
+                                )}
                                 <dl className="task-paper-facts">
                                     <div>
                                         <dt>Duration</dt>
-                                        <dd>3 hours</dd>
+                                        <dd>{activeSample.duration}</dd>
                                     </div>
                                     <div>
                                         <dt>Budget</dt>
-                                        <dd className="task-budget">₱600</dd>
+                                        <dd className="task-budget">
+                                            {activeSample.budget}
+                                        </dd>
                                     </div>
                                 </dl>
                             </div>
                             <p className="sr-only">
-                                Sample online task: Design a campus event poster
-                                for CMU Student Affairs. Estimated duration: 3
-                                hours. Budget: 600 pesos.
+                                Sample {activeSample.workMode.toLowerCase()}{' '}
+                                task:
+                                {` ${activeSample.title} for ${activeSample.poster}.`}{' '}
+                                Estimated duration: {activeSample.duration}.
+                                Budget: {activeSample.budget}.
                             </p>
-                            <button
-                                type="button"
-                                className="task-card-replay"
-                                onClick={() =>
-                                    setAnimationRun((run) => run + 1)
-                                }
-                            >
-                                <span aria-hidden="true">↻</span>
-                                Replay animation
-                            </button>
                         </aside>
                     </section>
                 </div>
@@ -346,7 +456,11 @@ export default function Welcome() {
                     recorded.
                 </p>
             )}
-            <div className="landing-intro-overlay" aria-hidden="true">
+            <div
+                key={introRun}
+                className="landing-intro-overlay"
+                aria-hidden="true"
+            >
                 <div className="landing-intro-content">
                     <h1 className="landing-intro-headline">
                         <span className="landing-intro-headline-line">
